@@ -1,7 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
-@theme {
+:root {
+  --color-primary: #33489a;
+  --color-primary-dark: #24366f;
+  --color-primary-light: #eaf1ff;
+  --color-accent: #c62828;
+  --color-accent-soft: #fcecec;
+  --color-gold: #d4af37;
+  --color-neutral-light: #f7f9fc;
+  --color-neutral-medium: #6b7280;
+  --color-neutral-dark: #1f2937;
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Open Sans', sans-serif;
+}
+
+@theme inline {
   --color-primary: #33489a;
   --color-primary-dark: #24366f;
   --color-primary-light: #eaf1ff;
@@ -40,3 +54,52 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 1rem;
   line-height: 1.7;
 }
+
+/* Modern Animations & Micro-Interactions */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+.glass-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(51, 72, 154, 0.15);
+  transform: translateY(-4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
