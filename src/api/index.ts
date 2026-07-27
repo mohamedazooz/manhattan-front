@@ -109,6 +109,8 @@ export const blogApi = {
   comments: () => api.get('/posts/comments/admin'),
   moderateComment: (id: string, status: string) =>
     api.patch(`/posts/comments/${id}`, { status }),
+  createComment: (postId: string, content: string) =>
+    api.post(`/posts/${postId}/comments`, { content }),
   categories: (lang: string) =>
     api.get('/categories', { params: { lang: langParam(lang) } }),
   createCategory: (data: object) => api.post('/categories', data),
@@ -125,12 +127,20 @@ export const careersApi = {
   update: (id: string, data: object) => api.patch(`/jobs/${id}`, data),
   updateStatus: (id: string, status: string) => api.patch(`/jobs/${id}/status`, { status }),
   applications: (id: string) => api.get(`/jobs/${id}/applications`),
+  myApplications: () => api.get('/jobs/my-applications'),
+  allApplications: () => api.get('/jobs/admin/all-applications'),
+  updateApplicationStatus: (id: string, status: string) =>
+    api.patch(`/jobs/applications/${id}/status`, { status }),
+  uploadDocument: (applicationId: string, form: FormData) =>
+    api.post(`/jobs/applications/${applicationId}/documents`, form),
   apply: (id: string, form: FormData) => api.post(`/jobs/${id}/apply`, form),
 };
 
 export const admissionsApi = {
   create: (data: object) => api.post<Admission>('/admissions', data),
-  myStatus: () => api.get<Admission[]>('/admissions/my-status'),
+  myStatus: () => api.get('/admissions/my-status'),
+  myAdmissions: () => api.get<Admission[]>('/admissions/my-admissions'),
+  get: (id: string) => api.get<Admission>(`/admissions/${id}`),
   list: (status?: string) => api.get<Admission[]>('/admissions', { params: { status } }),
   uploadDocument: (id: string, form: FormData) =>
     api.post(`/admissions/${id}/documents`, form),
@@ -156,6 +166,9 @@ export const contactApi = {
 
 export const usersApi = {
   list: () => api.get('/users'),
+  create: (data: { email: string; password: string; fullName: string; roleId: string }) =>
+    api.post('/users', data),
+  delete: (id: string) => api.delete(`/users/${id}`),
   updateStatus: (id: string, status: string) => api.patch(`/users/${id}/status`, { status }),
   updateRole: (id: string, roleId: string) => api.patch(`/users/${id}/role`, { roleId }),
 };
@@ -163,8 +176,10 @@ export const usersApi = {
 export const rolesApi = {
   list: () => api.get('/roles'),
   permissions: () => api.get('/roles/permissions'),
-  updatePermissions: (id: string, permissionIds: string[]) =>
-    api.patch(`/roles/${id}/permissions`, { permissionIds }),
+  updatePermissions: (id: string, permissionNames: string[]) =>
+    api.patch(`/roles/${id}/permissions`, { permissionNames }),
+  updateDescription: (id: string, description: string) =>
+    api.patch(`/roles/${id}`, { description }),
 };
 
 export const emailApi = {

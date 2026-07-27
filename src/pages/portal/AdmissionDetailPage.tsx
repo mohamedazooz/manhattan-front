@@ -13,12 +13,11 @@ export function AdmissionDetailPage() {
   const [docType, setDocType] = useState('BIRTH_CERTIFICATE');
   const [file, setFile] = useState<File | null>(null);
 
-  const { data: admissions = [], isLoading } = useQuery({
-    queryKey: ['my-admissions'],
-    queryFn: () => admissionsApi.myStatus().then((r) => r.data),
+  const { data: admission, isLoading } = useQuery({
+    queryKey: ['admission', id],
+    queryFn: () => admissionsApi.get(id!).then((r) => r.data),
+    enabled: !!id,
   });
-
-  const admission = admissions.find((a) => a.id === id);
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
@@ -28,18 +27,18 @@ export function AdmissionDetailPage() {
       return admissionsApi.uploadDocument(id!, fd);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-admissions'] });
+      queryClient.invalidateQueries({ queryKey: ['admission', id] });
       setFile(null);
     },
   });
 
   const submitMutation = useMutation({
     mutationFn: () => admissionsApi.submit(id!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-admissions'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admission', id] }),
   });
 
   if (isLoading) return <LoadingSpinner />;
-  if (!admission) return <p className="p-12 text-center">Application not found</p>;
+  if (!admission) return <p className="p-12 text-center text-neutral-medium">Application not found</p>;
 
   const canEdit = admission.status === 'DRAFT' || admission.status === 'SUBMITTED';
 
@@ -56,10 +55,10 @@ export function AdmissionDetailPage() {
       <section className="mb-8">
         <h3 className="font-semibold mb-3">Uploaded Documents</h3>
         <ul className="space-y-2 mb-4">
-          {(admission.documents || []).map((doc) => (
-            <li key={doc.id} className="flex justify-between text-sm border rounded p-3">
+          {(admission.documents || []).map((doc: { id: string; fileName: string; fileUrl: string; documentType: string }) => (
+            <li key={doc.id} className="flex justify-between text-sm border rounded p-3 bg-white shadow-sm">
               <span>{doc.documentType.replace(/_/g, ' ')} — {doc.fileName}</span>
-              <a href={mediaUrl(doc.fileUrl)} target="_blank" rel="noreferrer" className="text-primary">View</a>
+              <a href={mediaUrl(doc.fileUrl)} target="_blank" rel="noreferrer" className="text-primary font-medium hover:underline">View</a>
             </li>
           ))}
           {!admission.documents?.length && <p className="text-sm text-neutral-medium">No documents uploaded yet.</p>}

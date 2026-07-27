@@ -256,14 +256,55 @@ export function AdminCareersPage() {
 }
 
 export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
-  const { data: apps = [] } = useQuery({ queryKey: ['job-apps', jobId], queryFn: () => careersApi.applications(jobId).then((r) => r.data) });
+  const qc = useQueryClient();
+  const { data: apps = [] } = useQuery({
+    queryKey: ['job-apps', jobId],
+    queryFn: () => (jobId === 'all' ? careersApi.allApplications() : careersApi.applications(jobId)).then((r) => r.data),
+  });
+
+  const statuses = ['SUBMITTED', 'REVIEWING', 'SHORTLISTED', 'ACCEPTED', 'REJECTED'];
+
   return (
     <div>
-      <PageHeader title="Job Applications" />
+      <PageHeader title="Teacher & Job Applications" subtitle="Review candidate profiles, credentials, and update hiring statuses." />
       <DataTable data={apps} columns={[
-        { key: 'name', header: 'Name', render: (r: { fullName: string }) => r.fullName },
+        { key: 'name', header: 'Candidate Name', render: (r: { fullName: string; phone: string }) => (
+          <div>
+            <div className="font-semibold text-neutral-dark">{r.fullName}</div>
+            <div className="text-xs text-neutral-medium">{r.phone}</div>
+          </div>
+        )},
         { key: 'email', header: 'Email', render: (r: { email: string }) => r.email },
-        { key: 'status', header: 'Status', render: (r: { status: string }) => <StatusBadge status={r.status} /> },
+        { key: 'documents', header: 'Uploaded Credentials', render: (r: { documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }> }) => (
+          <div className="flex flex-wrap gap-1">
+            {r.documents && r.documents.length > 0 ? (
+              r.documents.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={doc.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs bg-primary-light text-primary hover:underline px-2 py-0.5 rounded font-mono flex items-center gap-1"
+                >
+                  📄 {doc.documentType.replace('_', ' ')}
+                </a>
+              ))
+            ) : (
+              <span className="text-xs text-neutral-medium italic">No files attached</span>
+            )}
+          </div>
+        )},
+        { key: 'status', header: 'Status', render: (r: { id: string; status: string }) => (
+          <select
+            className="border rounded p-1 text-xs bg-white font-medium"
+            value={r.status}
+            onChange={(e) => careersApi.updateApplicationStatus(r.id, e.target.value).then(() => qc.invalidateQueries({ queryKey: ['job-apps', jobId] }))}
+          >
+            {statuses.map((st) => (
+              <option key={st} value={st}>{st}</option>
+            ))}
+          </select>
+        )},
       ]} />
     </div>
   );
@@ -290,16 +331,89 @@ export function AdminInquiriesPage() {
 export function AdminUsersPage() {
   const qc = useQueryClient();
   const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: () => usersApi.list().then((r) => r.data) });
+  const { data: roles = [] } = useQuery({ queryKey: ['roles'], queryFn: () => rolesApi.list().then((r) => r.data) });
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', roleId: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.fullName || !form.email || !form.password || !form.roleId) return;
+    setLoading(true);
+    try {
+      await usersApi.create(form);
+      setForm({ fullName: '', email: '', password: '', roleId: '' });
+      setShowCreate(false);
+      qc.invalidateQueries({ queryKey: ['users'] });
+    } catch (err: unknown) {
+      alert('Error creating user: ' + (err instanceof Error ? err.message : 'Failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
-      <PageHeader title="Users" />
+      <PageHeader title="Users Management" />
+      <div className="mb-4">
+        <Button onClick={() => setShowCreate(!showCreate)}>
+          {showCreate ? 'Cancel' : '+ Create New User'}
+        </Button>
+      </div>
+
+      {showCreate && (
+        <form onSubmit={handleCreate} className="p-4 bg-white border rounded shadow-sm mb-6 max-w-xl space-y-4">
+          <h3 className="font-semibold text-lg text-neutral-dark">Add New User</h3>
+          <Input label="Full Name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required />
+          <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+          <Input label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+          <div>
+            <label className="block text-sm font-medium mb-1 text-neutral-dark">Role</label>
+            <select
+              className="w-full border rounded p-2 text-sm bg-white"
+              value={form.roleId}
+              onChange={(e) => setForm({ ...form, roleId: e.target.value })}
+              required
+            >
+              <option value="">Select Role</option>
+              {roles.map((r: { id: string; name: string }) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
+          <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create User'}</Button>
+        </form>
+      )}
+
       <DataTable data={users} columns={[
         { key: 'name', header: 'Name', render: (r: { fullName: string }) => r.fullName },
         { key: 'email', header: 'Email', render: (r: { email: string }) => r.email },
-        { key: 'role', header: 'Role', render: (r: { role: { name: string } }) => r.role.name },
+        { key: 'role', header: 'Role', render: (r: { id: string; role: { id: string; name: string } }) => (
+          <select
+            className="border rounded p-1 text-xs bg-white"
+            value={r.role.id}
+            onChange={(e) => usersApi.updateRole(r.id, e.target.value).then(() => qc.invalidateQueries({ queryKey: ['users'] }))}
+          >
+            {roles.map((ro: { id: string; name: string }) => (
+              <option key={ro.id} value={ro.id}>{ro.name}</option>
+            ))}
+          </select>
+        )},
         { key: 'status', header: 'Status', render: (r: { status: string }) => <StatusBadge status={r.status} /> },
         { key: 'actions', header: 'Actions', render: (r: { id: string; status: string }) => (
-          <Button variant="secondary" className="py-1 px-2 text-xs" onClick={() => usersApi.updateStatus(r.id, r.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE').then(() => qc.invalidateQueries({ queryKey: ['users'] }))}>Toggle Status</Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" className="py-1 px-2 text-xs" onClick={() => usersApi.updateStatus(r.id, r.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE').then(() => qc.invalidateQueries({ queryKey: ['users'] }))}>
+              {r.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
+            </Button>
+            <Button variant="secondary" className="py-1 px-2 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => {
+              if (confirm('Delete this user?')) {
+                usersApi.delete(r.id).then(() => qc.invalidateQueries({ queryKey: ['users'] }));
+              }
+            }}>
+              Delete
+            </Button>
+          </div>
         )},
       ]} />
     </div>
@@ -307,22 +421,85 @@ export function AdminUsersPage() {
 }
 
 export function AdminRolesPage() {
+  const qc = useQueryClient();
   const { data: roles = [] } = useQuery({ queryKey: ['roles'], queryFn: () => rolesApi.list().then((r) => r.data) });
+  const { data: permissions = [] } = useQuery({ queryKey: ['all-permissions'], queryFn: () => rolesApi.permissions().then((r) => r.data) });
+
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
+
+  const startEdit = (role: { id: string; rolePermissions: Array<{ permission: { name: string } }> }) => {
+    setEditingRoleId(role.id);
+    setSelectedPerms(role.rolePermissions.map((rp) => rp.permission.name));
+  };
+
+  const togglePerm = (permName: string) => {
+    setSelectedPerms((prev) =>
+      prev.includes(permName) ? prev.filter((p) => p !== permName) : [...prev, permName]
+    );
+  };
+
+  const handleSavePerms = async (roleId: string) => {
+    await rolesApi.updatePermissions(roleId, selectedPerms);
+    setEditingRoleId(null);
+    qc.invalidateQueries({ queryKey: ['roles'] });
+  };
+
   return (
     <div>
       <PageHeader title="Roles & Permissions" />
       <div className="space-y-4">
-        {roles.map((role: { id: string; name: string; description?: string; rolePermissions: Array<{ permission: { name: string } }> }) => (
-          <div key={role.id} className="rounded border bg-white p-4">
-            <h3 className="font-semibold">{role.name}</h3>
-            <p className="text-sm text-neutral-medium mb-2">{role.description}</p>
-            <div className="flex flex-wrap gap-1">
-              {role.rolePermissions.map((rp) => (
-                <span key={rp.permission.name} className="text-xs bg-primary-light text-primary px-2 py-0.5 rounded">{rp.permission.name}</span>
-              ))}
+        {roles.map((role: { id: string; name: string; description?: string; rolePermissions: Array<{ permission: { name: string } }> }) => {
+          const isEditing = editingRoleId === role.id;
+          return (
+            <div key={role.id} className="rounded border bg-white p-5 shadow-sm">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h3 className="font-semibold text-lg text-neutral-dark">{role.name}</h3>
+                  <p className="text-sm text-neutral-medium">{role.description}</p>
+                </div>
+                {!isEditing ? (
+                  <Button variant="secondary" className="text-xs" onClick={() => startEdit(role)}>Edit Permissions</Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="secondary" className="text-xs" onClick={() => setEditingRoleId(null)}>Cancel</Button>
+                    <Button className="text-xs" onClick={() => handleSavePerms(role.id)}>Save Permissions</Button>
+                  </div>
+                )}
+              </div>
+
+              {!isEditing ? (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {role.rolePermissions.map((rp) => (
+                    <span key={rp.permission.name} className="text-xs bg-primary-light text-primary px-2 py-0.5 rounded font-mono">
+                      {rp.permission.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4 p-3 bg-neutral-50 rounded border">
+                  {permissions.map((p: { id: string; name: string; description?: string }) => {
+                    const checked = selectedPerms.includes(p.name);
+                    return (
+                      <label key={p.name} className="flex items-center gap-2 text-xs cursor-pointer p-1 rounded hover:bg-white">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => togglePerm(p.name)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span>
+                          <strong className="block text-neutral-dark">{p.name}</strong>
+                          <span className="text-neutral-medium text-[10px]">{p.description}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

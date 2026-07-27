@@ -64,6 +64,7 @@ export interface BlogPost {
   category?: { id: string; name: string };
   author?: { fullName: string };
   createdAt: string;
+  comments?: Array<{ id: string; content: string; status: string; createdAt: string; author?: { fullName: string } }>;
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
