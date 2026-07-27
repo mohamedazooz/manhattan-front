@@ -15,19 +15,6 @@
   --font-body: 'Open Sans', sans-serif;
 }
 
-@theme inline {
-  --color-primary: #33489a;
-  --color-primary-dark: #24366f;
-  --color-primary-light: #eaf1ff;
-  --color-accent: #c62828;
-  --color-accent-soft: #fcecec;
-  --color-gold: #d4af37;
-  --color-neutral-light: #f7f9fc;
-  --color-neutral-medium: #6b7280;
-  --color-neutral-dark: #1f2937;
-  --font-heading: 'Poppins', sans-serif;
-  --font-body: 'Open Sans', sans-serif;
-}
 
 * {
   box-sizing: border-box;
