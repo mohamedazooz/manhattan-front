@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "about": "من نحن",
+    "academics": "الأكاديميات",
+    "admissions": "القبول",
+    "studentLife": "حياة الطالب",
+    "parents": "أولياء الأمور",
+    "news": "الأخبار",
+    "contact": "اتصل بنا",
+    "enroll": "سجل الآن",
+    "search": "بحث",
+    "login": "تسجيل الدخول",
+    "portal": "بوابة ولي الأمر",
+    "admin": "الإدارة"
+  },
+  "hero": {
+    "discover": "اكتشف المزيد",
+    "programs": "برامجنا"
+  },
+  "trust": {
+    "bilingual": "تعليم ثنائي اللغة",
+    "classrooms": "فصول حديثة",
+    "safe": "بيئة آمنة",
+    "teachers": "معلمون ذوو خبرة",
+    "future": "مستقبل مشرق"
+  },
+  "common": {
+    "readMore": "اقرأ المزيد",
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "submit": "إرسال",
+    "back": "رجوع",
+    "actions": "إجراءات",
+    "status": "الحالة",
+    "published": "منشور",
+    "draft": "مسودة",
+    "noResults": "لا توجد نتائج"
+  },
+  "footer": {
+    "quickLinks": "روابط سريعة",
+    "parentsSection": "أولياء الأمور",
+    "contactUs": "اتصل بنا",
+    "calendar": "التقويم الأكademي",
+    "policies": "سياسات المدرسة",
+    "forms": "النماذج والمستندات"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "registerTitle": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "fullName": "الاسم الكامل",
+    "loginBtn": "دخول",
+    "registerBtn": "تسجيل",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟"
+  },
+  "contact": {
+    "title": "اتصل بنا",
+    "subject": "الموضوع",
+    "message": "الرسالة",
+    "phone": "الهاتف",
+    "success": "تم إرسال رسالتك بنجاح!"
+  },
+  "portal": {
+    "title": "بوابة ولي الأمر",
+    "newApplication": "طلب قبول جديد",
+    "myApplications": "طلباتي",
+    "uploadDocs": "رفع المستندات",
+    "submitApplication": "تقديم الطلب"
+  },
+  "admin": {
+    "dashboard": "لوحة التحكم",
+    "landing": "الصفحة الرئيسية",
+    "hero": "البانر",
+    "sections": "الأقسام",
+    "about": "من نحن",
+    "settings": "الإعدادات",
+    "pages": "صفحات ثابتة",
+    "education": "التعليم",
+    "gallery": "المعرض",
+    "blog": "المدونة",
+    "comments": "التعليقات",
+    "admissions": "القبول",
+    "requirements": "المتطلبات",
+    "careers": "الوظائف",
+    "inquiries": "الاستفسارات",
+    "users": "المستخدمون",
+    "roles": "الأدوار",
+    "email": "البريد",
+    "logout": "خروج"
+  }
+}

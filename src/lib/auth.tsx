@@ -1,0 +1,115 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { authApi } from '../api';
+import { getAccessToken, setAccessToken } from '../api/client';
+import type { JwtPayload, User } from '../types';
+
+interface AuthContextValue {
+  user: User | null;
+  permissions: string[];
+  role: string | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, fullName: string) => Promise<void>;
+  logout: () => Promise<void>;
+  hasPermission: (perm: string) => boolean;
+  isAdmin: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+function decodeToken(token: string): { permissions: string[]; role: string } {
+  try {
+    const payload = jwtDecode<JwtPayload>(token);
+    return { permissions: payload.permissions || [], role: payload.role };
+  } catch {
+    return { permissions: [], role: 'GUEST' };
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const applyToken = useCallback((token: string, u: User) => {
+    setAccessToken(token);
+    const decoded = decodeToken(token);
+    setUser(u);
+    setPermissions(decoded.permissions);
+    setRole(decoded.role);
+  }, []);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    authApi
+      .me()
+      .then(({ data }) => {
+        applyToken(token, data);
+      })
+      .catch(() => {
+        setAccessToken(null);
+      })
+      .finally(() => setLoading(false));
+  }, [applyToken]);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const { data } = await authApi.login({ email, password });
+      applyToken(data.accessToken, data.user);
+      return data.user;
+    },
+    [applyToken],
+  );
+
+  const register = useCallback(async (email: string, password: string, fullName: string) => {
+    await authApi.register({ email, password, fullName });
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      setPermissions([]);
+      setRole(null);
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      permissions,
+      role,
+      loading,
+      login,
+      register,
+      logout,
+      hasPermission: (perm: string) => permissions.includes(perm),
+      isAdmin: role === 'ADMIN' || role === 'TEACHER',
+    }),
+    [user, permissions, role, loading, login, register, logout],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

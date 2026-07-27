@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "academics": "Academics",
+    "admissions": "Admissions",
+    "studentLife": "Student Life",
+    "parents": "Parents",
+    "news": "News",
+    "contact": "Contact",
+    "enroll": "ENROLL NOW",
+    "search": "Search",
+    "login": "Login",
+    "portal": "Parent Portal",
+    "admin": "Admin"
+  },
+  "hero": {
+    "discover": "DISCOVER MORE",
+    "programs": "OUR PROGRAMS"
+  },
+  "trust": {
+    "bilingual": "Bilingual Education",
+    "classrooms": "Modern Classrooms",
+    "safe": "Safe Environment",
+    "teachers": "Experienced Teachers",
+    "future": "Bright Future"
+  },
+  "common": {
+    "readMore": "READ MORE",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "submit": "Submit",
+    "back": "Back",
+    "actions": "Actions",
+    "status": "Status",
+    "published": "Published",
+    "draft": "Draft",
+    "noResults": "No results found"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "parentsSection": "Parents",
+    "contactUs": "Contact Us",
+    "calendar": "Academic Calendar",
+    "policies": "School Policies",
+    "forms": "Forms & Documents"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "registerTitle": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "loginBtn": "Sign In",
+    "registerBtn": "Register",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subject": "Subject",
+    "message": "Message",
+    "phone": "Phone",
+    "success": "Message sent successfully!"
+  },
+  "portal": {
+    "title": "Parent Portal",
+    "newApplication": "New Application",
+    "myApplications": "My Applications",
+    "uploadDocs": "Upload Documents",
+    "submitApplication": "Submit Application"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "landing": "Landing",
+    "hero": "Hero",
+    "sections": "Sections",
+    "about": "About Us",
+    "settings": "Settings",
+    "pages": "Static Pages",
+    "education": "Education",
+    "gallery": "Gallery",
+    "blog": "Blog",
+    "comments": "Comments",
+    "admissions": "Admissions",
+    "requirements": "Requirements",
+    "careers": "Careers",
+    "inquiries": "Inquiries",
+    "users": "Users",
+    "roles": "Roles",
+    "email": "Email",
+    "logout": "Logout"
+  }
+}
