@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { pagesApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
@@ -11,6 +12,7 @@ const slugMap: Record<string, string> = {
 };
 
 export function StaticParentPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const page = location.pathname.split('/').pop() || '';
   const lang = useAppLanguage();
@@ -23,7 +25,7 @@ export function StaticParentPage() {
   });
 
   if (isLoading) return <LoadingSpinner />;
-  if (!data) return <p className="p-12 text-center">Page not found</p>;
+  if (!data) return <p className="p-12 text-center">{t('staticPage.notFound')}</p>;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">

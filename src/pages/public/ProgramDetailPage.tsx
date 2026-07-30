@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { educationApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { mediaUrl } from '../../lib/utils';
@@ -8,6 +9,7 @@ import { SeoHead } from '../../components/common/SeoHead';
 
 export function ProgramDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const { data: program, isLoading } = useQuery({
     queryKey: ['education', slug, lang],
@@ -16,7 +18,7 @@ export function ProgramDetailPage() {
   });
 
   if (isLoading) return <LoadingSpinner />;
-  if (!program) return <p className="p-12 text-center">Program not found</p>;
+  if (!program) return <p className="p-12 text-center">{t('academics.programNotFound')}</p>;
 
   const progImage = program.coverImageUrl ? mediaUrl(program.coverImageUrl) : undefined;
   const snippet = program.summary || program.content.replace(/<[^>]*>?/gm, '').slice(0, 160);

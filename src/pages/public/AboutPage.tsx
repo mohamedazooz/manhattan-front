@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { aboutApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { mediaUrl } from '../../lib/utils';
@@ -6,6 +8,7 @@ import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 
 export function AboutPage() {
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const { data, isLoading } = useQuery({
     queryKey: ['about', lang],
@@ -19,24 +22,57 @@ export function AboutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <SeoHead
-        title="About Us"
-        description="Learn about Manhattan Language School's story, mission, educational excellence, and core values."
+        title={t('about.pageTitle')}
+        description={t('about.seoDesc')}
       />
-      <PageHeader title="About Us" subtitle="Our story, mission, and values" />
+      <PageHeader title={t('about.pageTitle')} subtitle={t('about.pageSubtitle')} />
+
       {sections.length === 0 && data?.legacyHistory && (
-        <p className="text-neutral-medium leading-relaxed">{data.legacyHistory}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-neutral-medium dark:text-slate-300 leading-relaxed text-lg"
+        >
+          {data.legacyHistory}
+        </motion.p>
       )}
-      <div className="space-y-12">
-        {sections.map((section: { id: string; title: string; content: string; imageUrl?: string }) => (
-          <div key={section.id} className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h2 className="text-2xl font-bold text-primary-dark mb-3">{section.title}</h2>
-              <div className="prose-content text-neutral-medium" dangerouslySetInnerHTML={{ __html: section.content }} />
+
+      <div className="space-y-16">
+        {sections.map((section: { id: string; title: string; content: string; imageUrl?: string }, idx: number) => (
+          <motion.div
+            key={section.id}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: idx * 0.1 }}
+            className={`grid md:grid-cols-2 gap-10 items-center ${
+              idx % 2 === 1 ? 'md:flex-row-reverse' : ''
+            }`}
+          >
+            <div className="space-y-4">
+              <h2 className="text-2xl sm:text-3xl font-bold text-primary-dark dark:text-blue-400">
+                {section.title}
+              </h2>
+              <div
+                className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: section.content }}
+              />
             </div>
             {section.imageUrl && (
-              <img src={mediaUrl(section.imageUrl)} alt={section.title} className="rounded-lg shadow-md w-full object-cover" />
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="relative overflow-hidden rounded-2xl shadow-xl group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <img
+                  src={mediaUrl(section.imageUrl)}
+                  alt={section.title}
+                  className="rounded-2xl w-full object-cover max-h-96 shadow-md"
+                />
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

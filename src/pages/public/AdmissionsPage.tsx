@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { requirementsApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { useAuth } from '../../lib/auth';
+import { SeoHead } from '../../components/common/SeoHead';
+import { CheckCircle2, Award } from 'lucide-react';
 
 export function AdmissionsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: requirements = [], isLoading } = useQuery({
     queryKey: ['requirements'],
@@ -16,27 +21,84 @@ export function AdmissionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
-      <PageHeader title="Admissions" subtitle="Requirements and enrollment process" />
-      <div className="grid md:grid-cols-2 gap-6 mb-10">
-        {requirements.map((req: { id: string; gradeLevel: string; title: string; description?: string; minAge?: number; maxAge?: number }) => (
-          <Card key={req.id}>
-            <h3 className="font-semibold text-lg text-primary-dark">{req.title}</h3>
-            <p className="text-sm text-neutral-medium mt-1">{req.gradeLevel}</p>
-            {req.description && <p className="text-sm mt-3">{req.description}</p>}
-            {(req.minAge || req.maxAge) && (
-              <p className="text-xs text-neutral-medium mt-2">
-                Age: {req.minAge ?? '?'} – {req.maxAge ?? '?'} years
-              </p>
-            )}
-          </Card>
+      <SeoHead
+        title={t('admissionsPage.pageTitle')}
+        description={t('admissionsPage.seoDesc')}
+      />
+      <PageHeader title={t('admissionsPage.pageTitle')} subtitle={t('admissionsPage.pageSubtitle')} />
+
+      <div className="grid md:grid-cols-2 gap-8 mb-12">
+        {requirements.map((req: { id: string; gradeLevel: string; title: string; description?: string; minAge?: number; maxAge?: number; requiredDocumentTypes?: string[] }, idx: number) => (
+          <motion.div
+            key={req.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+          >
+            <Card className="h-full space-y-4 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-xs font-semibold text-primary dark:text-blue-400 bg-primary-light dark:bg-slate-800 px-2.5 py-1 rounded-md">
+                    {req.gradeLevel}
+                  </span>
+                  <h3 className="font-bold text-xl text-primary-dark dark:text-slate-100 mt-2">
+                    {req.title}
+                  </h3>
+                </div>
+                <div className="p-2 bg-amber-50 dark:bg-amber-950/60 text-amber-500 rounded-lg">
+                  <Award className="h-5 w-5" />
+                </div>
+              </div>
+
+              {req.description && (
+                <p className="text-sm text-neutral-medium dark:text-slate-300 leading-relaxed">
+                  {req.description}
+                </p>
+              )}
+
+              {(req.minAge || req.maxAge) && (
+                <div className="flex items-center gap-2 text-xs font-medium text-neutral-dark dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg border border-gray-100 dark:border-slate-700">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span>
+                    {t('admissionsPage.ageEligibility')} <strong>{req.minAge ?? '?'} – {req.maxAge ?? '?'} {t('admissionsPage.years')}</strong>
+                  </span>
+                </div>
+              )}
+
+              {req.requiredDocumentTypes && req.requiredDocumentTypes.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs font-bold text-neutral-dark dark:text-slate-200 mb-1.5">{t('admissionsPage.requiredDocs')}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {req.requiredDocumentTypes.map((doc: string) => (
+                      <span key={doc} className="text-[11px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-neutral-dark dark:text-slate-300 px-2.5 py-1 rounded shadow-2xs font-mono">
+                        📄 {doc.replace('_', ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </motion.div>
         ))}
       </div>
-      <div className="text-center bg-primary-light rounded-lg p-8">
-        <h3 className="text-xl font-bold mb-4">Ready to apply?</h3>
-        <Button to={user ? '/portal/admissions/new' : '/register'} showArrow>
-          {user ? 'Start Application' : 'Register & Apply'}
-        </Button>
-      </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        className="text-center bg-gradient-to-r from-primary-dark via-slate-900 to-primary text-white rounded-2xl p-10 shadow-xl space-y-4"
+      >
+        <h3 className="text-2xl sm:text-3xl font-extrabold">{t('admissionsPage.readyTitle')}</h3>
+        <p className="text-slate-200 text-base max-w-xl mx-auto">
+          {t('admissionsPage.readySubtitle')}
+        </p>
+        <div className="pt-2">
+          <Button to={user ? '/portal/parent/admissions/new' : '/register/parent'} showArrow variant="gold" className="py-3 px-8 text-base shadow-lg">
+            {user ? t('portal.parent.newApplication') : t('auth.registerParent')}
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 }

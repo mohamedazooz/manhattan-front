@@ -57,8 +57,9 @@ export const SeoHead: FC<SeoHeadProps> = ({
 
   const finalKeywords =
     keywords ||
-    globalConfig?.defaultKeywords ||
-    'Manhattan Language School, Cairo schools, International Education, مدرسة منهاتن للغات';
+    (isAr
+      ? globalConfig?.defaultKeywords || 'مدرسة منهاتن للغات, تعليم دولي, مدارس القاهرة'
+      : 'Manhattan Language School, Cairo schools, International Education');
 
   const finalOgImage =
     ogImage ||

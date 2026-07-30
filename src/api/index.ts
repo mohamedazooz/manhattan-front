@@ -15,8 +15,12 @@ import type {
 export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post<{ accessToken: string; user: User }>('/auth/login', data),
-  register: (data: { email: string; password: string; fullName: string }) =>
+  register: (data: { email: string; password: string; fullName: string; accountType?: 'parent' | 'applicant' }) =>
     api.post('/auth/register', data),
+  requestPasswordReset: (data: { email: string }) =>
+    api.post('/auth/password-reset/request', data),
+  resetPassword: (data: { token: string; password: string }) =>
+    api.post('/auth/password-reset/confirm', data),
   logout: () => api.post('/auth/logout'),
   me: () => api.get<User>('/users/me'),
 };
@@ -36,7 +40,8 @@ export const landingApi = {
       : api.patch(`/landing/hero/${id}`, data),
   deleteHero: (id: string) => api.delete(`/landing/hero/${id}`),
   sections: () => api.get<LandingSection[]>('/landing/sections/admin'),
-  createSection: (data: object) => api.post('/landing/sections', data),
+  createSection: (data: FormData | object) =>
+    data instanceof FormData ? api.post('/landing/sections', data) : api.post('/landing/sections', data),
   updateSection: (id: string, data: FormData | object) =>
     data instanceof FormData
       ? api.patch(`/landing/sections/${id}`, data)
@@ -49,13 +54,18 @@ export const landingApi = {
 export const cmsApi = {
   getConfig: () => api.get<Record<string, string>>('/cms/config'),
   updateConfig: (key: string, value: string) => api.patch('/cms/config', { key, value }),
+  updateBulkConfig: (configs: Record<string, string>) => api.patch('/cms/bulk-config', configs),
 };
 
 export const aboutApi = {
   get: (lang: string) => api.get('/about-us', { params: { lang: langParam(lang) } }),
   admin: () => api.get('/about-us/admin'),
-  create: (data: object) => api.post('/about-us', data),
-  update: (id: string, data: object) => api.patch(`/about-us/${id}`, data),
+  create: (data: FormData | object) =>
+    data instanceof FormData ? api.post('/about-us', data) : api.post('/about-us', data),
+  update: (id: string, data: FormData | object) =>
+    data instanceof FormData
+      ? api.patch(`/about-us/${id}`, data)
+      : api.patch(`/about-us/${id}`, data),
   updateStatus: (id: string, status: string) => api.patch(`/about-us/${id}/status`, { status }),
   remove: (id: string) => api.delete(`/about-us/${id}`),
 };
@@ -128,6 +138,9 @@ export const careersApi = {
   updateStatus: (id: string, status: string) => api.patch(`/jobs/${id}/status`, { status }),
   applications: (id: string) => api.get(`/jobs/${id}/applications`),
   myApplications: () => api.get('/jobs/my-applications'),
+  getApplication: (id: string) => api.get(`/jobs/applications/${id}`),
+  updateApplication: (id: string, data: object) => api.patch(`/jobs/applications/${id}`, data),
+  submitApplication: (id: string) => api.post(`/jobs/applications/${id}/submit`),
   allApplications: () => api.get('/jobs/admin/all-applications'),
   updateApplicationStatus: (id: string, status: string) =>
     api.patch(`/jobs/applications/${id}/status`, { status }),
@@ -136,12 +149,22 @@ export const careersApi = {
   apply: (id: string, form: FormData) => api.post(`/jobs/${id}/apply`, form),
 };
 
+export const jobRequirementsApi = {
+  list: (all?: boolean) =>
+    all ? api.get('/job-requirements/admin') : api.get('/job-requirements'),
+  byType: (employmentType?: string) =>
+    api.get('/job-requirements/by-type', { params: { employmentType } }),
+};
+
 export const admissionsApi = {
   create: (data: object) => api.post<Admission>('/admissions', data),
+  update: (id: string, data: object) => api.patch<Admission>(`/admissions/${id}`, data),
   myStatus: () => api.get('/admissions/my-status'),
   myAdmissions: () => api.get<Admission[]>('/admissions/my-admissions'),
   get: (id: string) => api.get<Admission>(`/admissions/${id}`),
   list: (status?: string) => api.get<Admission[]>('/admissions', { params: { status } }),
+  track: (referenceNumber: string, email: string) =>
+    api.get('/admissions/track', { params: { referenceNumber, email } }),
   uploadDocument: (id: string, form: FormData) =>
     api.post(`/admissions/${id}/documents`, form),
   submit: (id: string) => api.post(`/admissions/${id}/submit`),
@@ -152,7 +175,8 @@ export const admissionsApi = {
 };
 
 export const requirementsApi = {
-  list: (all?: boolean) => api.get('/admission-requirements', { params: { all } }),
+  list: (all?: boolean) =>
+    all ? api.get('/admission-requirements/admin') : api.get('/admission-requirements'),
   create: (data: object) => api.post('/admission-requirements', data),
   update: (id: string, data: object) => api.patch(`/admission-requirements/${id}`, data),
   remove: (id: string) => api.delete(`/admission-requirements/${id}`),
@@ -162,7 +186,10 @@ export const contactApi = {
   submit: (data: object) => api.post('/contact', data),
   admin: (status?: string) => api.get('/contact/admin', { params: { status } }),
   updateStatus: (id: string, status: string) => api.patch(`/contact/${id}/status`, { status }),
+  reply: (id: string, data: { subject?: string; message: string }) =>
+    api.post(`/contact/${id}/reply`, data),
 };
+
 
 export const usersApi = {
   list: () => api.get('/users'),
@@ -176,10 +203,13 @@ export const usersApi = {
 export const rolesApi = {
   list: () => api.get('/roles'),
   permissions: () => api.get('/roles/permissions'),
+  create: (data: { name: string; description?: string; permissionNames?: string[] }) =>
+    api.post('/roles', data),
   updatePermissions: (id: string, permissionNames: string[]) =>
     api.patch(`/roles/${id}/permissions`, { permissionNames }),
   updateDescription: (id: string, description: string) =>
     api.patch(`/roles/${id}`, { description }),
+  delete: (id: string) => api.delete(`/roles/${id}`),
 };
 
 export const emailApi = {
@@ -192,10 +222,35 @@ export const emailApi = {
 
 export const dashboardApi = {
   stats: () => api.get<DashboardStats>('/dashboard/stats'),
-  activity: () => api.get('/dashboard/activity'),
+  modules: () => api.get('/dashboard/modules'),
+  activity: (params?: { limit?: number; module?: string }) =>
+    api.get('/dashboard/activity', { params }),
+  audit: (params?: { page?: number; limit?: number; action?: string; userId?: string }) =>
+    api.get('/dashboard/audit', { params }),
+};
+
+export const notificationsApi = {
+  list: (status?: string) => api.get('/notifications', { params: { status } }),
+  create: (data: { title: string; message: string; type?: string; userId?: string }) =>
+    api.post('/notifications', data),
+  updateStatus: (id: string, status: string) =>
+    api.patch(`/notifications/${id}/status`, { status }),
+  markAllRead: () => api.patch('/notifications/mark-all-read'),
 };
 
 export const seoApi = {
   getGlobal: () => api.get<SeoConfig>('/seo/global'),
   updateGlobal: (data: Partial<SeoConfig>) => api.put<SeoConfig>('/seo/global', data),
 };
+
+export const storageApi = {
+  upload: (file: File, folder: string = 'blog') => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', folder);
+    return api.post<{ url: string; fileUrl: string }>('/storage/upload', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+

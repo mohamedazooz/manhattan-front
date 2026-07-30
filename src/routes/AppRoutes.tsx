@@ -2,8 +2,11 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../lib/auth';
 import { PublicLayout } from '../components/layout/PublicLayout';
+import { PortalLayout } from '../components/layout/PortalLayout';
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import { PortalRedirect } from '../components/auth/PortalRedirect';
+import { RoleRoute } from '../components/auth/RoleRoute';
 import { HomePage } from '../pages/public/HomePage';
 import { AboutPage } from '../pages/public/AboutPage';
 import { AcademicsPage } from '../pages/public/AcademicsPage';
@@ -19,27 +22,34 @@ import { StaticParentPage } from '../pages/public/StaticParentPage';
 import { SearchPage } from '../pages/public/SearchPage';
 import { LoginPage, AdminLoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
-import { PortalDashboard } from '../pages/portal/PortalDashboard';
-import { NewAdmissionPage } from '../pages/portal/NewAdmissionPage';
-import { AdmissionDetailPage } from '../pages/portal/AdmissionDetailPage';
+import { ForgotPasswordPage, ResetPasswordPage } from '../pages/auth/PasswordResetPages';
+import { ParentPortalDashboard } from '../pages/portal/parent/ParentPortalDashboard';
+import { AdmissionWizard } from '../pages/portal/parent/AdmissionWizard';
+import { ParentAdmissionDetailPage } from '../pages/portal/parent/ParentAdmissionDetailPage';
+import { ApplicantPortalDashboard } from '../pages/portal/applicant/ApplicantPortalDashboard';
+import { ApplicationWizard } from '../pages/portal/applicant/ApplicationWizard';
+import { ApplicantApplicationDetailPage } from '../pages/portal/applicant/ApplicantApplicationDetailPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminHeroPage, AdminSectionsPage } from '../pages/admin/LandingAdminPages';
 import { AdminAboutPage, AdminPagesPage, AdminSettingsPage } from '../pages/admin/ContentAdminPages';
 import { SeoAdminPage } from '../pages/admin/SeoAdminPage';
+import { NotificationsAdminPage } from '../pages/admin/NotificationsAdminPage';
 import {
   AdminEducationPage,
   AdminGalleryPage,
   AdminBlogPage,
-  AdminCommentsPage,
   AdminAdmissionsPage,
   AdminRequirementsPage,
-  AdminCareersPage,
   AdminInquiriesPage,
   AdminUsersPage,
   AdminRolesPage,
   AdminEmailPage,
 } from '../pages/admin/OpsAdminPages';
+import { AdminCareersPage } from '../pages/admin/AdminCareersPage';
 import { AdminAdmissionDetailRoute, AdminJobApplicationsRoute } from '../pages/admin/AdminDetailRoutes';
+import { GlobalBackButton } from '../components/common/GlobalBackButton';
+import { AuditLogPage } from '../pages/admin/AuditLogPage';
+import { GalleryPage } from '../pages/public/GalleryPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -50,6 +60,7 @@ export function AppRoutes() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <GlobalBackButton />
           <Routes>
             <Route element={<PublicLayout />}>
               <Route index element={<HomePage />} />
@@ -58,6 +69,7 @@ export function AppRoutes() {
               <Route path="academics/:slug" element={<ProgramDetailPage />} />
               <Route path="admissions" element={<AdmissionsPage />} />
               <Route path="student-life" element={<StudentLifePage />} />
+              <Route path="gallery" element={<GalleryPage />} />
               <Route path="news" element={<NewsPage />} />
               <Route path="news/:slug" element={<NewsDetailPage />} />
               <Route path="careers" element={<CareersPage />} />
@@ -68,13 +80,29 @@ export function AppRoutes() {
               <Route path="parents/forms" element={<StaticParentPage />} />
               <Route path="search" element={<SearchPage />} />
               <Route path="login" element={<LoginPage />} />
-              <Route path="register" element={<RegisterPage />} />
+              <Route path="register" element={<Navigate to="/register/parent" replace />} />
+              <Route path="register/parent" element={<RegisterPage accountType="parent" />} />
+              <Route path="register/applicant" element={<RegisterPage accountType="applicant" />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="reset-password" element={<ResetPasswordPage />} />
             </Route>
 
             <Route element={<ProtectedRoute />}>
-              <Route path="portal" element={<PortalDashboard />} />
-              <Route path="portal/admissions/new" element={<NewAdmissionPage />} />
-              <Route path="portal/admissions/:id" element={<AdmissionDetailPage />} />
+              <Route path="portal" element={<PortalRedirect />} />
+              <Route element={<RoleRoute requiredRole="PARENT" />}>
+                <Route element={<PortalLayout portalType="parent" />}>
+                  <Route path="portal/parent" element={<ParentPortalDashboard />} />
+                  <Route path="portal/parent/admissions/new" element={<AdmissionWizard />} />
+                  <Route path="portal/parent/admissions/:id" element={<ParentAdmissionDetailPage />} />
+                </Route>
+              </Route>
+              <Route element={<RoleRoute requiredRole="APPLICANT" />}>
+                <Route element={<PortalLayout portalType="applicant" />}>
+                  <Route path="portal/applicant" element={<ApplicantPortalDashboard />} />
+                  <Route path="portal/applicant/apply/:jobId" element={<ApplicationWizard />} />
+                  <Route path="portal/applicant/applications/:id" element={<ApplicantApplicationDetailPage />} />
+                </Route>
+              </Route>
             </Route>
 
             <Route path="admin/login" element={<AdminLoginPage />} />
@@ -86,23 +114,32 @@ export function AppRoutes() {
                 <Route path="landing/sections" element={<AdminSectionsPage />} />
                 <Route path="about" element={<AdminAboutPage />} />
                 <Route path="pages" element={<AdminPagesPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="seo" element={<SeoAdminPage />} />
-                <Route path="education" element={<AdminEducationPage />} />
-                <Route path="education/:id" element={<AdminEducationPage />} />
-                <Route path="gallery" element={<AdminGalleryPage />} />
-                <Route path="blog" element={<AdminBlogPage />} />
-                <Route path="blog/:id" element={<AdminBlogPage />} />
-                <Route path="comments" element={<AdminCommentsPage />} />
                 <Route path="admissions" element={<AdminAdmissionsPage />} />
                 <Route path="admissions/:id" element={<AdminAdmissionDetailRoute />} />
                 <Route path="admission-requirements" element={<AdminRequirementsPage />} />
                 <Route path="careers" element={<AdminCareersPage />} />
                 <Route path="careers/:id/applications" element={<AdminJobApplicationsRoute />} />
                 <Route path="inquiries" element={<AdminInquiriesPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="roles" element={<AdminRolesPage />} />
-                <Route path="email" element={<AdminEmailPage />} />
+                <Route path="notifications" element={<NotificationsAdminPage />} />
+                <Route path="education" element={<AdminEducationPage />} />
+                <Route path="education/:id" element={<AdminEducationPage />} />
+                <Route path="gallery" element={<AdminGalleryPage />} />
+                <Route path="blog" element={<AdminBlogPage />} />
+                <Route path="blog/:id" element={<AdminBlogPage />} />
+                <Route element={<ProtectedRoute permission="UPDATE_SYSTEM_CONFIG" />}>
+                  <Route path="settings" element={<AdminSettingsPage />} />
+                  <Route path="seo" element={<SeoAdminPage />} />
+                </Route>
+                <Route element={<ProtectedRoute permission="MANAGE_USERS" />}>
+                  <Route path="users" element={<AdminUsersPage />} />
+                </Route>
+                <Route element={<ProtectedRoute permission="MANAGE_ROLES" />}>
+                  <Route path="roles" element={<AdminRolesPage />} />
+                  <Route path="audit" element={<AuditLogPage />} />
+                </Route>
+                <Route element={<ProtectedRoute permission="MANAGE_EMAIL_TEMPLATES" />}>
+                  <Route path="email" element={<AdminEmailPage />} />
+                </Route>
               </Route>
             </Route>
 

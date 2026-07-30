@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { galleryApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 
 export function StudentLifePage() {
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const { data: images = [], isLoading } = useQuery({
     queryKey: ['gallery', lang],
@@ -15,7 +17,7 @@ export function StudentLifePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
-      <PageHeader title="Student Life" subtitle="Campus activities, events, and gallery" />
+      <PageHeader title={t('studentLife.pageTitle')} subtitle={t('studentLife.pageSubtitle')} />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {images.map((img: { id: string; title: string; caption?: string; imageUrl: string; category: string }) => (
           <div key={img.id} className="group relative overflow-hidden rounded-lg shadow">
@@ -29,7 +31,7 @@ export function StudentLifePage() {
           </div>
         ))}
       </div>
-      {!images.length && <p className="text-neutral-medium">No gallery images yet.</p>}
+      {!images.length && <p className="text-neutral-medium">{t('gallery.noImages')}</p>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
 import { PermissionGuard } from '../auth/ProtectedRoute';
@@ -11,7 +11,6 @@ import {
   GraduationCap,
   Camera,
   Newspaper,
-  MessageSquare,
   ClipboardList,
   Briefcase,
   Mail,
@@ -20,81 +19,214 @@ import {
   Settings,
   LogOut,
   Home,
+  ArrowLeft,
   Search,
+  Bell,
+  Menu,
+  X,
 } from 'lucide-react';
+import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
-const navItems = [
-  { to: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, perm: 'VIEW_DASHBOARD' },
-  { to: '/admin/landing/hero', labelKey: 'admin.hero', icon: Image, perm: 'MANAGE_LANDING' },
-  { to: '/admin/landing/sections', labelKey: 'admin.sections', icon: FileText, perm: 'MANAGE_LANDING' },
-  { to: '/admin/about', labelKey: 'admin.about', icon: FileText, perm: 'MANAGE_ABOUT_US' },
-  { to: '/admin/pages', labelKey: 'admin.pages', icon: FileText, perm: 'MANAGE_ABOUT_US' },
-  { to: '/admin/settings', labelKey: 'admin.settings', icon: Settings, perm: 'UPDATE_SYSTEM_CONFIG' },
-  { to: '/admin/seo', labelKey: 'SEO Settings', icon: Search, perm: 'UPDATE_SYSTEM_CONFIG' },
-  { to: '/admin/education', labelKey: 'admin.education', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
-  { to: '/admin/gallery', labelKey: 'admin.gallery', icon: Camera, perm: 'MANAGE_GALLERY' },
-  { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
-  { to: '/admin/comments', labelKey: 'admin.comments', icon: MessageSquare, perm: 'APPROVE_COMMENTS' },
-  { to: '/admin/admissions', labelKey: 'admin.admissions', icon: ClipboardList, perm: 'VIEW_ALL_ADMISSIONS' },
-  { to: '/admin/admission-requirements', labelKey: 'admin.requirements', icon: ClipboardList, perm: 'MANAGE_ADMISSION_REQUIREMENTS' },
-  { to: '/admin/careers', labelKey: 'admin.careers', icon: Briefcase, perm: 'MANAGE_JOBS' },
-  { to: '/admin/inquiries', labelKey: 'admin.inquiries', icon: Mail, perm: 'VIEW_DASHBOARD' },
-  { to: '/admin/users', labelKey: 'admin.users', icon: Users, perm: 'MANAGE_USERS' },
+interface NavItem {
+  to: string;
+  labelKey: string;
+  icon: LucideIcon;
+  perm: string;
+}
+
+interface NavSection {
+  titleKey: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    titleKey: 'admin.navOverview',
+    items: [
+      { to: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, perm: 'VIEW_DASHBOARD' },
+      { to: '/admin/notifications', labelKey: 'admin.notifications', icon: Bell, perm: 'VIEW_DASHBOARD' },
+      { to: '/admin/inquiries', labelKey: 'admin.inquiries', icon: Mail, perm: 'VIEW_DASHBOARD' },
+    ],
+  },
+  {
+    titleKey: 'admin.navAdmissions',
+    items: [
+      { to: '/admin/admissions', labelKey: 'admin.admissions', icon: ClipboardList, perm: 'VIEW_ALL_ADMISSIONS' },
+      { to: '/admin/admission-requirements', labelKey: 'admin.requirements', icon: ClipboardList, perm: 'MANAGE_ADMISSION_REQUIREMENTS' },
+    ],
+  },
+  {
+    titleKey: 'admin.navCareers',
+    items: [{ to: '/admin/careers', labelKey: 'admin.careers', icon: Briefcase, perm: 'MANAGE_JOBS' }],
+  },
+  {
+    titleKey: 'admin.navContent',
+    items: [
+      { to: '/admin/landing/hero', labelKey: 'admin.hero', icon: Image, perm: 'MANAGE_LANDING' },
+      { to: '/admin/landing/sections', labelKey: 'admin.sections', icon: FileText, perm: 'MANAGE_LANDING' },
+      { to: '/admin/about', labelKey: 'admin.about', icon: FileText, perm: 'MANAGE_ABOUT_US' },
+      { to: '/admin/pages', labelKey: 'admin.pages', icon: FileText, perm: 'MANAGE_ABOUT_US' },
+      { to: '/admin/education', labelKey: 'admin.education', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
+      { to: '/admin/gallery', labelKey: 'admin.gallery', icon: Camera, perm: 'MANAGE_GALLERY' },
+      { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
+    ],
+  },
+  {
+    titleKey: 'admin.navSystem',
+    items: [
+      { to: '/admin/users', labelKey: 'admin.users', icon: Users, perm: 'MANAGE_USERS' },
   { to: '/admin/roles', labelKey: 'admin.roles', icon: Shield, perm: 'MANAGE_ROLES' },
+  { to: '/admin/audit', labelKey: 'admin.audit', icon: Shield, perm: 'MANAGE_ROLES' },
   { to: '/admin/email', labelKey: 'admin.email', icon: Mail, perm: 'MANAGE_EMAIL_TEMPLATES' },
+      { to: '/admin/settings', labelKey: 'admin.settings', icon: Settings, perm: 'UPDATE_SYSTEM_CONFIG' },
+      { to: '/admin/seo', labelKey: 'admin.seo', icon: Search, perm: 'UPDATE_SYSTEM_CONFIG' },
+    ],
+  },
 ];
+
+const allNavItems = navSections.flatMap((section) => section.items);
 
 export function AdminLayout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const activeNav = allNavItems.find((item) => item.to === location.pathname);
 
   return (
-    <div className="flex min-h-screen bg-neutral-light">
-      <aside className="w-64 shrink-0 bg-primary-dark text-white flex flex-col">
-        <div className="p-4 border-b border-white/10">
-          <div className="font-bold text-lg">MLS Admin</div>
-          <div className="text-xs text-white/60 mt-1">{user?.fullName}</div>
+    <div className="flex min-h-screen bg-slate-50 text-neutral-dark">
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={cn(
+          'fixed inset-y-0 z-50 w-64 bg-primary-dark text-white flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 shadow-lg',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        )}
+      >
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="MLS Logo" className="h-9 w-auto object-contain bg-white/10 rounded p-1" />
+            <div>
+              <div className="font-bold text-base leading-snug tracking-tight">MLS Admin</div>
+              <div className="text-xs text-white/60 truncate max-w-[130px]">
+                {user?.fullName || 'Administrator'}
+              </div>
+            </div>
+          </div>
+          <button
+            className="lg:hidden text-white/70 hover:text-white"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {navItems.map((item) => (
-            <PermissionGuard key={item.to} permission={item.perm}>
-              <NavLink
-                to={item.to}
-                end={item.to === '/admin'}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors',
-                    isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10',
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {t(item.labelKey)}
-              </NavLink>
-            </PermissionGuard>
+
+        <nav className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+          {navSections.map((section) => (
+            <div key={section.titleKey}>
+              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+                {t(section.titleKey)}
+              </div>
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <PermissionGuard key={item.to} permission={item.perm}>
+                    <NavLink
+                      to={item.to}
+                      end={item.to === '/admin'}
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-white/20 text-white shadow-xs font-semibold'
+                            : 'text-white/75 hover:bg-white/10 hover:text-white',
+                        )
+                      }
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span>{t(item.labelKey)}</span>
+                    </NavLink>
+                  </PermissionGuard>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
-        <div className="p-3 border-t border-white/10 space-y-2">
+
+        <div className="p-3 border-t border-white/10 space-y-1 bg-black/10">
           <button
             onClick={() => navigate('/')}
-            className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-white/70 hover:bg-white/10"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <Home className="h-4 w-4" /> Site
+            <Home className="h-4 w-4 shrink-0" />
+            <span>{t('admin.site', 'View Site')}</span>
           </button>
           <button
             onClick={() => logout().then(() => navigate('/admin/login'))}
-            className="flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-white/70 hover:bg-white/10"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-colors"
           >
-            <LogOut className="h-4 w-4" /> {t('admin.logout')}
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span>{t('admin.logout', 'Logout')}</span>
           </button>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white border-b px-6 py-3 flex justify-end">
-          <LanguageSwitcher />
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-white border-b border-slate-200 px-4 lg:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <button
+              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              onClick={() => setMobileOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-lg font-bold text-slate-800 hidden sm:block">
+              {activeNav ? t(activeNav.labelKey) : t('admin.dashboard')}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-300 dark:border-slate-700 shadow-2xs"
+              title={t('common.back', 'Back')}
+            >
+              <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+              <span className="hidden sm:inline">{t('common.back', 'Back')}</span>
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all shadow-2xs"
+              title={t('admin.site', 'View Site')}
+            >
+              <Home className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('admin.site', 'View Site')}</span>
+            </button>
+            <div className="text-xs text-slate-500 hidden md:block border-s border-slate-200 ps-3">
+              {t('admin.welcomeUser', 'Welcome')},{' '}
+              <span className="font-semibold text-slate-700">{user?.fullName}</span>
+            </div>
+            <LanguageSwitcher />
+            <button
+              onClick={() => logout().then(() => navigate('/admin/login'))}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/50 transition-all shadow-2xs ms-1"
+              title={t('admin.logout', 'Logout')}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('admin.logout', 'Logout')}</span>
+            </button>
+          </div>
         </header>
-        <main className="flex-1 p-6 overflow-auto">
+
+        <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-none overflow-x-hidden">
           <Outlet />
         </main>
       </div>

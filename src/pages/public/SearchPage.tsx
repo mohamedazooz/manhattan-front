@@ -19,9 +19,9 @@ export function SearchPage() {
   const query = q.toLowerCase().trim();
   const results = query
     ? [
-        ...posts.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: 'News', title: p.title, link: `/news/${p.slug}` })),
-        ...programs.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: 'Program', title: p.title, link: `/academics/${p.slug}` })),
-        ...pages.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: 'Page', title: p.title, link: `/parents/${p.slug === 'academic-calendar' ? 'calendar' : p.slug === 'school-policies' ? 'policies' : 'forms'}` })),
+        ...posts.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typeNews'), title: p.title, link: `/news/${p.slug}` })),
+        ...programs.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typeProgram'), title: p.title, link: `/academics/${p.slug}` })),
+        ...pages.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typePage'), title: p.title, link: `/parents/${p.slug === 'academic-calendar' ? 'calendar' : p.slug === 'school-policies' ? 'policies' : 'forms'}` })),
       ]
     : [];
 
@@ -29,7 +29,7 @@ export function SearchPage() {
     <div className="mx-auto max-w-3xl px-4 py-12">
       <PageHeader title={t('nav.search')} />
       <Input
-        placeholder="Search news, programs, pages..."
+        placeholder={t('search.placeholder')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         className="mb-8"

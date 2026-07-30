@@ -1,5 +1,5 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next, useTranslation } from 'react-i18next';
 import en from './en.json';
 import ar from './ar.json';
 
@@ -25,5 +25,6 @@ export function setAppLanguage(lang: 'en' | 'ar') {
 }
 
 export function useAppLanguage(): 'en' | 'ar' {
-  return i18n.language === 'ar' ? 'ar' : 'en';
+  const { i18n } = useTranslation();
+  return i18n.language?.startsWith('ar') ? 'ar' : 'en';
 }

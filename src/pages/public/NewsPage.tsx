@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { blogApi } from '../../api';
 import { Card } from '../../components/ui/Card';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { formatDate, mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
+import { Calendar, ArrowRight } from 'lucide-react';
 
 export function NewsPage() {
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['posts', lang],
@@ -19,25 +23,60 @@ export function NewsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <SeoHead
-        title="News & Events"
-        description="Stay updated with the latest news, announcements, and events from Manhattan Language School."
+        title={t('newsPage.pageTitle')}
+        description={t('newsPage.seoDesc')}
       />
-      <PageHeader title="News & Events" subtitle="Latest updates from our school" />
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post) => (
-          <Link key={post.id} to={`/news/${post.slug}`}>
-            <Card className="h-full hover:shadow-lg transition-shadow">
-              {post.coverImageUrl && (
-                <img src={mediaUrl(post.coverImageUrl)} alt={post.title} className="w-full h-40 object-cover rounded mb-4" />
-              )}
-              <span className="text-xs text-neutral-medium">{formatDate(post.createdAt, lang)}</span>
-              <h3 className="text-lg font-semibold mt-1">{post.title}</h3>
-              <p className="text-sm text-neutral-medium mt-2 line-clamp-3">{post.content.replace(/<[^>]+>/g, '').slice(0, 120)}...</p>
-            </Card>
-          </Link>
+      <PageHeader title={t('newsPage.pageTitle')} subtitle={t('newsPage.pageSubtitle')} />
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map((post, idx) => (
+          <motion.div
+            key={post.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+          >
+            <Link to={`/news/${post.slug}`}>
+              <Card className="h-full hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                  {post.coverImageUrl && (
+                    <div className="overflow-hidden rounded-lg mb-4 h-48">
+                      <img
+                        src={mediaUrl(post.coverImageUrl)}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-neutral-medium dark:text-slate-400 mb-2">
+                    <Calendar className="h-3.5 w-3.5 text-primary dark:text-blue-400" />
+                    <span>{formatDate(post.createdAt, lang)}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-neutral-dark dark:text-slate-100 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-neutral-medium dark:text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+                    {post.content.replace(/<[^>]+>/g, '').slice(0, 120)}...
+                  </p>
+                </div>
+
+                <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-primary dark:text-blue-400">
+                  <span>{t('newsPage.readArticle')}</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Card>
+            </Link>
+          </motion.div>
         ))}
       </div>
-      {!posts.length && <p className="text-neutral-medium">No news published yet.</p>}
+
+      {!posts.length && (
+        <p className="text-neutral-medium dark:text-slate-400">{t('newsPage.noPosts')}</p>
+      )}
     </div>
   );
 }

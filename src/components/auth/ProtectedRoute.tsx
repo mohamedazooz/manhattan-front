@@ -18,7 +18,7 @@ export function ProtectedRoute({
   }
 
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/portal" replace />;
+    return <Navigate to="/portal/parent" replace />;
   }
 
   if (permission && !hasPermission(permission)) {

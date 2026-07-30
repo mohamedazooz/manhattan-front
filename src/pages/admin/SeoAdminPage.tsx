@@ -1,14 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { seoApi } from '../../api';
+import { useTranslation } from 'react-i18next';
+import { seoApi, storageApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { PageHeader } from '../../components/ui/Badge';
 import { getApiErrorMessage } from '../../lib/formData';
+import { mediaUrl } from '../../lib/utils';
 import type { SeoConfig } from '../../types';
+import { Search, Share2, BarChart2, CheckCircle, Save, Upload } from 'lucide-react';
 
 export function SeoAdminPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
+  const ogFileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingOg, setIsUploadingOg] = useState(false);
   const [form, setForm] = useState<Partial<SeoConfig>>({
     siteTitle: '',
     siteTitleAr: '',
@@ -53,27 +59,33 @@ export function SeoAdminPage() {
       setTimeout(() => setSaveSuccess(false), 3000);
     },
     onError: (error) => {
-      setSaveError(getApiErrorMessage(error, 'Failed to update SEO settings'));
+      setSaveError(getApiErrorMessage(error, t('common.errorSave', 'Failed to save SEO settings')));
       setSaveSuccess(false);
     },
   });
 
   if (isLoading) {
-    return <div className="p-6">Loading SEO settings...</div>;
+    return <div className="p-6 text-slate-500">{t('common.loading', 'Loading SEO settings...')}</div>;
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <PageHeader title="SEO & Search Engine Settings" subtitle="Manage website metadata, keywords, social preview tags, and verification IDs" />
+    <div className="w-full space-y-6">
+      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
+        <PageHeader
+          title={t('admin.seoCrud.title', 'SEO & Meta Settings')}
+          subtitle={t('admin.seoCrud.subtitle', 'Configure global meta titles, keywords, descriptions, and OpenGraph tags.')}
+        />
+      </div>
 
       {saveSuccess && (
-        <div className="p-4 bg-green-50 text-green-700 rounded-md border border-green-200">
-          SEO settings updated successfully!
+        <div className="p-4 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 flex items-center gap-2 font-medium">
+          <CheckCircle className="h-5 w-5 text-emerald-600" />
+          {t('common.saveSuccess', 'SEO Settings saved successfully!')}
         </div>
       )}
 
       {saveError && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-md border border-red-200">
+        <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 font-medium">
           {saveError}
         </div>
       )}
@@ -83,96 +95,169 @@ export function SeoAdminPage() {
           e.preventDefault();
           saveMutation.mutate();
         }}
-        className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+        className="space-y-6"
       >
-        <h2 className="text-xl font-bold text-gray-800 border-b pb-3">Basic Site Meta</h2>
+        {/* Section 1: Basic Site Meta */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-5">
+          <div className="flex items-center gap-2 border-b pb-3">
+            <Search className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-bold text-slate-800">{t('admin.seoCrud.metaTitle', 'Site Meta Info')}</h2>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Site Title (English)"
-            value={form.siteTitle || ''}
-            onChange={(e) => setForm({ ...form, siteTitle: e.target.value })}
-            placeholder="Manhattan Language School"
-            required
-          />
-          <Input
-            label="Site Title (Arabic)"
-            value={form.siteTitleAr || ''}
-            onChange={(e) => setForm({ ...form, siteTitleAr: e.target.value })}
-            placeholder="مدرسة منهاتن للغات"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label={t('admin.seoCrud.siteTitleEn', 'Site Title (English)')}
+              value={form.siteTitle || ''}
+              onChange={(e) => setForm({ ...form, siteTitle: e.target.value })}
+              placeholder="Manhattan Language School"
+              required
+            />
+            <Input
+              label={t('admin.seoCrud.siteTitleAr', 'Site Title (Arabic)')}
+              value={form.siteTitleAr || ''}
+              onChange={(e) => setForm({ ...form, siteTitleAr: e.target.value })}
+              placeholder="مدرسة منهاتن للغات"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-slate-700">{t('admin.seoCrud.metaDescriptionEn', 'Meta Description (English)')}</label>
+              <textarea
+                className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none min-h-[90px]"
+                value={form.siteDescription || ''}
+                onChange={(e) => setForm({ ...form, siteDescription: e.target.value })}
+                placeholder="Manhattan Language School provides world-class education..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-slate-700">{t('admin.seoCrud.metaDescriptionAr', 'Meta Description (Arabic)')}</label>
+              <textarea
+                className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none min-h-[90px]"
+                value={form.siteDescriptionAr || ''}
+                onChange={(e) => setForm({ ...form, siteDescriptionAr: e.target.value })}
+                placeholder="تقدم مدرسة منهاتن للغات تعليمًا عالمي المستوى..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-slate-700">{t('admin.seoCrud.keywords', 'Keywords (comma separated)')}</label>
+            <textarea
+              className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+              rows={2}
+              value={form.defaultKeywords || ''}
+              onChange={(e) => setForm({ ...form, defaultKeywords: e.target.value })}
+              placeholder="مدرسة منهاتن للغات, مدارس اللغات بالقاهرة, Manhattan Language School, International Education"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Site Description (English)</label>
-          <textarea
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-            rows={3}
-            value={form.siteDescription || ''}
-            onChange={(e) => setForm({ ...form, siteDescription: e.target.value })}
-            placeholder="Manhattan Language School provides world-class education..."
-          />
+        {/* Section 2: Social Media OpenGraph */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-5">
+          <div className="flex items-center gap-2 border-b pb-3">
+            <Share2 className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-bold text-slate-800">معاينة المشاركة في وسائل التواصل (OpenGraph)</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Input
+                label="رابط صورة المشاركة التلقائية (OG Image)"
+                value={form.defaultOgImage || ''}
+                onChange={(e) => setForm({ ...form, defaultOgImage: e.target.value })}
+                placeholder="https://example.com/images/og-share.jpg"
+              />
+              <div className="flex items-center gap-3 pt-1">
+                <input
+                  ref={ogFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsUploadingOg(true);
+                    try {
+                      const res = await storageApi.upload(file, 'seo');
+                      const url = res.data.fileUrl || res.data.url;
+                      setForm((prev) => ({ ...prev, defaultOgImage: url }));
+                    } catch (err) {
+                      console.error('Failed to upload OG Image', err);
+                    } finally {
+                      setIsUploadingOg(false);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-2xs"
+                  disabled={isUploadingOg}
+                  onClick={() => ogFileInputRef.current?.click()}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{isUploadingOg ? 'جاري الرفع...' : 'رفع صورة من الكمبيوتر'}</span>
+                </Button>
+                {form.defaultOgImage && (
+                  <span className="text-xs text-slate-500 truncate max-w-[200px]">
+                    تم التحديد: {form.defaultOgImage}
+                  </span>
+                )}
+              </div>
+
+              {form.defaultOgImage && (
+                <div className="mt-2 rounded-lg border p-2 bg-slate-50 flex items-center gap-3">
+                  <img
+                    src={mediaUrl(form.defaultOgImage)}
+                    alt="OG Preview"
+                    className="h-14 w-24 object-cover rounded border"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <div className="text-xs text-slate-600">
+                    <span className="font-semibold block">معاينة الصورة</span>
+                    <span className="text-slate-400">تظهر عند مشاركة رابط الموقع على مواقع التواصل الاجتماعي</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Input
+              label="حساب منصة X (تويتر)"
+              value={form.twitterHandle || ''}
+              onChange={(e) => setForm({ ...form, twitterHandle: e.target.value })}
+              placeholder="@manhattanschool"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Site Description (Arabic)</label>
-          <textarea
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-            rows={3}
-            value={form.siteDescriptionAr || ''}
-            onChange={(e) => setForm({ ...form, siteDescriptionAr: e.target.value })}
-            placeholder="تقدم مدرسة منهاتن للغات تعليمًا عالمي المستوى..."
-          />
+        {/* Section 3: Analytics & Webmaster */}
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-5">
+          <div className="flex items-center gap-2 border-b pb-3">
+            <BarChart2 className="h-5 w-5 text-primary" />
+            <h2 className="text-base font-bold text-slate-800">أدوات الإحصائيات وجوجل (Google Analytics & Search Console)</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="معرف تحليلات جوجل GA4"
+              value={form.googleAnalyticsId || ''}
+              onChange={(e) => setForm({ ...form, googleAnalyticsId: e.target.value })}
+              placeholder="G-XXXXXXXXXX"
+            />
+            <Input
+              label="كود التحقق من Google Search Console"
+              value={form.googleSearchConsoleTag || ''}
+              onChange={(e) => setForm({ ...form, googleSearchConsoleTag: e.target.value })}
+              placeholder="google-site-verification-string..."
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Default Meta Keywords (comma separated)</label>
-          <textarea
-            className="w-full border rounded-md p-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
-            rows={2}
-            value={form.defaultKeywords || ''}
-            onChange={(e) => setForm({ ...form, defaultKeywords: e.target.value })}
-            placeholder="Manhattan Language School, Cairo schools, International Education, مدرسة منهاتن للغات"
-          />
-        </div>
-
-        <h2 className="text-xl font-bold text-gray-800 border-b pb-3 pt-4">Social Media & Sharing (Open Graph / Twitter)</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Default OG Image URL"
-            value={form.defaultOgImage || ''}
-            onChange={(e) => setForm({ ...form, defaultOgImage: e.target.value })}
-            placeholder="https://example.com/images/og-share.jpg"
-          />
-          <Input
-            label="Twitter Handle"
-            value={form.twitterHandle || ''}
-            onChange={(e) => setForm({ ...form, twitterHandle: e.target.value })}
-            placeholder="@manhattanschool"
-          />
-        </div>
-
-        <h2 className="text-xl font-bold text-gray-800 border-b pb-3 pt-4">Analytics & Search Console</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Google Analytics ID (GA4)"
-            value={form.googleAnalyticsId || ''}
-            onChange={(e) => setForm({ ...form, googleAnalyticsId: e.target.value })}
-            placeholder="G-XXXXXXXXXX"
-          />
-          <Input
-            label="Google Search Console Verification Tag"
-            value={form.googleSearchConsoleTag || ''}
-            onChange={(e) => setForm({ ...form, googleSearchConsoleTag: e.target.value })}
-            placeholder="google-site-verification code string"
-          />
-        </div>
-
-        <div className="pt-4 flex justify-end">
-          <Button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? 'Saving...' : 'Save SEO Settings'}
+        <div className="flex justify-end pt-2">
+          <Button type="submit" disabled={saveMutation.isPending} className="py-2.5 px-6 shadow-sm flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            <span>{saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ إعدادات SEO الشاملة'}</span>
           </Button>
         </div>
       </form>
