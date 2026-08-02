@@ -19,7 +19,7 @@ import {
 import { landingApi, blogApi, educationApi, requirementsApi, cmsApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/Badge';
-import { mediaUrl } from '../../lib/utils';
+import { getBilingualText, mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 import { Link, useNavigate } from 'react-router-dom';
@@ -237,18 +237,66 @@ export function HomePage() {
 
       {/* Chairman Inspiring Quote Banner */}
       {chairmanSection && (
-        <section className="py-16 bg-gradient-to-r from-slate-900 via-primary-dark to-slate-950 text-white relative overflow-hidden border-y border-white/10">
-          <div className="mx-auto max-w-5xl px-4 text-center space-y-6 relative z-10">
-            <div className="text-4xl text-gold font-serif">“</div>
-            <blockquote className="text-xl sm:text-2xl font-semibold leading-relaxed text-slate-100 max-w-4xl mx-auto italic">
-              {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) || t('quotes.chairman', 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.')}
-            </blockquote>
-            <div className="pt-2">
-              <span className="text-sm font-bold text-gold tracking-wide uppercase">
-                {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) || t('app.name')}
-              </span>
-              <p className="text-xs text-slate-400 mt-0.5">{t('nav.about')}</p>
-            </div>
+        <section className="py-20 bg-gradient-to-br from-slate-950 via-primary-dark to-slate-900 text-white relative overflow-hidden border-y border-white/5">
+          {/* Subtle radial glow behind the content */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(212,175,55,0.06) 0%, transparent 70%)' }} />
+
+          <div className="mx-auto max-w-5xl px-4 text-center relative z-10">
+            {/* ── Director Name & Title (above the quote) ── */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="mb-10 space-y-3"
+            >
+              {/* Decorative top line */}
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <span className="block h-px w-16 bg-gradient-to-r from-transparent to-gold/60" />
+                <span className="block h-1.5 w-1.5 rounded-full bg-gold/80" />
+                <span className="block h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
+              </div>
+
+              <h3
+                className="text-2xl sm:text-3xl font-extrabold tracking-wide"
+                style={{
+                  background: 'linear-gradient(135deg, #d4af37 0%, #f5e6a3 40%, #d4af37 70%, #b8942e 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: 'none',
+                }}
+              >
+                الأستاذ الدكتور / إبراهيم عزوز
+              </h3>
+              <p className="text-sm sm:text-base font-semibold text-slate-300 tracking-widest uppercase" style={{ letterSpacing: '0.25em' }}>
+                مدير المدرسة
+              </p>
+
+              {/* Decorative bottom line */}
+              <div className="flex items-center justify-center gap-3 pt-1">
+                <span className="block h-px w-24 bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+              </div>
+            </motion.div>
+
+            {/* ── Quote ── */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="text-5xl text-gold/70 font-serif leading-none select-none">"</div>
+              <blockquote className="text-xl sm:text-2xl font-semibold leading-relaxed text-slate-100 max-w-4xl mx-auto italic -mt-2">
+                {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) || t('quotes.chairman', 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.')}
+              </blockquote>
+              <div className="pt-2">
+                <span className="text-sm font-bold text-gold tracking-wide uppercase">
+                  {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) || t('app.name')}
+                </span>
+                <p className="text-xs text-slate-400 mt-0.5">{t('nav.about')}</p>
+              </div>
+            </motion.div>
           </div>
         </section>
       )}
@@ -510,9 +558,9 @@ export function HomePage() {
                   onChange={(e) => setSelectedGrade(e.target.value)}
                 >
                   <option value="">{t('requirementsWidget.choosePlaceholder', '-- Choose Grade Level --')}</option>
-                  {requirements.map((r: { id: string; gradeLevel: string; title: string }) => (
+                  {requirements.map((r: { id: string; gradeLevel: string; title: string; titleAr?: string }) => (
                     <option key={r.id} value={r.gradeLevel}>
-                      {r.gradeLevel} — {r.title}
+                      {String(t(`grades.${r.gradeLevel}`, r.gradeLevel))} — {getBilingualText(r, 'title', lang)}
                     </option>
                   ))}
                 </select>
@@ -520,8 +568,14 @@ export function HomePage() {
 
               {currentReq ? (
                 <div className="p-4 bg-primary-light/40 dark:bg-slate-800/80 rounded-xl space-y-3 border border-primary/20 animate-fade-in">
-                  <h4 className="font-bold text-primary-dark dark:text-blue-400">{currentReq.title}</h4>
-                  {currentReq.description && <p className="text-xs text-neutral-medium dark:text-slate-400">{currentReq.description}</p>}
+                  <h4 className="font-bold text-primary-dark dark:text-blue-400">
+                    {getBilingualText(currentReq, 'title', lang)}
+                  </h4>
+                  {(getBilingualText(currentReq, 'description', lang)) && (
+                    <p className="text-xs text-neutral-medium dark:text-slate-400">
+                      {getBilingualText(currentReq, 'description', lang)}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-4 text-xs font-semibold text-neutral-dark dark:text-slate-200">
                     {currentReq.minAge && <div>{t('requirementsWidget.minAge', 'Min Age:')} <span className="text-primary dark:text-blue-400">{currentReq.minAge} {t('requirementsWidget.years', 'yrs')}</span></div>}
                     {currentReq.maxAge && <div>{t('requirementsWidget.maxAge', 'Max Age:')} <span className="text-primary dark:text-blue-400">{currentReq.maxAge} {t('requirementsWidget.years', 'yrs')}</span></div>}
@@ -531,7 +585,7 @@ export function HomePage() {
                       <p className="text-xs font-bold text-neutral-dark dark:text-slate-200 mb-1">{t('requirementsWidget.requiredDocs', 'Required Documents:')}</p>
                       <div className="flex flex-wrap gap-1">
                         {currentReq.requiredDocumentTypes.map((doc: string) => (
-                          <span key={doc} className="text-[11px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-neutral-dark dark:text-slate-300 px-2 py-0.5 rounded shadow-xs font-mono">
+                          <span key={doc} className="text-[11px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-neutral-dark dark:text-slate-300 px-2 py-0.5 rounded shadow-xs font-semibold">
                             📄 {doc.replace('_', ' ')}
                           </span>
                         ))}

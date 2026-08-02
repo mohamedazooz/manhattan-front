@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
+import { useTheme } from '../../lib/theme';
 import { PermissionGuard } from '../auth/ProtectedRoute';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { cn } from '../../lib/utils';
@@ -24,6 +25,8 @@ import {
   Bell,
   Menu,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -53,7 +56,7 @@ const navSections: NavSection[] = [
     titleKey: 'admin.navAdmissions',
     items: [
       { to: '/admin/admissions', labelKey: 'admin.admissions', icon: ClipboardList, perm: 'VIEW_ALL_ADMISSIONS' },
-      { to: '/admin/admission-requirements', labelKey: 'admin.requirements', icon: ClipboardList, perm: 'MANAGE_ADMISSION_REQUIREMENTS' },
+      { to: '/admin/admission-requirements', labelKey: 'admin.navRequirements', icon: ClipboardList, perm: 'MANAGE_ADMISSION_REQUIREMENTS' },
     ],
   },
   {
@@ -67,18 +70,18 @@ const navSections: NavSection[] = [
       { to: '/admin/landing/sections', labelKey: 'admin.sections', icon: FileText, perm: 'MANAGE_LANDING' },
       { to: '/admin/about', labelKey: 'admin.about', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/pages', labelKey: 'admin.pages', icon: FileText, perm: 'MANAGE_ABOUT_US' },
-      { to: '/admin/education', labelKey: 'admin.education', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
-      { to: '/admin/gallery', labelKey: 'admin.gallery', icon: Camera, perm: 'MANAGE_GALLERY' },
+      { to: '/admin/education', labelKey: 'admin.navEducation', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
+      { to: '/admin/gallery', labelKey: 'admin.navGallery', icon: Camera, perm: 'MANAGE_GALLERY' },
       { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
     ],
   },
   {
     titleKey: 'admin.navSystem',
     items: [
-      { to: '/admin/users', labelKey: 'admin.users', icon: Users, perm: 'MANAGE_USERS' },
-  { to: '/admin/roles', labelKey: 'admin.roles', icon: Shield, perm: 'MANAGE_ROLES' },
-  { to: '/admin/audit', labelKey: 'admin.audit', icon: Shield, perm: 'MANAGE_ROLES' },
-  { to: '/admin/email', labelKey: 'admin.email', icon: Mail, perm: 'MANAGE_EMAIL_TEMPLATES' },
+      { to: '/admin/users', labelKey: 'admin.navUsers', icon: Users, perm: 'MANAGE_USERS' },
+      { to: '/admin/roles', labelKey: 'admin.navRoles', icon: Shield, perm: 'MANAGE_ROLES' },
+      { to: '/admin/audit', labelKey: 'admin.audit', icon: Shield, perm: 'MANAGE_ROLES' },
+      { to: '/admin/email', labelKey: 'admin.navEmail', icon: Mail, perm: 'MANAGE_EMAIL_TEMPLATES' },
       { to: '/admin/settings', labelKey: 'admin.settings', icon: Settings, perm: 'UPDATE_SYSTEM_CONFIG' },
       { to: '/admin/seo', labelKey: 'admin.seo', icon: Search, perm: 'UPDATE_SYSTEM_CONFIG' },
     ],
@@ -90,6 +93,7 @@ const allNavItems = navSections.flatMap((section) => section.items);
 export function AdminLayout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -97,7 +101,7 @@ export function AdminLayout() {
   const activeNav = allNavItems.find((item) => item.to === location.pathname);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-neutral-dark">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-neutral-dark dark:text-slate-100 transition-colors">
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -180,15 +184,15 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200 px-4 lg:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-2xs transition-colors">
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold text-slate-800 hidden sm:block">
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
               {activeNav ? t(activeNav.labelKey) : t('admin.dashboard')}
             </h1>
           </div>
@@ -210,9 +214,18 @@ export function AdminLayout() {
               <Home className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{t('admin.site', 'View Site')}</span>
             </button>
-            <div className="text-xs text-slate-500 hidden md:block border-s border-slate-200 ps-3">
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-slate-600 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            <div className="text-xs text-slate-500 dark:text-slate-400 hidden md:block border-s border-slate-200 dark:border-slate-700 ps-3">
               {t('admin.welcomeUser', 'Welcome')},{' '}
-              <span className="font-semibold text-slate-700">{user?.fullName}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{user?.fullName}</span>
             </div>
             <LanguageSwitcher />
             <button

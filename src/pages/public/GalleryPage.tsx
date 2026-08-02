@@ -3,57 +3,61 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon, Filter, Sparkles, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { galleryApi } from '../../api';
-import { mediaUrl } from '../../lib/utils';
+import { getBilingualText, mediaUrl } from '../../lib/utils';
+import { useAppLanguage } from '../../i18n';
 
 interface GalleryItem {
   id: string;
   title: string;
+  titleAr?: string;
   category: string;
   imageUrl?: string;
   media_url?: string;
   description?: string;
+  descriptionAr?: string;
   caption?: string;
+  captionAr?: string;
 }
 
 const defaultGalleryItems: GalleryItem[] = [
-  { id: '1', title: 'Smart Classroom & Interactive Learning', category: 'ACADEMICS', media_url: '/photos/photo1.jpeg', description: 'Modern bilingual classrooms equipped with digital smart boards.' },
-  { id: '2', title: 'Main Campus & Building Entrance', category: 'CAMPUS', media_url: '/photos/hero1.jpeg', description: 'State of the art campus facilities and welcoming atmosphere.' },
-  { id: '3', title: 'School Activities & Honors Ceremony', category: 'EVENTS', media_url: '/photos/photo2.jpeg', description: 'Celebrating academic excellence and student achievements.' },
-  { id: '4', title: 'Sports Grounds & Physical Fitness', category: 'SPORTS', media_url: '/photos/hero3.jpeg', description: 'Spacious sports fields and physical education facilities.' },
-  { id: '5', title: 'Interactive Science & Computer Labs', category: 'ACADEMICS', media_url: '/photos/photo3.jpeg', description: 'Hands-on scientific experiments and modern computer labs.' },
-  { id: '6', title: 'School Cultural Performance & Stage', category: 'EVENTS', media_url: '/photos/photo4.jpeg', description: 'Annual cultural festival, arts, and theatrical performances.' },
-  { id: '7', title: 'Kindergarten Activity Corner', category: 'CAMPUS', media_url: '/photos/hero2.jpeg', description: 'Safe, colorful, and fun environment for young learners.' },
-  { id: '8', title: 'Football & Outdoor Athletics Field', category: 'SPORTS', media_url: '/photos/photo5.jpeg', description: 'Professional sports coaching and team competitions.' },
-  { id: '9', title: 'Students Teamwork & Collaborative Projects', category: 'ACADEMICS', media_url: '/photos/hero4.jpeg', description: 'Fostering teamwork, problem solving, and creativity.' },
-  { id: '10', title: 'Annual Sports Day & Medals', category: 'EVENTS', media_url: '/photos/photo6.jpeg', description: 'Encouraging sportsmanship and healthy active lifestyle.' },
-  { id: '11', title: 'School Library & Quiet Reading Zone', category: 'CAMPUS', media_url: '/photos/photo7.jpeg', description: 'Rich collection of bilingual books, journals, and digital media.' },
-  { id: '12', title: 'Art & Design Studio Showcase', category: 'ACADEMICS', media_url: '/photos/photo8.jpeg', description: 'Unleashing artistic talents and creative expression.' },
+  { id: '1', title: 'Smart Classroom & Interactive Learning', titleAr: 'فصل دراسي ذكي وتعلّم تفاعلي', category: 'ACADEMICS', media_url: '/photos/photo1.jpeg', description: 'Modern bilingual classrooms equipped with digital smart boards.', descriptionAr: 'فصول دراسية حديثة ثنائية اللغة مجهزة بشاشات ذكية تفاعلية.' },
+  { id: '2', title: 'Main Campus & Building Entrance', titleAr: 'الحرم المدرسي الرئيسي والمدخل', category: 'CAMPUS', media_url: '/photos/hero1.jpeg', description: 'State of the art campus facilities and welcoming atmosphere.', descriptionAr: 'مرافق مدرسية حديثة وبيئة تعليمية محفزة ودافئة.' },
+  { id: '3', title: 'School Activities & Honors Ceremony', titleAr: 'أنشطة المدرسة وحفل تكريم المتفوقين', category: 'EVENTS', media_url: '/photos/photo2.jpeg', description: 'Celebrating academic excellence and student achievements.', descriptionAr: 'الاحتفال بالتفوق الأكاديمي وإنجازات الطلاب المتميزين.' },
+  { id: '4', title: 'Sports Grounds & Physical Fitness', titleAr: 'الملاعب الرياضية والمرفق البدني', category: 'SPORTS', media_url: '/photos/hero3.jpeg', description: 'Spacious sports fields and physical education facilities.', descriptionAr: 'ملاعب رياضية واسعة ومجهزة للتربية البدنية والأنشطة.' },
+  { id: '5', title: 'Interactive Science & Computer Labs', titleAr: 'معامل العلوم والحاسب التفاعلية', category: 'ACADEMICS', media_url: '/photos/photo3.jpeg', description: 'Hands-on scientific experiments and modern computer labs.', descriptionAr: 'تجارب علمية عملية ومختبرات حاسوبية متطورة.' },
+  { id: '6', title: 'School Cultural Performance & Stage', titleAr: 'المسرح المدرسي والعروض الثقافية', category: 'EVENTS', media_url: '/photos/photo4.jpeg', description: 'Annual cultural festival, arts, and theatrical performances.', descriptionAr: 'المهرجان الثقافي السنوي والعروض الفنية والمسرحية.' },
+  { id: '7', title: 'Kindergarten Activity Corner', titleAr: 'ركن أنشطة مرحلة رياض الأطفال', category: 'CAMPUS', media_url: '/photos/hero2.jpeg', description: 'Safe, colorful, and fun environment for young learners.', descriptionAr: 'بيئة آمنة ومبهجة ومجهزة لصغار الطلاب.' },
+  { id: '8', title: 'Football & Outdoor Athletics Field', titleAr: 'ملعب كرة القدم والألعاب الخارجية', category: 'SPORTS', media_url: '/photos/photo5.jpeg', description: 'Professional sports coaching and team competitions.', descriptionAr: 'تدريب رياضي متخصص ومنافسات فرق المدارس.' },
+  { id: '9', title: 'Students Teamwork & Collaborative Projects', titleAr: 'العمل الجماعي ومشاريع الطلاب', category: 'ACADEMICS', media_url: '/photos/hero4.jpeg', description: 'Fostering teamwork, problem solving, and creativity.', descriptionAr: 'تعزيز مهارات التعاون وحل المشكلات والابتكار.' },
+  { id: '10', title: 'Annual Sports Day & Medals', titleAr: 'اليوم الرياضي السنوي وتوزيع الجوائز', category: 'EVENTS', media_url: '/photos/photo6.jpeg', description: 'Encouraging sportsmanship and healthy active lifestyle.', descriptionAr: 'تشجيع الروح الرياضية ونمط الحياة الصحي والنشط.' },
+  { id: '11', title: 'School Library & Quiet Reading Zone', titleAr: 'المكتبة المدرسية وركن القراءة الهادئ', category: 'CAMPUS', media_url: '/photos/photo7.jpeg', description: 'Rich collection of bilingual books, journals, and digital media.', descriptionAr: 'مجموعة غنية من الكتب ثنائية اللغة والمجلات والمصادر الرقمية.' },
+  { id: '12', title: 'Art & Design Studio Showcase', titleAr: 'استوديو الفنون والمعرض الإبداعي', category: 'ACADEMICS', media_url: '/photos/photo8.jpeg', description: 'Unleashing artistic talents and creative expression.', descriptionAr: 'إطلاق المواهب الفنية والتعبير الإبداعي للطلاب.' },
 ];
 
 const ITEMS_PER_PAGE = 8;
 
 export function GalleryPage() {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
+  const lang = useAppLanguage();
+  const isRtl = lang === 'ar';
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [lightboxImage, setLightboxImage] = useState<GalleryItem | null>(null);
 
   const { data: rawItems = [], isLoading } = useQuery<GalleryItem[]>({
-    queryKey: ['public-gallery', i18n.language],
-    queryFn: () => galleryApi.list(i18n.language).then((res) => res.data),
+    queryKey: ['public-gallery', lang],
+    queryFn: () => galleryApi.list(lang).then((res) => res.data),
   });
 
   const galleryItems = useMemo(() => {
-    if (rawItems && rawItems.length > 0) {
-      return rawItems.map((item) => ({
-        ...item,
-        media_url: item.imageUrl || item.media_url || '/photos/photo1.jpeg',
-        description: item.caption || item.description,
-      }));
-    }
-    return defaultGalleryItems;
-  }, [rawItems]);
+    const items = rawItems && rawItems.length > 0 ? rawItems : defaultGalleryItems;
+    return items.map((item) => ({
+      ...item,
+      title: getBilingualText(item, 'title', lang),
+      media_url: item.imageUrl || item.media_url || '/photos/photo1.jpeg',
+      description: getBilingualText(item, 'caption', lang) || getBilingualText(item, 'description', lang),
+    }));
+  }, [rawItems, lang]);
 
   const categories = useMemo(() => {
     return ['all', ...Array.from(new Set(galleryItems.map((item) => item.category).filter(Boolean)))];

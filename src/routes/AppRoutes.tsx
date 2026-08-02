@@ -19,6 +19,7 @@ import { CareersPage } from '../pages/public/CareersPage';
 import { CareerDetailPage } from '../pages/public/CareerDetailPage';
 import { ContactPage } from '../pages/public/ContactPage';
 import { StaticParentPage } from '../pages/public/StaticParentPage';
+import { FormsAndDocumentsPage } from '../pages/public/FormsAndDocumentsPage';
 import { SearchPage } from '../pages/public/SearchPage';
 import { LoginPage, AdminLoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
@@ -75,9 +76,8 @@ export function AppRoutes() {
               <Route path="careers" element={<CareersPage />} />
               <Route path="careers/:id" element={<CareerDetailPage />} />
               <Route path="contact" element={<ContactPage />} />
-              <Route path="parents/calendar" element={<StaticParentPage />} />
               <Route path="parents/policies" element={<StaticParentPage />} />
-              <Route path="parents/forms" element={<StaticParentPage />} />
+              <Route path="parents/forms" element={<FormsAndDocumentsPage />} />
               <Route path="search" element={<SearchPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<Navigate to="/register/parent" replace />} />

@@ -23,10 +23,11 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useAppLanguage } from '../../i18n';
 import type { Job } from '../../types';
 
+import { getBilingualText } from '../../lib/utils';
+
 export function CareersPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
-  const isAr = lang === 'ar';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
@@ -53,8 +54,8 @@ export function CareersPage() {
   });
 
   const filteredJobs = jobs.filter((job: Job) => {
-    const title = (isAr && job.titleAr ? job.titleAr : job.title).toLowerCase();
-    const location = (isAr && job.locationAr ? job.locationAr : job.location).toLowerCase();
+    const title = getBilingualText(job, 'title', lang).toLowerCase();
+    const location = getBilingualText(job, 'location', lang).toLowerCase();
     const matchesSearch =
       title.includes(searchTerm.toLowerCase()) || location.includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'ALL' || job.employmentType === selectedType;
@@ -199,9 +200,9 @@ export function CareersPage() {
         {filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredJobs.map((job: Job) => {
-              const jobTitle = isAr && job.titleAr ? job.titleAr : job.title;
-              const jobDesc = isAr && job.descriptionAr ? job.descriptionAr : job.description;
-              const jobLoc = isAr && job.locationAr ? job.locationAr : job.location;
+              const jobTitle = getBilingualText(job, 'title', lang);
+              const jobDesc = getBilingualText(job, 'description', lang);
+              const jobLoc = getBilingualText(job, 'location', lang);
 
               return (
                 <div
@@ -278,7 +279,7 @@ export function CareersPage() {
                   {t('careers.applicationTitle')}
                 </span>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {isAr && applyingJob.titleAr ? applyingJob.titleAr : applyingJob.title}
+                  {getBilingualText(applyingJob, 'title', lang)}
                 </h2>
               </div>
               <button
@@ -398,24 +399,59 @@ export function CareersPage() {
 
                 {/* CV Upload Field */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('careers.uploadCvLabel')}
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                    <span>{t('careers.uploadCvLabel')} <span className="text-red-500">*</span></span>
+                    <span className="text-[10px] text-slate-400 font-normal">PDF, DOC, DOCX, PNG, JPG (الحجم الأقصى 5MB)</span>
                   </label>
-                  <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-primary transition-colors bg-slate-50/50 dark:bg-slate-800/50">
+                  <div className={`relative border-2 border-dashed rounded-2xl p-5 text-center transition-all ${
+                    resumeFile
+                      ? 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-500/10'
+                      : 'border-slate-300 dark:border-slate-700 hover:border-amber-500 bg-slate-50/60 dark:bg-slate-800/60'
+                  }`}>
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                      required
                       onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                     />
-                    <div className="flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 text-sm">
-                      <Upload className="w-5 h-5 text-primary dark:text-gold" />
-                      <span>
-                        {resumeFile
-                          ? resumeFile.name
-                          : t('careers.uploadCvPlaceholder')}
-                      </span>
-                    </div>
+                    
+                    {resumeFile ? (
+                      <div className="flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-200">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                            📄
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold truncate max-w-xs">{resumeFile.name}</div>
+                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
+                              {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB · {resumeFile.name.split('.').pop()?.toUpperCase()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setResumeFile(null);
+                          }}
+                          className="relative z-20 text-red-500 hover:text-red-700 font-bold px-2 py-1 hover:underline text-xs"
+                        >
+                          تغيير الملف
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 text-xs">
+                        <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 mb-0.5">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <span className="font-bold text-slate-800 dark:text-slate-100">
+                          {t('careers.uploadCvPlaceholder')}
+                        </span>
+                        <span className="text-[11px] text-slate-400">اضغط هنا لاختيار ملف السيرة الذاتية</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

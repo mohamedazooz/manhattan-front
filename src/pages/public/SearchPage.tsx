@@ -7,6 +7,8 @@ import { Input } from '../../components/ui/Input';
 import { PageHeader } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
 
+import { getBilingualText } from '../../lib/utils';
+
 export function SearchPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
@@ -19,9 +21,18 @@ export function SearchPage() {
   const query = q.toLowerCase().trim();
   const results = query
     ? [
-        ...posts.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typeNews'), title: p.title, link: `/news/${p.slug}` })),
-        ...programs.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typeProgram'), title: p.title, link: `/academics/${p.slug}` })),
-        ...pages.filter((p) => p.title.toLowerCase().includes(query)).map((p) => ({ type: t('search.typePage'), title: p.title, link: `/parents/${p.slug === 'academic-calendar' ? 'calendar' : p.slug === 'school-policies' ? 'policies' : 'forms'}` })),
+        ...posts
+          .map((p) => ({ ...p, localizedTitle: getBilingualText(p, 'title', lang) }))
+          .filter((p) => p.localizedTitle.toLowerCase().includes(query))
+          .map((p) => ({ type: t('search.typeNews'), title: p.localizedTitle, link: `/news/${p.slug}` })),
+        ...programs
+          .map((p) => ({ ...p, localizedTitle: getBilingualText(p, 'title', lang) }))
+          .filter((p) => p.localizedTitle.toLowerCase().includes(query))
+          .map((p) => ({ type: t('search.typeProgram'), title: p.localizedTitle, link: `/academics/${p.slug}` })),
+        ...pages
+          .map((p) => ({ ...p, localizedTitle: getBilingualText(p, 'title', lang) }))
+          .filter((p) => p.localizedTitle.toLowerCase().includes(query) && p.slug !== 'academic-calendar')
+          .map((p) => ({ type: t('search.typePage'), title: p.localizedTitle, link: `/parents/${p.slug === 'school-policies' ? 'policies' : 'forms'}` })),
       ]
     : [];
 

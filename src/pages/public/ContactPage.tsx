@@ -58,9 +58,20 @@ export function ContactPage() {
                   <div className="font-semibold text-sm text-neutral-dark dark:text-slate-100">
                     {t('contact.address')}
                   </div>
-                  <div className="text-sm text-neutral-medium dark:text-slate-400 mt-0.5">
-                    {config.contact_address_ar || config.contact_address || 'القاهرة، مصر (Cairo, Egypt)'}
-                  </div>
+                  <a
+                    href={config.google_maps_url || 'https://maps.app.goo.gl/aCF8oV9RvreCyaXu9'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-neutral-medium dark:text-slate-400 hover:text-primary dark:hover:text-gold transition-colors mt-0.5 inline-block group"
+                    title="فتح الموقع على خرائط جوجل"
+                  >
+                    <span>
+                      {config.contact_address_ar || config.contact_address || 'مدينة الشيخ زايد، محافظة الجيزة، مصر'}
+                    </span>
+                    <span className="ms-1.5 text-[10px] bg-primary-light dark:bg-slate-800 text-primary dark:text-gold px-1.5 py-0.5 rounded font-bold group-hover:bg-primary group-hover:text-white transition-all">
+                      📍 Map
+                    </span>
+                  </a>
                 </div>
               </div>
 
@@ -231,17 +242,15 @@ export function ContactPage() {
             <p className="text-xs text-slate-400 mt-1">
               {config.contact_address_ar || config.contact_address || 'Sheikh Zayed, Giza, Egypt'}
             </p>
-            {config.google_maps_url && (
-              <a
-                href={config.google_maps_url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md inline-flex items-center gap-1.5"
-              >
-                <MapPin className="h-4 w-4" />
-                <span>{t('contact.openMaps')}</span>
-              </a>
-            )}
+            <a
+              href={config.google_maps_url || 'https://maps.app.goo.gl/aCF8oV9RvreCyaXu9'}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md inline-flex items-center gap-1.5"
+            >
+              <MapPin className="h-4 w-4" />
+              <span>{t('contact.openMaps')}</span>
+            </a>
           </div>
         </motion.div>
 

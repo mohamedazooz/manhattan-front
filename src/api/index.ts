@@ -150,10 +150,12 @@ export const careersApi = {
 };
 
 export const jobRequirementsApi = {
-  list: (all?: boolean) =>
-    all ? api.get('/job-requirements/admin') : api.get('/job-requirements'),
-  byType: (employmentType?: string) =>
-    api.get('/job-requirements/by-type', { params: { employmentType } }),
+  list: (all?: boolean, lang?: string) =>
+    all
+      ? api.get('/job-requirements/admin')
+      : api.get('/job-requirements', { params: { lang: langParam(lang) } }),
+  byType: (employmentType?: string, lang?: string) =>
+    api.get('/job-requirements/by-type', { params: { employmentType, lang: langParam(lang) } }),
 };
 
 export const admissionsApi = {
@@ -175,8 +177,10 @@ export const admissionsApi = {
 };
 
 export const requirementsApi = {
-  list: (all?: boolean) =>
-    all ? api.get('/admission-requirements/admin') : api.get('/admission-requirements'),
+  list: (all?: boolean, lang?: string) =>
+    all
+      ? api.get('/admission-requirements/admin')
+      : api.get('/admission-requirements', { params: { lang: langParam(lang) } }),
   create: (data: object) => api.post('/admission-requirements', data),
   update: (id: string, data: object) => api.patch(`/admission-requirements/${id}`, data),
   remove: (id: string) => api.delete(`/admission-requirements/${id}`),

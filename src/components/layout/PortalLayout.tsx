@@ -84,7 +84,7 @@ export function PortalLayout({ portalType }: PortalLayoutProps) {
           <Link to="/contact" className="hover:text-primary">{t('nav.contact')}</Link>
           {portalType === 'parent' ? (
             <>
-              <Link to="/parents/calendar" className="hover:text-primary">{t('portal.parent.calendar')}</Link>
+              <Link to="/parents/forms" className="hover:text-primary">{t('footer.forms')}</Link>
               <Link to="/parents/policies" className="hover:text-primary">{t('portal.parent.policies')}</Link>
             </>
           ) : (

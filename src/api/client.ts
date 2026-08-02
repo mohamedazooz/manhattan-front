@@ -60,6 +60,6 @@ api.interceptors.response.use(
   },
 );
 
-export function langParam(lang: string) {
+export function langParam(lang?: string) {
   return lang === 'ar' ? 'ar' : 'en';
 }

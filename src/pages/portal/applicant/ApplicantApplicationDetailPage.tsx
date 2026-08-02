@@ -182,7 +182,7 @@ export function ApplicantApplicationDetailPage() {
                 <option key={val} value={val}>{label}</option>
               ))}
             </Select>
-            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             <Button onClick={() => uploadMutation.mutate()} disabled={!file || uploadMutation.isPending}>
               {t('admission.uploadDocument')}
             </Button>

@@ -60,8 +60,8 @@ export function DashboardCharts({ stats }: Props) {
   // 3. Content Modules Publishing Status
   const contentModules = [
     { name: t('admin.blog', 'Articles & News'), published: stats.blog?.published || 0, draft: stats.blog?.draft || 0, icon: FileText, color: 'from-blue-600 to-cyan-500' },
-    { name: t('admin.gallery', 'Photo Gallery'), published: stats.gallery?.published || 0, draft: stats.gallery?.draft || 0, icon: Layers, color: 'from-purple-600 to-pink-500' },
-    { name: t('admin.education', 'Academic Programs'), published: stats.education?.published || 0, draft: stats.education?.draft || 0, icon: Sparkles, color: 'from-emerald-600 to-teal-500' },
+    { name: t('admin.navGallery', 'Photo Gallery'), published: stats.gallery?.published || 0, draft: stats.gallery?.draft || 0, icon: Layers, color: 'from-purple-600 to-pink-500' },
+    { name: t('admin.navEducation', 'Academic Programs'), published: stats.education?.published || 0, draft: stats.education?.draft || 0, icon: Sparkles, color: 'from-emerald-600 to-teal-500' },
     { name: t('admin.pages', 'Static Pages'), published: stats.pages?.published || 0, draft: stats.pages?.draft || 0, icon: PieChartIcon, color: 'from-amber-600 to-orange-500' },
     { name: t('admin.about', 'About Us Sections'), published: stats.aboutUs?.published || 0, draft: stats.aboutUs?.draft || 0, icon: Users, color: 'from-indigo-600 to-blue-500' },
   ];

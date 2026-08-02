@@ -132,6 +132,17 @@ export interface Admission {
   parentRelationship?: string;
   parentNationality?: string;
   parentEmployer?: string;
+  motherName?: string;
+  motherNationality?: string;
+  motherOccupation?: string;
+  motherEmployerAddress?: string;
+  motherPhone?: string;
+  emergencyContactAddress?: string;
+  emergencyContactPhone?: string;
+  healthConditions?: Record<string, boolean> | any;
+  healthNotes?: string;
+  signedByName?: string;
+  signedDate?: string;
   termsAccepted?: boolean;
   currentStep?: number;
   status: string;

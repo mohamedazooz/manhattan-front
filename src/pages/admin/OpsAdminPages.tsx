@@ -812,17 +812,17 @@ export function AdminRequirementsPage() {
   const [form, setForm] = useState({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 });
   return (
     <div>
-      <PageHeader title="Admission Requirements" />
-      <form className="grid md:grid-cols-3 gap-3 mb-6" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => qc.invalidateQueries({ queryKey: ['requirements'] })); }}>
-        <Input label="Grade" value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} required />
-        <Input label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-        <Button type="submit">Add</Button>
+      <PageHeader title="Admission Requirements" subtitle="Manage grade-specific admission criteria and required documents." />
+      <form className="grid md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs items-end" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => { setForm({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 }); qc.invalidateQueries({ queryKey: ['requirements'] }); }); }}>
+        <Input label="Grade" value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} placeholder="e.g. Grade 1" required />
+        <Input label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Primary Admission Requirements" required />
+        <Button type="submit" className="w-full">Add Requirement</Button>
       </form>
       <DataTable data={items} columns={[
-        { key: 'grade', header: 'Grade', render: (r: { gradeLevel: string }) => r.gradeLevel },
-        { key: 'title', header: 'Title', render: (r: { title: string }) => r.title },
+        { key: 'grade', header: 'Grade', render: (r: { gradeLevel: string }) => <span className="font-semibold text-slate-900 dark:text-slate-100">{r.gradeLevel}</span> },
+        { key: 'title', header: 'Title', render: (r: { title: string }) => <span className="text-slate-800 dark:text-slate-200">{r.title}</span> },
         { key: 'actions', header: 'Actions', render: (r: { id: string }) => (
-          <Button variant="primary" className="py-1 px-2 text-xs" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>Delete</Button>
+          <Button variant="danger" className="py-1 px-3 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>Delete</Button>
         )},
       ]} />
     </div>
@@ -1929,7 +1929,7 @@ export function AdminRolesPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border font-semibold">
-                          👥 {role._count?.users ?? 0} {t('admin.users', 'Users')}
+                          👥 {role._count?.users ?? 0} {t('admin.navUsers', 'Users')}
                         </span>
                         {!isCoreRole && (
                           <button

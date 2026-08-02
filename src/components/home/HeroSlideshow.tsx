@@ -4,13 +4,17 @@ import type { Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { mediaUrl } from '../../lib/utils';
+import { getBilingualText, mediaUrl } from '../../lib/utils';
+import { useAppLanguage } from '../../i18n';
 
 export interface HeroData {
   title?: string;
+  titleAr?: string;
   subtitle?: string;
+  subtitleAr?: string;
   imageUrl?: string;
   ctaText?: string;
+  ctaTextAr?: string;
   ctaLink?: string;
 }
 
@@ -19,18 +23,23 @@ interface HeroSlideshowProps {
 }
 
 export function HeroSlideshow({ cmsHero }: HeroSlideshowProps) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
+  const lang = useAppLanguage();
+  const isRtl = lang === 'ar';
+
+  const heroTitle = getBilingualText(cmsHero, 'title', lang);
+  const heroSubtitle = getBilingualText(cmsHero, 'subtitle', lang);
+  const heroCtaText = getBilingualText(cmsHero, 'ctaText', lang);
 
   const defaultSlides = [
     {
       id: 'slide-1',
-      title: cmsHero?.title || t('hero.slide1.title'),
-      subtitle: cmsHero?.subtitle || t('hero.slide1.subtitle'),
+      title: heroTitle || t('hero.slide1.title'),
+      subtitle: heroSubtitle || t('hero.slide1.subtitle'),
       image: cmsHero?.imageUrl
         ? mediaUrl(cmsHero.imageUrl)
         : '/photos/hero1.jpeg',
-      ctaText: cmsHero?.ctaText || t('nav.login'),
+      ctaText: heroCtaText || t('nav.login'),
       ctaLink: cmsHero?.ctaLink || '/login',
       secondaryCtaText: t('nav.careers'),
       secondaryCtaLink: '/careers',
