@@ -87,7 +87,7 @@ export function ParentAdmissionDetailPage() {
   const gradeReq = requirements.find((r: { gradeLevel: string }) => r.gradeLevel === admission.gradeLevel);
   const requiredDocs: string[] = gradeReq?.requiredDocumentTypes ?? [];
   const uploadedTypes = new Set((admission.documents || []).map((d: { documentType: string }) => d.documentType));
-  const canEdit = admission.status === 'DRAFT';
+  const canEdit = admission.status !== 'REJECTED';
 
   const wizardSteps = [
     t('admission.steps.student'),

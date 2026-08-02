@@ -568,6 +568,13 @@ const SETTINGS_CONFIG: Record<
     category: 'contact',
     type: 'text',
   },
+  google_maps_embed_url: {
+    labelAr: 'رابط تضمين الخريطة (Google Maps Embed Iframe SRC)',
+    labelEn: 'Google Maps Embed URL',
+    desc: 'رابط تضمين الخريطة التفاعلية (Embed URL) لإظهار الخريطة المباشرة.',
+    category: 'contact',
+    type: 'text',
+  },
   social_facebook: {
     labelAr: 'فيسبوك (Facebook)',
     labelEn: 'Facebook Page URL',

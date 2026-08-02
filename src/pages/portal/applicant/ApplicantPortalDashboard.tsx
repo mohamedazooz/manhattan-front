@@ -18,6 +18,7 @@ export function ApplicantPortalDashboard() {
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['my-job-applications'],
     queryFn: () => careersApi.myApplications().then((r) => r.data),
+    refetchInterval: 10000,
   });
 
   if (isLoading) return <LoadingSpinner />;

@@ -33,6 +33,7 @@ import { ApplicantApplicationDetailPage } from '../pages/portal/applicant/Applic
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminHeroPage, AdminSectionsPage } from '../pages/admin/LandingAdminPages';
 import { AdminAboutPage, AdminPagesPage, AdminSettingsPage } from '../pages/admin/ContentAdminPages';
+import { AdminStudentLifePage } from '../pages/admin/AdminStudentLifePage';
 import { SeoAdminPage } from '../pages/admin/SeoAdminPage';
 import { NotificationsAdminPage } from '../pages/admin/NotificationsAdminPage';
 import {
@@ -112,6 +113,7 @@ export function AppRoutes() {
                 <Route index element={<AdminDashboardPage />} />
                 <Route path="landing/hero" element={<AdminHeroPage />} />
                 <Route path="landing/sections" element={<AdminSectionsPage />} />
+                <Route path="student-life" element={<AdminStudentLifePage />} />
                 <Route path="about" element={<AdminAboutPage />} />
                 <Route path="pages" element={<AdminPagesPage />} />
                 <Route path="admissions" element={<AdminAdmissionsPage />} />

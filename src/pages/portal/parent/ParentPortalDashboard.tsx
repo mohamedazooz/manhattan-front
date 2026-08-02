@@ -24,6 +24,7 @@ export function ParentPortalDashboard() {
   const { data: admissions = [], isLoading } = useQuery({
     queryKey: ['my-admissions'],
     queryFn: () => admissionsApi.myAdmissions().then((r) => r.data),
+    refetchInterval: 10000,
   });
 
   if (isLoading) return <LoadingSpinner />;

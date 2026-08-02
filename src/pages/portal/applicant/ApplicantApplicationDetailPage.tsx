@@ -9,6 +9,7 @@ import { Input, Select } from '../../../components/ui/Input';
 import { StatusBadge, LoadingSpinner } from '../../../components/ui/Badge';
 import { ChecklistItem } from '../../../components/ui/ChecklistItem';
 import { mediaUrl } from '../../../lib/utils';
+import { HiringDocumentsSection } from '../../../components/careers/HiringDocumentsSection';
 
 const DOC_LABELS: Record<string, string> = {
   CV_RESUME: 'CV / Resume',
@@ -76,7 +77,7 @@ export function ApplicantApplicationDetailPage() {
     );
   }
 
-  const canEdit = application.status === 'DRAFT';
+  const canEdit = application.status !== 'REJECTED';
   const uploadedTypes = new Set((application.documents || []).map((d: { documentType: string }) => d.documentType));
 
   return (
@@ -155,6 +156,15 @@ export function ApplicantApplicationDetailPage() {
           )}
         </div>
       </section>
+
+      <HiringDocumentsSection
+        pledged={!!application.pledgeOriginalsAtInterview}
+        onPledgeChange={() => {}}
+        documentFiles={{}}
+        onFileChange={() => {}}
+        uploadedDocs={application.documents || []}
+        readOnly={true}
+      />
 
       <section className="glass-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">{t('application.documents')}</h3>

@@ -23,6 +23,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { useAppLanguage } from '../../i18n';
 import type { Job } from '../../types';
 
+import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
 import { getBilingualText } from '../../lib/utils';
 
 export function CareersPage() {
@@ -47,6 +48,8 @@ export function CareersPage() {
     coverLetter: '',
   });
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [pledgedOriginals, setPledgedOriginals] = useState<boolean>(true);
+  const [hiringFiles, setHiringFiles] = useState<Record<string, File | null>>({});
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs', lang],
@@ -72,6 +75,7 @@ export function CareersPage() {
       formData.append('fullName', form.fullName);
       formData.append('email', form.email);
       formData.append('phone', form.phone);
+      formData.append('pledgeOriginalsAtInterview', String(pledgedOriginals));
       if (form.yearsExperience) formData.append('yearsExperience', form.yearsExperience);
       if (form.curriculumExperience) formData.append('curriculumExperience', form.curriculumExperience);
       if (form.subjectsTaught) formData.append('subjectsTaught', form.subjectsTaught);
@@ -82,7 +86,25 @@ export function CareersPage() {
         formData.append('resume', resumeFile);
       }
 
-      await careersApi.apply(applyingJob.id, formData);
+      const res = await careersApi.apply(applyingJob.id, formData);
+      const appId = res.data?.applicationId;
+
+      // Upload extra hiring documents if selected
+      if (appId) {
+        for (const [code, file] of Object.entries(hiringFiles)) {
+          if (file) {
+            const docFd = new FormData();
+            docFd.append('file', file);
+            docFd.append('documentType', code);
+            try {
+              await careersApi.uploadDocument(appId, docFd);
+            } catch (docErr) {
+              console.warn(`Failed uploading document ${code}`, docErr);
+            }
+          }
+        }
+      }
+
       setApplySuccess(true);
       setTimeout(() => {
         setApplyingJob(null);
@@ -98,6 +120,8 @@ export function CareersPage() {
           coverLetter: '',
         });
         setResumeFile(null);
+        setPledgedOriginals(true);
+        setHiringFiles({});
       }, 2500);
     } catch (err: any) {
       console.error('Failed to submit application', err);
@@ -396,6 +420,17 @@ export function CareersPage() {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
                   />
                 </div>
+
+                {/* Hiring Documents Section (مصوغات التعيين) */}
+                <HiringDocumentsSection
+                  lang={lang as 'ar' | 'en'}
+                  pledged={pledgedOriginals}
+                  onPledgeChange={setPledgedOriginals}
+                  documentFiles={hiringFiles}
+                  onFileChange={(code, file) =>
+                    setHiringFiles((prev) => ({ ...prev, [code]: file }))
+                  }
+                />
 
                 {/* CV Upload Field */}
                 <div>

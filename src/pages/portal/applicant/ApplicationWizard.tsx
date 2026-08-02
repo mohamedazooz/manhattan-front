@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { careersApi, jobRequirementsApi } from '../../../api';
+import { careersApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
 import { StepIndicator } from '../../../components/ui/StepIndicator';
 import { useAuth } from '../../../lib/auth';
+import { HiringDocumentsSection } from '../../../components/careers/HiringDocumentsSection';
 
 export function ApplicationWizard() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -26,18 +27,13 @@ export function ApplicationWizard() {
     teachingLicenseNo: '',
     availableStartDate: '',
     safeguardingAccepted: false,
+    pledgeOriginalsAtInterview: true,
   });
 
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => careersApi.get(jobId!, 'en').then((r) => r.data),
     enabled: !!jobId,
-  });
-
-  const { data: requirement } = useQuery({
-    queryKey: ['job-requirement', job?.employmentType],
-    queryFn: () => jobRequirementsApi.byType(job?.employmentType).then((r) => r.data),
-    enabled: !!job?.employmentType,
   });
 
   useEffect(() => {
@@ -50,19 +46,37 @@ export function ApplicationWizard() {
     }
   }, [user]);
 
+  const [documentFiles, setDocumentFiles] = useState<Record<string, File | null>>({});
+
+  async function uploadPendingDocs(appId: string) {
+    for (const [docCode, file] of Object.entries(documentFiles)) {
+      if (file) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('documentType', docCode);
+        await careersApi.uploadDocument(appId, fd).catch(() => null);
+      }
+    }
+  }
+
   const createMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== '') fd.append(k, String(v));
       });
       fd.append('currentStep', String(step));
-      return careersApi.apply(jobId!, fd);
+      const res = await careersApi.apply(jobId!, fd);
+      const newId = res.data.applicationId;
+      await uploadPendingDocs(newId);
+      return res;
     },
     onSuccess: ({ data }) => {
       setApplicationId(data.applicationId);
       if (step >= 4) {
-        navigate(`/portal/applicant/applications/${data.applicationId}`);
+        careersApi.submitApplication(data.applicationId).then(() => {
+          navigate('/portal/applicant');
+        });
       } else {
         setStep(step + 1);
       }
@@ -70,11 +84,14 @@ export function ApplicationWizard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: () => careersApi.updateApplication(applicationId!, { ...form, currentStep: step }),
+    mutationFn: async () => {
+      await careersApi.updateApplication(applicationId!, { ...form, currentStep: step });
+      await uploadPendingDocs(applicationId!);
+    },
     onSuccess: () => {
       if (step >= 4) {
         careersApi.submitApplication(applicationId!).then(() => {
-          navigate(`/portal/applicant/applications/${applicationId}`);
+          navigate('/portal/applicant');
         });
       } else {
         setStep(step + 1);
@@ -162,18 +179,17 @@ export function ApplicationWizard() {
         )}
 
         {step === 3 && (
-          <div className="space-y-3">
-            <p className="text-sm text-neutral-medium">{t('application.documentsHint')}</p>
-            {requirement?.requiredDocumentTypes?.map((type: string) => (
-              <div key={type} className="text-sm border rounded-lg p-3 bg-ivory">
-                {type.replace(/_/g, ' ')}
-              </div>
-            ))}
+          <div className="space-y-4">
+            <HiringDocumentsSection
+              pledged={form.pledgeOriginalsAtInterview}
+              onPledgeChange={(pledged) => setForm({ ...form, pledgeOriginalsAtInterview: pledged })}
+              documentFiles={documentFiles}
+              onFileChange={(docCode, file) => setDocumentFiles((prev) => ({ ...prev, [docCode]: file }))}
+            />
             <label className="block text-sm">
               <span className="font-medium">{t('application.coverLetter')}</span>
               <textarea className="mt-1 w-full border rounded-lg px-3 py-2" rows={4} value={form.coverLetter} onChange={(e) => setForm({ ...form, coverLetter: e.target.value })} />
             </label>
-            <p className="text-xs text-neutral-medium">{t('application.uploadAfterCreate')}</p>
           </div>
         )}
 

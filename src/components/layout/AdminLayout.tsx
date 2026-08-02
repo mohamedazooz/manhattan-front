@@ -27,6 +27,7 @@ import {
   X,
   Sun,
   Moon,
+  Compass,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -68,6 +69,7 @@ const navSections: NavSection[] = [
     items: [
       { to: '/admin/landing/hero', labelKey: 'admin.hero', icon: Image, perm: 'MANAGE_LANDING' },
       { to: '/admin/landing/sections', labelKey: 'admin.sections', icon: FileText, perm: 'MANAGE_LANDING' },
+      { to: '/admin/student-life', labelKey: 'admin.navStudentLife', icon: Compass, perm: 'MANAGE_LANDING' },
       { to: '/admin/about', labelKey: 'admin.about', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/pages', labelKey: 'admin.pages', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/education', labelKey: 'admin.navEducation', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },

@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Manhattan Language School",
-    "fullname": "Manhattan Language School - International & Bilingual Education"
+    "fullname": "Manhattan Language School (KG - Primary - Preparatory)"
   },
   "theme": {
     "toggle": "Toggle theme",
@@ -37,7 +37,7 @@
     },
     "slide2": {
       "title": "World-Class Academic Programs",
-      "subtitle": "From Kindergarten to High School, preparing tomorrow's global leaders with dual curriculum excellence."
+      "subtitle": "From Kindergarten to Middle School, preparing tomorrow's global leaders with dual curriculum excellence."
     },
     "slide3": {
       "title": "Modern Facilities & Vibrant Campus Life",
@@ -67,7 +67,7 @@
     "studentTitle": "Student Admission Application",
     "studentSubtitle": "Seamless online enrollment system to join Manhattan Language School family.",
     "teacherTitle": "Apply for Educator / Staff Position",
-    "teacherSubtitle": "Join our team of elite international and bilingual educators."
+    "teacherSubtitle": "Join our team of elite educators at Manhattan Language School (KG, Primary & Preparatory)."
   },
   "trust": {
     "bilingual": "Bilingual Education",
@@ -115,7 +115,7 @@
   "quickFacts": {
     "badge": "Quick Overview",
     "title": "MLS at a Glance",
-    "subtitle": "High quality international & bilingual education serving future leaders in Egypt.",
+    "subtitle": "High quality language education for KG, Primary, and Preparatory stages serving future leaders in Egypt.",
     "students": "Enrolled Students",
     "experience": "Years of Experience",
     "classSize": "Avg. Class Size",
@@ -132,14 +132,19 @@
   },
   "quotes": {
     "chairman": "Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.",
-    "teachers": "Every great leader today can point to a teacher who radically changed their life path for the better. At Manhattan Language School, our teachers go above and beyond for every learner."
+    "teachers": "Every great leader today can point to a teacher who radically changed their life path for the better. At Manhattan Language School, our teachers go above and beyond for every learner.",
+    "directorMessage": "School Director's Message",
+    "regards": "With warm regards,",
+    "directorName": "Prof. Dr. Ibrahim Azzouz",
+    "directorRole": "Chairman & School Director",
+    "schoolSubName": "Manhattan Language School"
   },
   "coreValues": {
     "badge": "Our Core Values",
     "title": "What Defines Manhattan Language School",
     "genius": {
       "title": "Genius Discovery",
-      "desc": "Unlocking human and intellectual potential from kindergarten to high school."
+      "desc": "Unlocking human and intellectual potential from kindergarten to middle school."
     },
     "confidence": {
       "title": "Confidence",
@@ -207,7 +212,7 @@
     "description": "Nurturing future leaders through academic excellence, character development, and global perspective.",
     "workingHours": "Working Hours",
     "workingHoursValue": "Sun - Thu: 7:30 AM - 3:00 PM",
-    "address": "Cairo, Egypt",
+    "address": "Manhattan Language School, Sheikh Zayed City, Giza Governorate, Egypt",
     "rights": "All rights reserved.",
     "newsletterTitle": "Subscribe to Newsletter",
     "newsletterDesc": "Stay updated with our latest news, academic events, and announcements.",
@@ -349,6 +354,7 @@
     "seo": "SEO Settings",
     "notifications": "Notifications",
     "pages": "Static Pages",
+    "navStudentLife": "Student Life",
     "navEducation": "Education",
     "navGallery": "Gallery",
     "blog": "Blog",
@@ -691,7 +697,7 @@
       "step1Desc": "Starting the day with energy, flag salute, and light physical activities.",
       "step2Time": "08:15 AM - 11:30 AM",
       "step2Title": "Interactive Smart Classroom Sessions",
-      "step2Desc": "Active learning combining international curriculum with hands-on smart tech.",
+      "step2Desc": "Active learning combining language curriculum with hands-on smart tech.",
       "step3Time": "11:30 AM - 12:30 PM",
       "step3Title": "Lunch & Social Recess",
       "step3Desc": "Enjoying nutritious meals and bonding with peers across green campus yards.",
@@ -706,7 +712,7 @@
       "title": "Student Achievements & Excellence",
       "subtitle": "Proudly celebrating students who elevate Manhattan School's name in every arena",
       "item1Title": "1st Place in National STEM Fair",
-      "item1Desc": "High school students designed a solar-powered water purification system.",
+      "item1Desc": "Middle school students designed a solar-powered water purification system.",
       "item2Title": "Inter-School Football Championship Cup",
       "item2Desc": "Gold medal victory for our varsity team at the regional tournament.",
       "item3Title": "Excellence Award in Debate & Drama",
@@ -739,10 +745,10 @@
   "careers": {
     "heroBadge": "Join Our Academic Family",
     "heroTitle": "Empower Minds & Shape Futures With Us",
-    "heroSubtitle": "Explore rewardingly rich teaching & leadership careers in an international environment dedicated to excellence, innovation, and professional growth.",
+    "heroSubtitle": "Explore rewardingly rich teaching & leadership careers in an environment dedicated to excellence, innovation, and professional growth.",
     "packageTitle": "Competitive Package",
     "packageDesc": "Comprehensive benefits",
-    "standardTitle": "International Standard",
+    "standardTitle": "High Academic Standard",
     "standardDesc": "Modern curriculum & tools",
     "cultureTitle": "Collaborative Culture",
     "cultureDesc": "Supportive leadership",
@@ -806,10 +812,7 @@
     "Grade 6": "Grade 6",
     "Grade 7": "Grade 7",
     "Grade 8": "Grade 8",
-    "Grade 9": "Grade 9",
-    "Grade 10": "Grade 10",
-    "Grade 11": "Grade 11",
-    "Grade 12": "Grade 12"
+    "Grade 9": "Grade 9"
   },
   "admission": {
     "wizardTitle": "New Student Admission Application",
@@ -817,6 +820,7 @@
     "steps": {
       "student": "Student Details",
       "family": "Family & Emergency Info",
+      "documents": "Document Upload",
       "health": "Medical & Health Record",
       "policies": "Rules & Declaration",
       "review": "Review & Submit"

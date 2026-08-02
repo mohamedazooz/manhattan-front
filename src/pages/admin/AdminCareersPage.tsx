@@ -163,6 +163,9 @@ export function AdminCareersPage() {
     try {
       await careersApi.updateApplicationStatus(appId, newStatus);
       queryClient.invalidateQueries({ queryKey: ['job-apps-all'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['my-job-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       if (selectedApp && selectedApp.id === appId) {
         setSelectedApp({ ...selectedApp, status: newStatus });
       }

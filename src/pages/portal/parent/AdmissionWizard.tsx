@@ -11,7 +11,10 @@ import {
   ShieldAlert, 
   GraduationCap, 
   Phone, 
-  Briefcase
+  Briefcase,
+  Upload,
+  Paperclip,
+  Trash2
 } from 'lucide-react';
 import { admissionsApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
@@ -28,10 +31,7 @@ const GRADE_OPTIONS = [
   'Grade 6',
   'Grade 7',
   'Grade 8',
-  'Grade 9',
-  'Grade 10',
-  'Grade 11',
-  'Grade 12'
+  'Grade 9'
 ];
 
 const HEALTH_CONDITIONS_LIST = [
@@ -50,12 +50,64 @@ const HEALTH_CONDITIONS_LIST = [
   { key: 'other', labelKey: 'admission.healthConditions.other', icon: '📋' },
 ];
 
+const REQUIRED_DOCUMENTS_LIST = [
+  {
+    code: 'BIRTH_CERTIFICATE',
+    title: 'شهادة الميلاد الرقمية / المميكنة',
+    titleEn: 'Computerized Birth Certificate',
+    desc: 'صورة طبق الأصل من شهادة الميلاد بالرقم القومي للطالب',
+    icon: '📄',
+    required: true,
+  },
+  {
+    code: 'PREVIOUS_REPORT',
+    title: 'أحدث شهادة دراسية / بيان نجاح',
+    titleEn: 'Previous School Report',
+    desc: 'آخر كشف درجات أو بيان نجاح معتمد من المدرسة السابقة',
+    icon: '🎓',
+    required: false,
+  },
+  {
+    code: 'STUDENT_PHOTO',
+    title: 'صورة شخصية حديثة للطالب',
+    titleEn: 'Recent Student Photo',
+    desc: 'صورة شخصية بخلفية بيضاء وواضحة المعالم للطالب',
+    icon: '🖼️',
+    required: true,
+  },
+  {
+    code: 'PARENT_PASSPORT',
+    title: 'بطاقة الرقم القومي / جواز سفر ولي الأمر',
+    titleEn: 'Parent ID / Passport',
+    desc: 'صورة سارية لبطاقة الرقم القومي أو جواز السفر لولي الأمر',
+    icon: '🪪',
+    required: true,
+  },
+  {
+    code: 'HEALTH_RECORD',
+    title: 'البطاقة الصحية / كارت التطعيمات',
+    titleEn: 'Health / Vaccination Record',
+    desc: 'كارت التطعيمات أو الشهادة الطبية الأولية للطالب',
+    icon: '🏥',
+    required: false,
+  },
+  {
+    code: 'SCHOOL_REFERENCE',
+    title: 'إفادة / توصية من المدرسة السابقة',
+    titleEn: 'School Recommendation Letter',
+    desc: 'إفادة حسن سير وسلوك أو خطاب توصية (إن وجد)',
+    icon: '📋',
+    required: false,
+  },
+];
+
 export function AdmissionWizard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [step, setStep] = useState(1);
+  const [documentFiles, setDocumentFiles] = useState<Record<string, File | null>>({});
   const [form, setForm] = useState({
     // Step 1: Student
     studentFirstName: '',
@@ -86,7 +138,7 @@ export function AdmissionWizard() {
     emergencyContactAddress: '',
     emergencyContactPhone: '',
 
-    // Step 3: Medical / Health Record
+    // Step 4: Medical / Health Record
     hasAllergy: false,
     allergyDetails: '',
     healthConditions: HEALTH_CONDITIONS_LIST.reduce<Record<string, boolean>>((acc, item) => {
@@ -97,7 +149,7 @@ export function AdmissionWizard() {
     specialNeeds: false,
     specialNeedsDetails: '',
 
-    // Step 4: Declaration & Signature
+    // Step 5: Declaration & Signature
     signedByName: user?.fullName || '',
     signedDate: new Date().toISOString().split('T')[0],
     termsAccepted: false,
@@ -106,20 +158,50 @@ export function AdmissionWizard() {
   const steps = [
     t('admission.steps.student', 'بيانات الطالب'),
     t('admission.steps.family', 'بيانات الأسرة والطوارئ'),
+    t('admission.steps.documents', 'رفع المستندات'),
     t('admission.steps.health', 'السجل الطبي والصحي'),
     t('admission.steps.policies', 'اللوائح والتوقيع'),
     t('admission.steps.review', 'مراجعة واعتماد الطلب'),
   ];
 
   const mutation = useMutation({
-    mutationFn: () =>
-      admissionsApi.create({
+    mutationFn: async () => {
+      // 1. Create Application
+      const res = await admissionsApi.create({
         ...form,
         healthConditions: form.healthConditions,
-        currentStep: step,
-      }),
-    onSuccess: ({ data }) => navigate(`/portal/parent/admissions/${data.id}`),
+        currentStep: 6,
+      });
+      const appId = res.data.id;
+
+      // 2. Upload Document Files
+      for (const [docCode, fileObj] of Object.entries(documentFiles)) {
+        if (fileObj) {
+          const fd = new FormData();
+          fd.append('file', fileObj);
+          fd.append('documentType', docCode);
+          await admissionsApi.uploadDocument(appId, fd).catch(() => null);
+        }
+      }
+
+      // 3. Submit application to admin
+      await admissionsApi.submit(appId).catch((err) => {
+        console.warn('Submission submit notice:', err);
+      });
+
+      return appId;
+    },
+    onSuccess: (appId) => {
+      navigate(`/portal/parent/admissions/${appId}`);
+    },
   });
+
+  function handleFileChange(code: string, file: File | null) {
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [code]: file,
+    }));
+  }
 
   function toggleHealthCondition(key: string, val: boolean) {
     setForm((prev) => ({
@@ -131,16 +213,67 @@ export function AdmissionWizard() {
     }));
   }
 
+  const isStep1Valid =
+    form.studentFirstName.trim().length >= 1 &&
+    form.studentLastName.trim().length >= 1 &&
+    form.dateOfBirth.trim() !== '' &&
+    form.gender.trim() !== '' &&
+    form.nationality.trim() !== '' &&
+    form.gradeLevel.trim() !== '';
+
+  const isStep2Valid =
+    form.parentName.trim().length >= 1 &&
+    form.parentEmail.trim().length >= 3 &&
+    form.parentPhone.trim().length >= 8 &&
+    form.emergencyContactPhone.trim().length >= 8;
+
+  const isStep3Valid = REQUIRED_DOCUMENTS_LIST
+    .filter((doc) => doc.required)
+    .every((doc) => !!documentFiles[doc.code]);
+
+  const isStep4Valid =
+    (!form.hasAllergy || form.allergyDetails.trim().length >= 1) &&
+    (!form.specialNeeds || form.specialNeedsDetails.trim().length >= 1);
+
+  const isStep5Valid = form.termsAccepted && form.signedByName.trim().length >= 1;
+
+  function isCurrentStepValid() {
+    if (step === 1) return isStep1Valid;
+    if (step === 2) return isStep2Valid;
+    if (step === 3) return isStep3Valid;
+    if (step === 4) return isStep4Valid;
+    if (step === 5) return isStep5Valid;
+    return true;
+  }
+
+  function getStepValidationHint() {
+    if (step === 1 && !isStep1Valid) {
+      return 'يرجى استكمال الحقول المطلوبة للطالب: اسم الطالب الأول، اسم العائلة، تاريخ الميلاد، الجنس، والجنسية.';
+    }
+    if (step === 2 && !isStep2Valid) {
+      return 'يرجى استكمال الحقول المطلوبة للوالدين: اسم ولي الأمر، البريد الإلكتروني، هاتف ولي الأمر وهاتف الطوارئ (8 أرقام على الأقل).';
+    }
+    if (step === 3 && !isStep3Valid) {
+      return 'يرجى رفع المستندات المطلوبة (شهادة الميلاد المميكنة، صورة الطالب، وبطاقة/جواز ولي الأمر).';
+    }
+    if (step === 4 && !isStep4Valid) {
+      return 'يرجى كتابة تفاصيل الحساسية أو الرعاية الخاصة المطلوبة للطالب.';
+    }
+    if (step === 5 && !isStep5Valid) {
+      return 'يرجى إدخال اسم ولي الأمر الموقّع بالكامل والموافقة على الشروط واللوائح التنظيمية.';
+    }
+    return null;
+  }
+
   function next() {
-    if (step < 5) setStep(step + 1);
+    if (!isCurrentStepValid()) return;
+    if (step < 6) setStep(step + 1);
     else mutation.mutate();
   }
 
   function back() {
     if (step > 1) setStep(step - 1);
   }
-
-  const isStep4Valid = form.termsAccepted && form.signedByName.trim() !== '';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
@@ -523,9 +656,103 @@ export function AdmissionWizard() {
             </div>
           </div>
         )}
-
-        {/* STEP 3: MEDICAL & HEALTH CHECKLIST (Extracted 13 Health Conditions) */}
         {step === 3 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                  {t('admission.steps.documents', 'رفع المستندات المطلوبة من ولي الأمر')}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  يرجى إرفاق المستندات الرسمية للطالب وولي الأمر (المستندات المقبولة: PDF, JPG, PNG بحجم أقصى 5MB)
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {REQUIRED_DOCUMENTS_LIST.map((doc) => {
+                const currentFile = documentFiles[doc.code];
+                return (
+                  <div
+                    key={doc.code}
+                    className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${
+                      currentFile
+                        ? 'bg-emerald-500/5 border-emerald-500/40 dark:bg-emerald-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{doc.icon}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                              {doc.title}
+                            </h4>
+                            {doc.required ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                هام
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                اختياري
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                            {doc.desc}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
+                      {currentFile ? (
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">
+                            <FileCheck2 className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{currentFile.name}</span>
+                            <span className="text-[10px] text-slate-400">
+                              ({(currentFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleFileChange(doc.code, null)}
+                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                            title="حذف المستند"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold transition-all">
+                          <Paperclip className="w-3.5 h-3.5 text-amber-500" />
+                          <span>اختر ملف مرفق</span>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0] || null;
+                              if (f) handleFileChange(doc.code, f);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: MEDICAL & HEALTH CHECKLIST */}
+        {step === 4 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
@@ -598,7 +825,7 @@ export function AdmissionWizard() {
                   rows={2}
                   value={form.allergyDetails}
                   onChange={(e) => setForm({ ...form, allergyDetails: e.target.value })}
-                  placeholder={t('admission.allergyDetails', 'اذكر نوع الحساسية (حساسية طعام، طعام معين، أدوية...)' )}
+                  placeholder={t('admission.allergyDetails', 'اذكر نوع الحساسية (حساسية طعام، طعام معين، أدوية...)')}
                 />
               )}
             </div>
@@ -647,8 +874,8 @@ export function AdmissionWizard() {
           </div>
         )}
 
-        {/* STEP 4: POLICIES & DECLARATION (Extracted 9 Points & Rules) */}
-        {step === 4 && (
+        {/* STEP 5: POLICIES & DECLARATION */}
+        {step === 5 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
@@ -737,8 +964,8 @@ export function AdmissionWizard() {
           </div>
         )}
 
-        {/* STEP 5: REVIEW & SUBMIT */}
-        {step === 5 && (
+        {/* STEP 6: REVIEW & SUBMIT TO ADMIN */}
+        {step === 6 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -746,10 +973,10 @@ export function AdmissionWizard() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                  {t('admission.steps.review', 'مراجعة وتأكيد كافة بيانات الطلب')}
+                  {t('admission.steps.review', 'مراجعة وتأكيد كافة بيانات الطلب قبل الإرسال للإدارة')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  يرجى التأكد من صحة كافة البيانات المدخلة قبل الاعتماد النهائي للإرسال
+                  يرجى التأكد من صحة كافة البيانات والملفات المرفقة قبل الاعتماد النهائي وإرسال الطلب للإدارة
                 </p>
               </div>
             </div>
@@ -779,6 +1006,31 @@ export function AdmissionWizard() {
                 <p><strong>اسم الأم:</strong> {form.motherName || 'غير مدخل'}</p>
                 <p><strong>هاتف الأم:</strong> {form.motherPhone || 'غير مدخل'}</p>
                 <p><strong>هاتف الطوارئ:</strong> {form.emergencyContactPhone || 'غير مدخل'}</p>
+              </div>
+            </div>
+
+            {/* Documents Summary Card */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+              <div className="font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 text-sm">
+                <Upload className="w-4 h-4" />
+                <span>المستندات والملفات المرفقة ({Object.values(documentFiles).filter(Boolean).length})</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(documentFiles).filter(([, f]) => !!f).length === 0 ? (
+                  <span className="text-slate-500">لم يتم إرفاق ملفات في هذه الخطوة (يمكن إرفاقها لاحقاً)</span>
+                ) : (
+                  Object.entries(documentFiles)
+                    .filter(([, f]) => !!f)
+                    .map(([code, file]) => {
+                      const docDef = REQUIRED_DOCUMENTS_LIST.find((d) => d.code === code);
+                      return (
+                        <span key={code} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>{docDef?.title || code}: {file?.name}</span>
+                        </span>
+                      );
+                    })
+                )}
               </div>
             </div>
 
@@ -821,6 +1073,14 @@ export function AdmissionWizard() {
 
       </div>
 
+      {/* Validation Hint Alert */}
+      {getStepValidationHint() && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-center gap-3 animate-pulse">
+          <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span>{getStepValidationHint()}</span>
+        </div>
+      )}
+
       {/* Navigation Footer Buttons */}
       <div className="flex items-center justify-between pt-2">
         <Button
@@ -835,11 +1095,11 @@ export function AdmissionWizard() {
         <Button
           variant="gold"
           onClick={next}
-          disabled={mutation.isPending || (step === 4 && !isStep4Valid)}
-          className="rounded-xl px-8 shadow-lg shadow-amber-500/20 font-bold"
+          disabled={mutation.isPending || !isCurrentStepValid()}
+          className="rounded-xl px-8 shadow-lg shadow-amber-500/20 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {step === 5
-            ? (mutation.isPending ? t('common.submitting', 'جاري الإرسال...') : t('admission.createAndContinue', 'إرسال واعتماد الطلب'))
+          {step === 6
+            ? (mutation.isPending ? t('common.submitting', 'جاري إرسال الطلب للإدارة...') : t('admission.createAndContinue', 'إرسال واعتماد طلب القبول'))
             : t('common.next', 'التالي')}
         </Button>
       </div>

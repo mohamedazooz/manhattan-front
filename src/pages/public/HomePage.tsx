@@ -15,6 +15,8 @@ import {
   HeartHandshake,
   Phone,
   Mail,
+  Sparkles,
+  Quote,
 } from 'lucide-react';
 import { landingApi, blogApi, educationApi, requirementsApi, cmsApi } from '../../api';
 import { Button } from '../../components/ui/Button';
@@ -25,6 +27,7 @@ import { SeoHead } from '../../components/common/SeoHead';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeroSlideshow } from '../../components/home/HeroSlideshow';
 import { PhotoGallery } from '../../components/home/PhotoGallery';
+import { SchoolMap } from '../../components/common/SchoolMap';
 import { useAuth } from '../../lib/auth';
 
 const trustIcons = [
@@ -216,7 +219,7 @@ export function HomePage() {
                   {t('applicantFlows.teacherTitle', 'التقديم على وظيفة معلم / كادر تعليمي')}
                 </h3>
                 <p className="text-white/80 text-sm leading-relaxed mb-6">
-                  {t('applicantFlows.teacherSubtitle', 'انضم لنخبة المعلمين في واحدة من أرقى المدارس الدولية وثنائية اللغة')}
+                  {t('applicantFlows.teacherSubtitle', 'انضم لنخبة المعلمين في مدرسة مانهاتن للغات (رياض الأطفال والابتدائي والإعدادي)')}
                 </p>
               </div>
 
@@ -237,64 +240,106 @@ export function HomePage() {
 
       {/* Chairman Inspiring Quote Banner */}
       {chairmanSection && (
-        <section className="py-20 bg-gradient-to-br from-slate-950 via-primary-dark to-slate-900 text-white relative overflow-hidden border-y border-white/5">
+        <section className="py-20 bg-gradient-to-br from-slate-950 via-primary-dark to-slate-900 text-white relative overflow-hidden border-y border-white/10">
           {/* Subtle radial glow behind the content */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(212,175,55,0.06) 0%, transparent 70%)' }} />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(212,175,55,0.08) 0%, transparent 70%)',
+            }}
+          />
 
-          <div className="mx-auto max-w-5xl px-4 text-center relative z-10">
-            {/* ── Director Name & Title (above the quote) ── */}
+          <div className="mx-auto max-w-4xl px-4 relative z-10 space-y-8">
+            {/* Header Badge */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold/60" />
+              <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30 tracking-wider uppercase flex items-center gap-2 shadow-xs backdrop-blur-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                {t('quotes.directorMessage', lang === 'ar' ? 'رسالة إدارة المدرسة' : "School Director's Message")}
+              </span>
+              <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold/60" />
+            </div>
+
+            {/* Letter / Message Card */}
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="mb-10 space-y-3"
+              className="relative bg-slate-900/70 border border-gold/20 rounded-3xl p-8 sm:p-12 shadow-2xl backdrop-blur-md space-y-8"
             >
-              {/* Decorative top line */}
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <span className="block h-px w-16 bg-gradient-to-r from-transparent to-gold/60" />
-                <span className="block h-1.5 w-1.5 rounded-full bg-gold/80" />
-                <span className="block h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
+              {/* Decorative top quote mark */}
+              <div className="flex items-center justify-start text-gold/30">
+                <Quote className="w-10 h-10 rotate-180" />
               </div>
 
-              <h3
-                className="text-2xl sm:text-3xl font-extrabold tracking-wide"
-                style={{
-                  background: 'linear-gradient(135deg, #d4af37 0%, #f5e6a3 40%, #d4af37 70%, #b8942e 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  textShadow: 'none',
-                }}
-              >
-                الأستاذ الدكتور / إبراهيم عزوز
-              </h3>
-              <p className="text-sm sm:text-base font-semibold text-slate-300 tracking-widest uppercase" style={{ letterSpacing: '0.25em' }}>
-                مدير المدرسة
-              </p>
-
-              {/* Decorative bottom line */}
-              <div className="flex items-center justify-center gap-3 pt-1">
-                <span className="block h-px w-24 bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-              </div>
-            </motion.div>
-
-            {/* ── Quote ── */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="space-y-6"
-            >
-              <div className="text-5xl text-gold/70 font-serif leading-none select-none">"</div>
-              <blockquote className="text-xl sm:text-2xl font-semibold leading-relaxed text-slate-100 max-w-4xl mx-auto italic -mt-2">
-                {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) || t('quotes.chairman', 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.')}
+              {/* Message Content */}
+              <blockquote className="text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed text-slate-100 italic">
+                {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) ||
+                  t(
+                    'quotes.chairman',
+                    lang === 'ar'
+                      ? 'هدفنا هو ربط النقاط لتنمية العقول، والتي تتيح لكل طفل أن ينمو ليصبح بالغاً فخوراً بذاته وقادراً على اتخاذ القرار.'
+                      : 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.',
+                  )}
               </blockquote>
-              <div className="pt-2">
-                <span className="text-sm font-bold text-gold tracking-wide uppercase">
-                  {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) || t('app.name')}
-                </span>
-                <p className="text-xs text-slate-400 mt-0.5">{t('nav.about')}</p>
+
+              {/* End of Message Divider & Signature Block */}
+              <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
+                {/* School Name Label */}
+                <div className="text-start space-y-1">
+                  <span className="text-xs font-bold text-gold/90 tracking-widest uppercase block">
+                    {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) ||
+                      t('app.name')}
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    {t('quotes.schoolSubName', lang === 'ar' ? 'مدرسة منهاتن للغات' : 'Manhattan Language School')}
+                  </p>
+                </div>
+
+                {/* Signature of Prof. Dr. Ibrahim Azzouz */}
+                <div className="text-center sm:text-end space-y-1">
+                  <div className="text-xs text-slate-400 font-medium">
+                    {t('quotes.regards', lang === 'ar' ? 'مع خالص التحية والتقدير،' : 'With warm regards,')}
+                  </div>
+
+                  {/* Signature Name with Calligraphic/Stylized Gradient & Flourish */}
+                  <div className="inline-block relative pt-1">
+                    <div
+                      className="text-2xl sm:text-3xl font-extrabold tracking-wide drop-shadow-md"
+                      style={{
+                        fontFamily: "'Amiri', 'Traditional Arabic', 'Cairo', serif",
+                        background:
+                          'linear-gradient(135deg, #f5e6a3 0%, #d4af37 50%, #b8942e 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      {t('quotes.directorName', lang === 'ar' ? 'الأستاذ الدكتور / إبراهيم عزوز' : 'Prof. Dr. Ibrahim Azzouz')}
+                    </div>
+
+                    {/* Handwritten Signature SVG Flourish Line */}
+                    <svg
+                      className="w-full h-3 text-gold/70 mt-1"
+                      viewBox="0 0 240 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4 14C65 20 175 2 236 11M35 17C95 9 155 19 205 13"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Director Role Title */}
+                  <p className="text-xs sm:text-sm font-semibold text-slate-300 tracking-wider">
+                    {t('quotes.directorRole', lang === 'ar' ? 'رئيس مجلس الإدارة ومدير المدرسة' : 'Chairman & School Director')}
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -482,11 +527,17 @@ export function HomePage() {
                   {item.date && (
                     <div className="mb-3 flex items-center gap-2 text-xs text-neutral-medium dark:text-slate-400">
                       <Calendar className="h-4 w-4 text-primary" />
-                      <span>{new Date(item.date).toLocaleDateString()}</span>
+                      <span>{new Date(item.date).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>
                     </div>
                   )}
-                  <h3 className="text-lg font-bold text-primary-dark dark:text-slate-100">{item.title}</h3>
-                  {item.body && <p className="mt-2 text-sm text-neutral-medium dark:text-slate-300 leading-relaxed">{item.body}</p>}
+                  <h3 className="text-lg font-bold text-primary-dark dark:text-slate-100">
+                    {getBilingualText(item, 'title', lang)}
+                  </h3>
+                  {getBilingualText(item, 'body', lang) && (
+                    <p className="mt-2 text-sm text-neutral-medium dark:text-slate-300 leading-relaxed">
+                      {getBilingualText(item, 'body', lang)}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
@@ -771,11 +822,12 @@ export function HomePage() {
                     )}
                   </div>
                 </div>
-                <div className="min-h-80 bg-white/10">
-                  <img
-                    src={mediaUrl(config.school_flyer_url || hero?.imageUrl || '') || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&q=80'}
-                    alt="Manhattan Languages School students"
-                    className="h-full w-full object-cover"
+                <div className="min-h-[380px] h-full w-full relative">
+                  <SchoolMap
+                    googleMapsUrl={config.google_maps_url}
+                    embedUrl={config.google_maps_embed_url}
+                    address={config.contact_address_ar || config.contact_address || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد، محافظة الجيزة، مصر'}
+                    className="h-full w-full min-h-[380px]"
                   />
                 </div>
               </div>

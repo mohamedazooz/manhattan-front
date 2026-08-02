@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { cmsApi } from '../../api';
 import {
   Sparkles,
   Trophy,
@@ -16,121 +18,14 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Compass,
-  Heart,
   Calendar,
   Award,
   BookOpen,
 } from 'lucide-react';
 import { SeoHead } from '../../components/common/SeoHead';
+import { DEFAULT_STUDENT_LIFE_CONFIG, type StudentLifeFullConfig } from '../admin/AdminStudentLifePage';
 
-interface ClubItem {
-  id: string;
-  category: 'stem' | 'sports' | 'arts' | 'leadership';
-  icon: typeof Cpu;
-  titleAr: string;
-  titleEn: string;
-  descAr: string;
-  descEn: string;
-  scheduleAr: string;
-  scheduleEn: string;
-  locationAr: string;
-  locationEn: string;
-  color: string;
-  badgeBg: string;
-}
 
-const clubList: ClubItem[] = [
-  {
-    id: 'robotics',
-    category: 'stem',
-    icon: Cpu,
-    titleAr: 'نادي الروبوتات والذكاء الاصطناعي',
-    titleEn: 'Robotics & AI Club',
-    descAr: 'تصميم وبرمجة الروبوتات الذكية والمشاركة في المسابقات التكنولوجية المحاضرة والدولية.',
-    descEn: 'Design and program smart robots, competing in national and international tech challenges.',
-    scheduleAr: 'الأحد والأربعاء - 02:30 م',
-    scheduleEn: 'Sun & Wed - 02:30 PM',
-    locationAr: 'معمل التكنولوجيا المتقدم',
-    locationEn: 'Advanced Tech Lab',
-    color: 'from-blue-500 to-indigo-600',
-    badgeBg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  {
-    id: 'football',
-    category: 'sports',
-    icon: Dumbbell,
-    titleAr: 'أكاديمية كرة القدم والرياضات الميدانية',
-    titleEn: 'Football & Field Sports Academy',
-    descAr: 'تدريبات للياقة البدنية والمهارات التكتيكية تحت إشراف كادر مدربين معتمدين.',
-    descEn: 'Fitness training and tactical skills led by certified professional sports coaches.',
-    scheduleAr: 'الاثنين والخميس - 03:00 م',
-    scheduleEn: 'Mon & Thu - 03:00 PM',
-    locationAr: 'الملعب الرياضي الرئيسي',
-    locationEn: 'Main Sports Turf',
-    color: 'from-emerald-500 to-teal-600',
-    badgeBg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  {
-    id: 'fine-arts',
-    category: 'arts',
-    icon: Palette,
-    titleAr: 'مرسم الفنون التشكيلية والتصميم',
-    titleEn: 'Fine Arts & Design Studio',
-    descAr: 'تنمية مهارات الرسم والترميم والتصميم الرقمي وإقامة المعارض السنوية للطلاب.',
-    descEn: 'Developing painting, sculpture, and digital art skills with annual student gallery exhibitions.',
-    scheduleAr: 'الثلاثاء - 02:30 م',
-    scheduleEn: 'Tuesday - 02:30 PM',
-    locationAr: 'استوديو الفنون الجميل',
-    locationEn: 'Arts & Crafts Studio',
-    color: 'from-purple-500 to-pink-600',
-    badgeBg: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
-  },
-  {
-    id: 'mun',
-    category: 'leadership',
-    icon: Globe,
-    titleAr: 'نموذج الأمم المتحدة والقيادة الشابة (MUN)',
-    titleEn: 'Model United Nations (MUN)',
-    descAr: 'تدريب الطلاب على التناظر والدبلوماسية وحل القضايا العالمية وصقل مهارات الخطابة.',
-    descEn: 'Training students in debate, diplomacy, resolving global issues, and public speaking.',
-    scheduleAr: 'الأربعاء - 03:00 م',
-    scheduleEn: 'Wednesday - 03:00 PM',
-    locationAr: 'قاعة المؤتمرات الدولية',
-    locationEn: 'International Conference Hall',
-    color: 'from-amber-500 to-orange-600',
-    badgeBg: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  },
-  {
-    id: 'science-fair',
-    category: 'stem',
-    icon: BookOpen,
-    titleAr: 'نادي البحث العلمي والتجارب البيئية',
-    titleEn: 'Scientific Research & Eco Club',
-    descAr: 'تجارب معملية ومشاريع الاستدامة البيئية وإعداد أبحاث المشاركة في معارض العلوم.',
-    descEn: 'Laboratory experiments, eco-sustainability projects, and STEM research showcase.',
-    scheduleAr: 'الأحد - 03:00 م',
-    scheduleEn: 'Sunday - 03:00 PM',
-    locationAr: 'مجمع المعامل المركزية',
-    locationEn: 'Central Science Labs',
-    color: 'from-cyan-500 to-blue-600',
-    badgeBg: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300',
-  },
-  {
-    id: 'theater',
-    category: 'arts',
-    icon: Heart,
-    titleAr: 'الفرقة المسرحية والكورال الموسيقي',
-    titleEn: 'School Theatre & Music Ensemble',
-    descAr: 'الأداء المسرحي باللغتين العربية والإنجليزية والعروض الموسيقية في الحفلات الرسمية.',
-    descEn: 'Bilingual theatrical performances and musical choir during official events.',
-    scheduleAr: 'الخميس - 02:30 م',
-    scheduleEn: 'Thursday - 02:30 PM',
-    locationAr: 'المسرح المدرسي الكبير',
-    locationEn: 'Grand School Auditorium',
-    color: 'from-rose-500 to-red-600',
-    badgeBg: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-  },
-];
 
 export function StudentLifePage() {
   const { t, i18n } = useTranslation();
@@ -139,9 +34,52 @@ export function StudentLifePage() {
 
   const [activeCategory, setActiveCategory] = useState<'all' | 'stem' | 'sports' | 'arts' | 'leadership'>('all');
 
+  const { data: cmsConfig = {} } = useQuery({
+    queryKey: ['cms-config'],
+    queryFn: () => cmsApi.getConfig().then((r) => r.data),
+  });
+
+  const cmsData: StudentLifeFullConfig = (() => {
+    if (cmsConfig.student_life_config) {
+      try {
+        const parsed = JSON.parse(cmsConfig.student_life_config);
+        return {
+          ...DEFAULT_STUDENT_LIFE_CONFIG,
+          ...parsed,
+          clubs: parsed.clubs && parsed.clubs.length > 0 ? parsed.clubs : DEFAULT_STUDENT_LIFE_CONFIG.clubs,
+          pillars: parsed.pillars && parsed.pillars.length > 0 ? parsed.pillars : DEFAULT_STUDENT_LIFE_CONFIG.pillars,
+        };
+      } catch (e) {
+        console.error('Error parsing student_life_config', e);
+      }
+    }
+    return DEFAULT_STUDENT_LIFE_CONFIG;
+  })();
+
+  const categoryIconMap: Record<string, typeof Cpu> = {
+    stem: Cpu,
+    sports: Dumbbell,
+    arts: Palette,
+    leadership: Globe,
+  };
+
+  const categoryColorMap: Record<string, string> = {
+    stem: 'from-blue-500 to-indigo-600',
+    sports: 'from-emerald-500 to-teal-600',
+    arts: 'from-purple-500 to-pink-600',
+    leadership: 'from-amber-500 to-orange-600',
+  };
+
+  const categoryBadgeMap: Record<string, string> = {
+    stem: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+    sports: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+    arts: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+    leadership: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  };
+
   const filteredClubs = activeCategory === 'all'
-    ? clubList
-    : clubList.filter((club) => club.category === activeCategory);
+    ? cmsData.clubs
+    : cmsData.clubs.filter((club) => club.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-300">
@@ -162,7 +100,7 @@ export function StudentLifePage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-semibold text-gold"
           >
             <Sparkles className="h-4 w-4" />
-            <span>{t('studentLife.heroBadge')}</span>
+            <span>{isRtl ? cmsData.badgeAr : cmsData.badgeEn}</span>
           </motion.div>
 
           <motion.h1
@@ -171,7 +109,7 @@ export function StudentLifePage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto"
           >
-            {t('studentLife.heroTitle')}
+            {isRtl ? cmsData.heroTitleAr : cmsData.heroTitleEn}
           </motion.h1>
 
           <motion.p
@@ -180,7 +118,7 @@ export function StudentLifePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg sm:text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed"
           >
-            {t('studentLife.heroSubtitle')}
+            {isRtl ? cmsData.heroSubtitleAr : cmsData.heroSubtitleEn}
           </motion.p>
 
           <motion.div
@@ -211,25 +149,25 @@ export function StudentLifePage() {
       <section className="relative -mt-10 max-w-6xl mx-auto px-4 sm:px-6 z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-slate-800">
           <div className="text-center p-3 border-r border-gray-100 dark:border-slate-800 last:border-0">
-            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">+15</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">{cmsData.statClubs}</div>
             <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400">
               {t('studentLife.stats.clubs')}
             </div>
           </div>
           <div className="text-center p-3 border-r border-gray-100 dark:border-slate-800 last:border-0">
-            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">+10</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">{cmsData.statSports}</div>
             <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400">
               {t('studentLife.stats.sports')}
             </div>
           </div>
           <div className="text-center p-3 border-r border-gray-100 dark:border-slate-800 last:border-0">
-            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">+50</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">{cmsData.statEvents}</div>
             <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400">
               {t('studentLife.stats.events')}
             </div>
           </div>
           <div className="text-center p-3">
-            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">100%</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-primary dark:text-blue-400 mb-1">{cmsData.statParticipation}</div>
             <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400">
               {t('studentLife.stats.participation')}
             </div>
@@ -248,78 +186,30 @@ export function StudentLifePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* STEM */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-slate-800 flex flex-col justify-between"
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-                <Cpu className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('studentLife.pillars.stemTitle')}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
-                {t('studentLife.pillars.stemDesc')}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Sports */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-slate-800 flex flex-col justify-between"
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
-                <Dumbbell className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('studentLife.pillars.sportsTitle')}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
-                {t('studentLife.pillars.sportsDesc')}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Arts */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-slate-800 flex flex-col justify-between"
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
-                <Palette className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('studentLife.pillars.artsTitle')}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
-                {t('studentLife.pillars.artsDesc')}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Leadership */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-slate-800 flex flex-col justify-between"
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
-                <Globe className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {t('studentLife.pillars.leadershipTitle')}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
-                {t('studentLife.pillars.leadershipDesc')}
-              </p>
-            </div>
-          </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cmsData.pillars.map((pillar, idx) => {
+            const icons = [Dumbbell, Cpu, Palette, Globe, Trophy];
+            const IconComp = icons[idx % icons.length];
+            return (
+              <motion.div
+                key={pillar.id || idx}
+                whileHover={{ y: -6 }}
+                className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-slate-800 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+                    <IconComp className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {isRtl ? pillar.titleAr : pillar.titleEn}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
+                    {isRtl ? pillar.descAr : pillar.descEn}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
@@ -361,7 +251,9 @@ export function StudentLifePage() {
           {/* Club Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClubs.map((club) => {
-              const IconComp = club.icon;
+              const IconComp = categoryIconMap[club.category] || Cpu;
+              const colorClass = categoryColorMap[club.category] || 'from-blue-500 to-indigo-600';
+              const badgeClass = categoryBadgeMap[club.category] || 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
               return (
                 <motion.div
                   key={club.id}
@@ -373,10 +265,10 @@ export function StudentLifePage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${club.color} text-white shadow-sm`}>
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClass} text-white shadow-sm`}>
                         <IconComp className="h-6 w-6" />
                       </div>
-                      <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${club.badgeBg}`}>
+                      <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${badgeClass}`}>
                         {club.category.toUpperCase()}
                       </span>
                     </div>

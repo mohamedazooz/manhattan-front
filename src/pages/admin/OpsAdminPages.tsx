@@ -12,6 +12,7 @@ import { getApiErrorMessage, omitKeys } from '../../lib/formData';
 import { AdmissionStatusSelect } from '../../components/admin/AdmissionStatusSelect';
 import { useAppLanguage } from '../../i18n';
 import { Upload, Eye, Mail, Send, Phone, User, Clock, Search, MessageSquare, ExternalLink, CheckCircle } from 'lucide-react';
+import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
 
 
 export function AdminEducationPage() {
@@ -639,7 +640,12 @@ export function AdminAdmissionsPage() {
           <AdmissionStatusSelect
             className="border rounded p-1 text-xs bg-white dark:bg-slate-800 text-neutral-dark dark:text-slate-100 font-medium"
             value={r.status}
-            onChange={(status) => admissionsApi.updateStatus(r.id, status).then(() => qc.invalidateQueries({ queryKey: ['admissions-admin'] }))}
+            onChange={(status) => admissionsApi.updateStatus(r.id, status).then(() => {
+              qc.invalidateQueries({ queryKey: ['admissions-admin'] });
+              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+              qc.invalidateQueries({ queryKey: ['my-admissions'] });
+              qc.invalidateQueries({ queryKey: ['notifications'] });
+            })}
           />
         )},
         { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r) => (
@@ -730,6 +736,9 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
             admissionsApi.updateStatus(id, status).then(() => {
               qc.invalidateQueries({ queryKey: ['admission-detail', id] });
               qc.invalidateQueries({ queryKey: ['admissions-admin'] });
+              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+              qc.invalidateQueries({ queryKey: ['my-admissions'] });
+              qc.invalidateQueries({ queryKey: ['notifications'] });
             })
           }
           className="w-48"
@@ -808,21 +817,26 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
 
 export function AdminRequirementsPage() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
+  const lang = useAppLanguage();
   const { data: items = [] } = useQuery({ queryKey: ['requirements'], queryFn: () => requirementsApi.list(true).then((r) => r.data) });
   const [form, setForm] = useState({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 });
   return (
     <div>
-      <PageHeader title="Admission Requirements" subtitle="Manage grade-specific admission criteria and required documents." />
+      <PageHeader
+        title={t('admin.admissionRequirementsTitle', 'شروط ومتطلبات القبول')}
+        subtitle={t('admin.admissionRequirementsSubtitle', 'إدارة المعايير وشروط السن والمستندات المطلوبة لكل مرحلة دراسية.')}
+      />
       <form className="grid md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs items-end" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => { setForm({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 }); qc.invalidateQueries({ queryKey: ['requirements'] }); }); }}>
-        <Input label="Grade" value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} placeholder="e.g. Grade 1" required />
-        <Input label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Primary Admission Requirements" required />
-        <Button type="submit" className="w-full">Add Requirement</Button>
+        <Input label={t('admin.gradeLevel', 'المرحلة الدراسية')} value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} placeholder={t('admin.gradePlaceholder', 'مثال: Grade 1')} required />
+        <Input label={t('admin.title', 'العنوان')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('admin.titlePlaceholder', 'مثال: متطلبات قبول الصف الأول')} required />
+        <Button type="submit" className="w-full">{t('admin.addRequirement', 'إضافة شرط جديد')}</Button>
       </form>
       <DataTable data={items} columns={[
-        { key: 'grade', header: 'Grade', render: (r: { gradeLevel: string }) => <span className="font-semibold text-slate-900 dark:text-slate-100">{r.gradeLevel}</span> },
-        { key: 'title', header: 'Title', render: (r: { title: string }) => <span className="text-slate-800 dark:text-slate-200">{r.title}</span> },
-        { key: 'actions', header: 'Actions', render: (r: { id: string }) => (
-          <Button variant="danger" className="py-1 px-3 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>Delete</Button>
+        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r: { gradeLevel: string }) => <span className="font-semibold text-slate-900 dark:text-slate-100">{t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}</span> },
+        { key: 'title', header: t('admin.title', 'العنوان') as string, render: (r: { title: string; titleAr?: string }) => <span className="text-slate-800 dark:text-slate-200">{lang === 'ar' && r.titleAr ? r.titleAr : r.title}</span> },
+        { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r: { id: string }) => (
+          <Button variant="danger" className="py-1 px-3 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>{t('admin.delete', 'حذف')}</Button>
         )},
       ]} />
     </div>
@@ -831,6 +845,7 @@ export function AdminRequirementsPage() {
 
 export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [viewApp, setViewApp] = useState<any | null>(null);
   const { data: apps = [] } = useQuery({
     queryKey: ['job-apps', jobId],
@@ -841,42 +856,48 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
 
   return (
     <div>
-      <PageHeader title="Teacher & Job Applications" subtitle="Review candidate profiles, credentials, and update hiring statuses." />
+      <PageHeader title={t('admin.jobAppsTitle', 'طلبات التوظيف والتعيين')} subtitle={t('admin.jobAppsSubtitle', 'مراجعة ملفات المعلمين والمتقدمين، المستندات المرفقة، وتحديث حالات التعيين.')} />
       <DataTable data={apps} columns={[
-        { key: 'name', header: 'Candidate Name', render: (r: { fullName: string; phone: string }) => (
+        { key: 'name', header: t('admin.candidateName', 'اسم المتقدم') as string, render: (r: { fullName: string; phone: string }) => (
           <div>
-            <div className="font-semibold text-neutral-dark">{r.fullName}</div>
-            <div className="text-xs text-neutral-medium">{r.phone}</div>
+            <div className="font-semibold text-neutral-dark dark:text-slate-100">{r.fullName}</div>
+            <div className="text-xs text-neutral-medium dark:text-slate-400">{r.phone}</div>
           </div>
         )},
-        { key: 'email', header: 'Email', render: (r: { email: string }) => r.email },
-        { key: 'documents', header: 'Uploaded Credentials', render: (r: { documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }> }) => (
+        { key: 'email', header: t('admin.email', 'البريد الإلكتروني') as string, render: (r: { email: string }) => r.email },
+        { key: 'documents', header: t('admin.attachedDocuments', 'المستندات المرفقة') as string, render: (r: { documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }> }) => (
           <div className="flex flex-wrap gap-1">
             {r.documents && r.documents.length > 0 ? (
               r.documents.map((doc) => (
                 <a
                   key={doc.id}
-                  href={doc.fileUrl}
+                  href={mediaUrl(doc.fileUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs bg-primary-light text-primary hover:underline px-2 py-0.5 rounded font-mono flex items-center gap-1"
                 >
-                  📄 {doc.documentType.replace('_', ' ')}
+                  📄 {t(`documents.${doc.documentType}`, doc.documentType.replace(/_/g, ' '))}
                 </a>
               ))
             ) : (
-              <span className="text-xs text-neutral-medium italic">No files attached</span>
+              <span className="text-xs text-slate-400">{t('admin.noDocs', 'لا توجد مستندات')}</span>
             )}
           </div>
         )},
-        { key: 'status', header: 'Status', render: (r: { id: string; status: string }) => (
+        { key: 'status', header: t('admin.statusLabel', 'الحالة') as string, render: (r: { id: string; status: string }) => (
           <select
-            className="border rounded p-1 text-xs bg-white font-medium"
             value={r.status}
-            onChange={(e) => careersApi.updateApplicationStatus(r.id, e.target.value).then(() => qc.invalidateQueries({ queryKey: ['job-apps', jobId] }))}
+            onChange={(e) => careersApi.updateApplicationStatus(r.id, e.target.value).then(() => {
+              qc.invalidateQueries({ queryKey: ['job-apps', jobId] });
+              qc.invalidateQueries({ queryKey: ['job-apps-all'] });
+              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+              qc.invalidateQueries({ queryKey: ['my-job-applications'] });
+              qc.invalidateQueries({ queryKey: ['notifications'] });
+            })}
+            className="text-xs border rounded p-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
           >
-            {statuses.map((st) => (
-              <option key={st} value={st}>{st}</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{String(t(`status.${s}`, s))}</option>
             ))}
           </select>
         )},
@@ -946,6 +967,16 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
               </div>
             </div>
 
+            {/* Hiring Documents & Interview Pledge Details */}
+            <HiringDocumentsSection
+              pledged={!!viewApp.pledgeOriginalsAtInterview}
+              onPledgeChange={() => {}}
+              documentFiles={{}}
+              onFileChange={() => {}}
+              uploadedDocs={viewApp.documents || []}
+              readOnly={true}
+            />
+
             <div className="flex justify-between items-center pt-4 border-t mt-2">
                <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-600">تغيير حالة الطلب:</span>
@@ -955,6 +986,10 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
                     onChange={(e) => {
                        careersApi.updateApplicationStatus(viewApp.id, e.target.value).then(() => {
                           qc.invalidateQueries({ queryKey: ['job-apps', jobId] });
+                          qc.invalidateQueries({ queryKey: ['job-apps-all'] });
+                          qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                          qc.invalidateQueries({ queryKey: ['my-job-applications'] });
+                          qc.invalidateQueries({ queryKey: ['notifications'] });
                           setViewApp({ ...viewApp, status: e.target.value });
                        });
                     }}
