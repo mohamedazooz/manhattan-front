@@ -175,15 +175,26 @@ export const HiringDocumentsSection: React.FC<HiringDocumentsSectionProps> = ({
                       <IconComponent className="w-4 h-4" />
                     </div>
                     <div className="space-y-0.5 flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
                         <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                           {title}
                         </span>
-                        {badge && (
-                          <span className="px-1.5 py-0.2 text-[10px] font-medium rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 shrink-0">
-                            {badge}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {doc.isMandatory ? (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                              {isAr ? '🔴 مطلوب إلزامي' : 'Mandatory'}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                              {isAr ? '🔵 اختياري' : 'Optional'}
+                            </span>
+                          )}
+                          {badge && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-md bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                              {badge}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
                         {desc}

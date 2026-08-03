@@ -9,6 +9,7 @@ export interface HiringDocumentDef {
   badgeEn?: string;
   icon: string;
   requiredFor: 'ALL' | 'MALES' | 'NON_EDUCATION_GRADUATES' | 'FEMALES';
+  isMandatory?: boolean;
 }
 
 export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
@@ -21,6 +22,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Official police clearance certificate addressed to Manhattan Language School.',
     icon: 'ShieldCheck',
     requiredFor: 'ALL',
+    isMandatory: true,
   },
   {
     key: 'birth_certificate',
@@ -31,6 +33,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Original computer birth certificate.',
     icon: 'FileText',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
   {
     key: 'graduation_certificate',
@@ -41,6 +44,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Original degree/graduation certificate (Bachelor/Master).',
     icon: 'GraduationCap',
     requiredFor: 'ALL',
+    isMandatory: true,
   },
   {
     key: 'educational_diploma',
@@ -53,6 +57,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     badgeEn: 'Non-Education Majors',
     icon: 'Award',
     requiredFor: 'NON_EDUCATION_GRADUATES',
+    isMandatory: false,
   },
   {
     key: 'national_id',
@@ -63,6 +68,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Valid National ID card copy (Front & Back).',
     icon: 'CreditCard',
     requiredFor: 'ALL',
+    isMandatory: true,
   },
   {
     key: 'personal_photos',
@@ -73,6 +79,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: '8 recent passport-sized photographs (white background).',
     icon: 'Image',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
   {
     key: 'military_status',
@@ -85,6 +92,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     badgeEn: 'Males Only',
     icon: 'FileCheck',
     requiredFor: 'MALES',
+    isMandatory: false,
   },
   {
     key: 'public_service',
@@ -95,6 +103,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Public Service completion or exemption certificate.',
     icon: 'FileBadge',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
   {
     key: 'insurance_form_111',
@@ -105,6 +114,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Official health & medical examination Form 111.',
     icon: 'Stethoscope',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
   {
     key: 'labor_card',
@@ -115,6 +125,7 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Work Labor card issued by the regional employment bureau.',
     icon: 'Briefcase',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
   {
     key: 'insurance_print',
@@ -125,5 +136,18 @@ export const HIRING_DOCUMENTS: HiringDocumentDef[] = [
     descriptionEn: 'Official insurance number & history printout from Social Insurance Authority.',
     icon: 'Printer',
     requiredFor: 'ALL',
+    isMandatory: false,
   },
 ];
+
+export function getMandatoryHiringDocumentCodes(): string[] {
+  return HIRING_DOCUMENTS.filter((doc) => doc.isMandatory).map((doc) => doc.code);
+}
+
+export function isDocumentUploaded(
+  code: string,
+  documentFiles: Record<string, File | null>,
+  uploadedDocTypes: Set<string>,
+): boolean {
+  return !!documentFiles[code] || uploadedDocTypes.has(code);
+}

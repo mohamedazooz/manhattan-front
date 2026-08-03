@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Briefcase,
   MapPin,
   Clock,
   Search,
-  CheckCircle2,
   Award,
   Sparkles,
   ChevronRight,
-  Upload,
   GraduationCap,
   Users,
-  X,
 } from 'lucide-react';
 import { careersApi } from '../../api';
 import { useTranslation } from 'react-i18next';
@@ -22,34 +19,30 @@ import { StatusBadge, LoadingSpinner } from '../../components/ui/Badge';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useAppLanguage } from '../../i18n';
 import type { Job } from '../../types';
-
-import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
+import { useAuth } from '../../lib/auth';
 import { getBilingualText } from '../../lib/utils';
 
 export function CareersPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
+  const navigate = useNavigate();
+  const { user, role } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
-  const [applyingJob, setApplyingJob] = useState<Job | null>(null);
-  const [applySuccess, setApplySuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
-  // Application form state
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    yearsExperience: '',
-    curriculumExperience: '',
-    subjectsTaught: '',
-    highestQualification: '',
-    coverLetter: '',
-  });
-  const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [pledgedOriginals, setPledgedOriginals] = useState<boolean>(true);
-  const [hiringFiles, setHiringFiles] = useState<Record<string, File | null>>({});
+  function getApplyPath(jobId: string) {
+    return `/portal/applicant/apply/${jobId}`;
+  }
+
+  function handleApplyJob(jobId: string) {
+    const applyPath = getApplyPath(jobId);
+    if (!user || role === 'PARENT') {
+      navigate(`/register/applicant?redirect=${encodeURIComponent(applyPath)}`);
+      return;
+    }
+    navigate(applyPath);
+  }
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs', lang],
@@ -65,74 +58,6 @@ export function CareersPage() {
     return matchesSearch && matchesType;
   });
 
-  const handleApplySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!applyingJob) return;
-
-    setSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('fullName', form.fullName);
-      formData.append('email', form.email);
-      formData.append('phone', form.phone);
-      formData.append('pledgeOriginalsAtInterview', String(pledgedOriginals));
-      if (form.yearsExperience) formData.append('yearsExperience', form.yearsExperience);
-      if (form.curriculumExperience) formData.append('curriculumExperience', form.curriculumExperience);
-      if (form.subjectsTaught) formData.append('subjectsTaught', form.subjectsTaught);
-      if (form.highestQualification) formData.append('highestQualification', form.highestQualification);
-      if (form.coverLetter) formData.append('coverLetter', form.coverLetter);
-
-      if (resumeFile) {
-        formData.append('resume', resumeFile);
-      }
-
-      const res = await careersApi.apply(applyingJob.id, formData);
-      const appId = res.data?.applicationId;
-
-      // Upload extra hiring documents if selected
-      if (appId) {
-        for (const [code, file] of Object.entries(hiringFiles)) {
-          if (file) {
-            const docFd = new FormData();
-            docFd.append('file', file);
-            docFd.append('documentType', code);
-            try {
-              await careersApi.uploadDocument(appId, docFd);
-            } catch (docErr) {
-              console.warn(`Failed uploading document ${code}`, docErr);
-            }
-          }
-        }
-      }
-
-      setApplySuccess(true);
-      setTimeout(() => {
-        setApplyingJob(null);
-        setApplySuccess(false);
-        setForm({
-          fullName: '',
-          email: '',
-          phone: '',
-          yearsExperience: '',
-          curriculumExperience: '',
-          subjectsTaught: '',
-          highestQualification: '',
-          coverLetter: '',
-        });
-        setResumeFile(null);
-        setPledgedOriginals(true);
-        setHiringFiles({});
-      }, 2500);
-    } catch (err: any) {
-      console.error('Failed to submit application', err);
-      const apiMsg = err?.response?.data?.message;
-      const errorText = Array.isArray(apiMsg) ? apiMsg.join(', ') : apiMsg;
-      alert(errorText || t('careers.errorSubmit'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (isLoading) return <LoadingSpinner />;
 
   return (
@@ -141,9 +66,19 @@ export function CareersPage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-dark via-primary to-slate-900 text-white py-20 px-4">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(201,162,39,0.15),transparent_50%)]" />
         <div className="relative mx-auto max-w-7xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/20 border border-gold/40 text-gold text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-4 h-4" />
-            {t('careers.heroBadge')}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold/20 border border-gold/40 text-gold text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4" />
+              {t('careers.heroBadge')}
+            </div>
+
+            <Link
+              to="/careers/track"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-gold/30 border border-gold/40 text-gold font-bold text-xs transition-all backdrop-blur-xs shadow-xs"
+            >
+              <Search className="w-4 h-4 text-gold" />
+              {lang === 'ar' ? 'تتبع حالة طلبك' : 'Track Application Status'}
+            </Link>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black font-heading tracking-tight max-w-3xl leading-tight mb-6">
             {t('careers.heroTitle')}
@@ -272,7 +207,7 @@ export function CareersPage() {
                     </Link>
                     {job.status === 'OPEN' && (
                       <Button
-                        onClick={() => setApplyingJob(job)}
+                        onClick={() => handleApplyJob(job.id)}
                         className="py-2 px-5 text-sm shadow-md"
                       >
                         {t('careers.applyNow')}
@@ -291,218 +226,6 @@ export function CareersPage() {
           />
         )}
       </div>
-
-      {/* Quick Application Modal */}
-      {applyingJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 my-8">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <span className="text-xs font-bold text-primary dark:text-gold uppercase tracking-wider">
-                  {t('careers.applicationTitle')}
-                </span>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {getBilingualText(applyingJob, 'title', lang)}
-                </h2>
-              </div>
-              <button
-                onClick={() => setApplyingJob(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {applySuccess ? (
-              <div className="text-center py-10 space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {t('careers.applicationSuccess')}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-                  {t('careers.applicationSuccessDesc')}
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleApplySubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.fullNameLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.fullName}
-                      onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.emailLabel')}
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.phoneLabel')}
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.experienceLabel')}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.yearsExperience}
-                      onChange={(e) => setForm({ ...form, yearsExperience: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.qualificationLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('careers.qualificationPlaceholder')}
-                      value={form.highestQualification}
-                      onChange={(e) => setForm({ ...form, highestQualification: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      {t('careers.subjectsLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('careers.subjectsPlaceholder')}
-                      value={form.subjectsTaught}
-                      onChange={(e) => setForm({ ...form, subjectsTaught: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('careers.coverLetterLabel')}
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={form.coverLetter}
-                    onChange={(e) => setForm({ ...form, coverLetter: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-
-                {/* Hiring Documents Section (مصوغات التعيين) */}
-                <HiringDocumentsSection
-                  lang={lang as 'ar' | 'en'}
-                  pledged={pledgedOriginals}
-                  onPledgeChange={setPledgedOriginals}
-                  documentFiles={hiringFiles}
-                  onFileChange={(code, file) =>
-                    setHiringFiles((prev) => ({ ...prev, [code]: file }))
-                  }
-                />
-
-                {/* CV Upload Field */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
-                    <span>{t('careers.uploadCvLabel')} <span className="text-red-500">*</span></span>
-                    <span className="text-[10px] text-slate-400 font-normal">PDF, DOC, DOCX, PNG, JPG (الحجم الأقصى 5MB)</span>
-                  </label>
-                  <div className={`relative border-2 border-dashed rounded-2xl p-5 text-center transition-all ${
-                    resumeFile
-                      ? 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-500/10'
-                      : 'border-slate-300 dark:border-slate-700 hover:border-amber-500 bg-slate-50/60 dark:bg-slate-800/60'
-                  }`}>
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
-                      required
-                      onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                    />
-                    
-                    {resumeFile ? (
-                      <div className="flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-200">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                            📄
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold truncate max-w-xs">{resumeFile.name}</div>
-                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-                              {(resumeFile.size / (1024 * 1024)).toFixed(2)} MB · {resumeFile.name.split('.').pop()?.toUpperCase()}
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setResumeFile(null);
-                          }}
-                          className="relative z-20 text-red-500 hover:text-red-700 font-bold px-2 py-1 hover:underline text-xs"
-                        >
-                          تغيير الملف
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 text-xs">
-                        <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 mb-0.5">
-                          <Upload className="w-5 h-5" />
-                        </div>
-                        <span className="font-bold text-slate-800 dark:text-slate-100">
-                          {t('careers.uploadCvPlaceholder')}
-                        </span>
-                        <span className="text-[11px] text-slate-400">اضغط هنا لاختيار ملف السيرة الذاتية</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pt-4 flex items-center justify-end gap-3">
-                  <Button type="button" variant="outline" onClick={() => setApplyingJob(null)}>
-                    {t('careers.cancel')}
-                  </Button>
-                  <Button type="submit" disabled={submitting} showArrow>
-                    {submitting ? t('careers.submitting') : t('careers.submitApplication')}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -135,7 +135,7 @@
     "teachers": "Every great leader today can point to a teacher who radically changed their life path for the better. At Manhattan Language School, our teachers go above and beyond for every learner.",
     "directorMessage": "School Director's Message",
     "regards": "With warm regards,",
-    "directorName": "Prof. Dr. Ibrahim Azzouz",
+    "directorName": "Ibrahim Azzouz",
     "directorRole": "Chairman & School Director",
     "schoolSubName": "Manhattan Language School"
   },
@@ -200,7 +200,11 @@
     "published": "Published",
     "draft": "Draft",
     "noResults": "No results found",
-    "notFound": "Not found"
+    "notFound": "Not found",
+    "name": "Name",
+    "subject": "Subject",
+    "date": "Date",
+    "view": "View"
   },
   "footer": {
     "quickLinks": "Quick Links",
@@ -359,10 +363,75 @@
     "navGallery": "Gallery",
     "blog": "Blog",
     "comments": "Comments",
+    "inquiries": "Inquiries",
     "admissions": "Admissions",
     "navRequirements": "Requirements",
     "careers": "Careers",
-    "inquiries": "Inquiries",
+    "jobRequirements": "Job Requirements",
+    "formDocuments": "Forms & Documents",
+    "requiredField": "Required",
+    "optionalField": "Optional",
+    "pageGuide": {
+      "viewOnSite": "View on site",
+      "affectsSection": "Affects section",
+      "livePreview": "Live preview",
+      "noPreviewData": "No preview data yet — add content to see it here."
+    },
+    "pageGuides": {
+      "hero": {
+        "section": "Homepage",
+        "description": "Manage hero carousel slides at the top of the homepage: images, titles, and CTA buttons."
+      },
+      "sections": {
+        "section": "Homepage",
+        "description": "Edit predefined landing sections (text, images, publish/hide). New sections cannot be added."
+      },
+      "studentLife": {
+        "section": "Student Life page",
+        "description": "Manage clubs, activities, stats, and content on the student life page."
+      },
+      "about": {
+        "section": "About Us page",
+        "description": "Edit About Us blocks: vision, mission, values, and school profile content."
+      },
+      "pages": {
+        "section": "Custom pages",
+        "description": "Create and edit static pages with custom URLs (e.g. policies and terms)."
+      },
+      "formDocuments": {
+        "section": "Parent forms",
+        "description": "Manage downloadable forms and documents for parents on the forms portal."
+      },
+      "education": {
+        "section": "Academic programs",
+        "description": "Manage education programs and levels shown on the academics pages."
+      },
+      "gallery": {
+        "section": "Homepage — Photo gallery",
+        "description": "Upload and organize school photos shown in the landing gallery section."
+      },
+      "blog": {
+        "section": "News & blog",
+        "description": "Write and publish school news and blog articles."
+      },
+      "jobRequirements": {
+        "section": "Careers — Applicant form",
+        "description": "Define required documents per employment type. Applicants must upload these when applying for a matching job."
+      }
+    },
+    "jobRequirementsTitle": "Job Requirements",
+    "jobRequirementsSubtitle": "Manage documents and conditions required for each job type.",
+    "employmentTypeFullTime": "Full-time",
+    "employmentTypePartTime": "Part-time",
+    "employmentTypeContract": "Contract",
+    "addRequirement": "Add requirement",
+    "requiredDocuments": "Required documents",
+    "basicInfo": "Basic information",
+    "optionalDetails": "Optional details",
+    "minYearsExperience": "Minimum years of experience",
+    "jobReqPreviewHint": "When applying for a job of this type, the applicant will be asked to upload:",
+    "formDocumentsTitle": "Forms & Documents",
+    "formDocumentsSubtitle": "Manage forms and documents shown to parents and staff.",
     "navUsers": "Users",
     "navRoles": "Roles",
     "navEmail": "Email",
@@ -427,12 +496,29 @@
     "applied": "Applied",
     "audit": "Audit Log",
     "auditSubtitle": "System-wide activity and status change history",
+    "audit.filterCategory": "Filter by category",
+    "audit.allCategories": "All categories",
+    "audit.searchAction": "Search",
+    "audit.searchPlaceholder": "Search actions or details...",
+    "audit.noResults": "No matching audit records found.",
+    "audit.localhost": "Local",
+    "audit.category.auth": "Security & Login",
+    "audit.category.admissions": "Admissions",
+    "audit.category.jobs": "Careers & Hiring",
+    "audit.category.content": "Content",
+    "audit.category.users": "Users",
+    "audit.category.inquiries": "Inquiries",
+    "audit.category.system": "System",
+    "audit.category.other": "Other",
     "actionQueue": "Action Queue",
     "moduleGrid": "All Modules",
     "manageModule": "Manage",
     "viewFullAudit": "View full audit log",
     "contentDrafts": "Content drafts pending",
     "unreadNotifications": "Unread notifications",
+    "notificationBell": "Notifications",
+    "viewAllNotifications": "View all notifications",
+    "noUnreadNotifications": "No unread notifications.",
     "failedEmails": "Failed emails",
     "review": "Review",
     "filterAction": "Filter by action",
@@ -601,8 +687,8 @@
     },
     "sectionsCrud": {
       "title": "Landing Page Sections",
-      "subtitle": "Manage content sections displayed on the school landing page.",
-      "addNew": "+ Add Landing Section"
+      "subtitle": "Edit predefined homepage sections (text, images, publish/hide). New sections cannot be added.",
+      "editTitle": "Edit Section"
     },
     "careersCrud": {
       "title": "Job Postings & Hiring",
@@ -852,6 +938,14 @@
     "motherPhone": "Mother Telephone",
     "emergencyContactAddress": "Emergency Contact Address",
     "emergencyContactPhone": "Emergency Contact Telephone",
+    "emergencyContactName": "Emergency Contact Person Name",
+    "emergencyContactRelation": "Emergency Contact Relationship",
+    "streetAddress": "Street Address (Building/Flat/Street)",
+    "city": "City / Area",
+    "governorate": "Governorate / State",
+    "nationalId": "Student National ID / Birth Certificate ID",
+    "parentNationalId": "Guardian National ID / Passport No.",
+    "addressSection": "Residential Address Details",
     "previousSchool": "Previous School (if applicable)",
     "languagesSpoken": "Languages Spoken by Student",
     "specialNeeds": "Does the student require special educational support?",
@@ -905,5 +999,39 @@
     "notFound": "Application not found",
     "noRequirements": "No specific requirements configured for this grade",
     "referenceNumber": "Reference Number"
+  },
+  "application": {
+    "applyTitle": "New Job Application / Teaching Staff",
+    "steps": {
+      "personal": "Personal & Address Details",
+      "qualifications": "Qualifications & Teaching Experience",
+      "documents": "Documents & Resume",
+      "declarations": "Declarations & Final Review"
+    },
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "nationalId": "National ID / Passport No.",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "nationality": "Nationality",
+    "streetAddress": "Street Address",
+    "city": "City",
+    "governorate": "Governorate / State",
+    "yearsExperience": "Years of Teaching Experience",
+    "curriculum": "Curriculum Experience (IB / British / American / National)",
+    "subjects": "Subjects Taught",
+    "qualification": "Highest Qualification",
+    "university": "University / College",
+    "graduationYear": "Graduation Year",
+    "major": "Major / Field of Study",
+    "licenseNo": "Teaching License No. (if any)",
+    "noticePeriod": "Notice Period / Availability",
+    "expectedSalary": "Expected Monthly Salary",
+    "emergencyContactName": "Emergency Contact Person",
+    "emergencyContactPhone": "Emergency Phone Number",
+    "coverLetter": "Cover Letter / Brief Overview",
+    "safeguarding": "I declare that all information is accurate and accept the Child Safeguarding policy of Manhattan Language School.",
+    "submit": "Submit Final Application"
   }
 }

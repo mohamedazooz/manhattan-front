@@ -6,9 +6,12 @@ import { Button } from '../../components/ui/Button';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
 import { useAuth } from '../../lib/auth';
-import { getPortalHomeForRole } from '../../components/auth/RoleRoute';
 
 import { getBilingualText } from '../../lib/utils';
+
+function getApplyPath(jobId: string) {
+  return `/portal/applicant/apply/${jobId}`;
+}
 
 export function CareerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,20 +35,17 @@ export function CareerDetailPage() {
   const requirements = getBilingualText(job, 'requirements', lang);
 
   function handleApply() {
-    if (!user) {
-      navigate(`/login?redirect=/portal/applicant/apply/${id}`);
+    const applyPath = getApplyPath(id!);
+    if (!user || role === 'PARENT') {
+      navigate(`/register/applicant?redirect=${encodeURIComponent(applyPath)}`);
       return;
     }
-    if (role === 'PARENT') {
-      navigate('/register/applicant');
-      return;
-    }
-    if (role === 'APPLICANT') {
-      navigate(`/portal/applicant/apply/${id}`);
-      return;
-    }
-    navigate(getPortalHomeForRole(role));
+    navigate(applyPath);
   }
+
+  const applyPath = getApplyPath(id!);
+  const registerApplicantUrl = `/register/applicant?redirect=${encodeURIComponent(applyPath)}`;
+  const loginUrl = `/login?redirect=${encodeURIComponent(applyPath)}&accountType=applicant`;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
@@ -72,18 +72,18 @@ export function CareerDetailPage() {
                   {t('auth.registerApplicantDesc')}
                 </p>
                 <div className="flex flex-col gap-2">
-                  <Button variant="gold" onClick={() => navigate(`/login?redirect=/portal/applicant/apply/${id}`)}>
-                    {t('auth.loginBtn')}
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate(`/register/applicant?redirect=/portal/applicant/apply/${id}`)}>
+                  <Button variant="gold" onClick={() => navigate(registerApplicantUrl)}>
                     {t('auth.registerBtn')}
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate(loginUrl)}>
+                    {t('auth.loginBtn')}
                   </Button>
                 </div>
               </div>
             ) : role === 'PARENT' ? (
               <div className="text-center py-6 px-4 bg-ivory rounded-xl border space-y-3">
                 <p className="text-sm text-neutral-medium">{t('auth.switchToApplicant')}</p>
-                <Button variant="gold" to="/register/applicant">{t('auth.registerApplicant')}</Button>
+                <Button variant="gold" to={registerApplicantUrl}>{t('auth.registerApplicant')}</Button>
               </div>
             ) : (
               <div className="space-y-4">

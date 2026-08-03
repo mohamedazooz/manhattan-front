@@ -1,19 +1,33 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { MapPin, Phone, Mail, Clock, Send, Check } from 'lucide-react';
-import { cmsApi } from '../../api';
+import { cmsApi, newsletterApi } from '../../api';
 import { mediaUrl } from '../../lib/utils';
 
 export function Footer() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   const { data: config = {} } = useQuery({
     queryKey: ['cms-config'],
     queryFn: () => cmsApi.getConfig().then((r) => r.data),
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: (value: string) => newsletterApi.subscribe(value),
+    onSuccess: () => {
+      setSubscribed(true);
+      setEmail('');
+      setSubscribeError(null);
+      setTimeout(() => setSubscribed(false), 4000);
+    },
+    onError: () => {
+      setSubscribeError(t('footer.subscribeError', 'Could not subscribe. Please try again.'));
+    },
   });
 
   const slogan = config.school_slogan || t('footer.description');
@@ -21,9 +35,7 @@ export function Footer() {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 4000);
+      subscribeMutation.mutate(email.trim());
     }
   };
 
@@ -242,12 +254,16 @@ export function Footer() {
                 />
                 <button
                   type="submit"
-                  className="px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors flex items-center justify-center shrink-0"
+                  disabled={subscribeMutation.isPending}
+                  className="px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors flex items-center justify-center shrink-0 disabled:opacity-60"
                   aria-label={t('footer.subscribe')}
                 >
                   <Send className="h-3.5 w-3.5" />
                 </button>
               </form>
+            )}
+            {subscribeError && (
+              <p className="text-xs text-rose-400 mt-1.5">{subscribeError}</p>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   FileText,
   UserCheck,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { SeoHead } from '../../components/common/SeoHead';
 import { useAppLanguage } from '../../i18n';
+import { formDocumentsApi } from '../../api';
 
 interface DocumentItem {
   id: string;
@@ -242,6 +244,42 @@ export function FormsAndDocumentsPage() {
   const lang = useAppLanguage();
   const isAr = lang === 'ar';
 
+  const { data: apiDocs = [] } = useQuery({
+    queryKey: ['form-documents', lang],
+    queryFn: () => formDocumentsApi.list(lang).then((r) => r.data),
+  });
+
+  const documentItems: DocumentItem[] = useMemo(() => {
+    if (!Array.isArray(apiDocs) || apiDocs.length === 0) {
+      return DOCUMENT_ITEMS;
+    }
+    return apiDocs.map((item: {
+      id: string;
+      category: 'STUDENT' | 'STAFF';
+      subCategory?: string | null;
+      titleAr: string;
+      titleEn: string;
+      descAr: string;
+      descEn: string;
+      requiredStatus: DocumentItem['requiredStatus'];
+      downloadUrl?: string | null;
+      downloadName?: string | null;
+      iconType?: string | null;
+    }) => ({
+      id: item.id,
+      category: item.category,
+      subCategory: item.subCategory || undefined,
+      titleAr: item.titleAr,
+      titleEn: item.titleEn,
+      descAr: item.descAr,
+      descEn: item.descEn,
+      requiredStatus: item.requiredStatus,
+      downloadUrl: item.downloadUrl || undefined,
+      downloadName: item.downloadName || undefined,
+      iconType: (item.iconType as DocumentItem['iconType']) || 'file',
+    }));
+  }, [apiDocs]);
+
   const [activeTab, setActiveTab] = useState<'STUDENT' | 'STAFF' | 'DOWNLOADS'>('STUDENT');
   const [searchQuery, setSearchQuery] = useState('');
   const [subFilter, setSubFilter] = useState<'ALL' | 'REQUIRED' | 'TRANSFER' | 'OPTIONAL'>('ALL');
@@ -269,7 +307,7 @@ export function FormsAndDocumentsPage() {
   };
 
   const filteredDocs = useMemo(() => {
-    return DOCUMENT_ITEMS.filter((item) => {
+    return documentItems.filter((item) => {
       if (activeTab === 'DOWNLOADS') {
         if (!item.downloadUrl) return false;
       } else if (item.category !== activeTab) {
@@ -289,12 +327,12 @@ export function FormsAndDocumentsPage() {
 
       return true;
     });
-  }, [activeTab, subFilter, searchQuery, isAr]);
+  }, [activeTab, subFilter, searchQuery, isAr, documentItems]);
 
   // Progress stats
   const currentTabDocs = useMemo(() => {
-    return DOCUMENT_ITEMS.filter((d) => (activeTab === 'DOWNLOADS' ? !!d.downloadUrl : d.category === activeTab));
-  }, [activeTab]);
+    return documentItems.filter((d) => (activeTab === 'DOWNLOADS' ? !!d.downloadUrl : d.category === activeTab));
+  }, [activeTab, documentItems]);
 
   const completedCount = useMemo(() => {
     return currentTabDocs.filter((d) => checkedIds.includes(d.id)).length;

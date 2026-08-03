@@ -135,7 +135,7 @@
     "teachers": "يمكن لكل قائد ناجح أن يشير إلى ذلك المعلم الذي غير مسار حياته للأفضل. في مدرسة مانهاتن للغات، يذهب مدرسونا إلى أبعد الحدود لمساعدة كل فرد على التفوق والنمو.",
     "directorMessage": "رسالة إدارة المدرسة",
     "regards": "مع خالص التحية والتقدير،",
-    "directorName": "الأستاذ الدكتور / إبراهيم عزوز",
+    "directorName": "إبراهيم عزوز",
     "directorRole": "رئيس مجلس الإدارة ومدير المدرسة",
     "schoolSubName": "مدرسة منهاتن للغات"
   },
@@ -200,7 +200,11 @@
     "published": "منشور",
     "draft": "مسودة",
     "noResults": "لا توجد نتائج",
-    "notFound": "غير موجود"
+    "notFound": "غير موجود",
+    "name": "الاسم",
+    "subject": "الموضوع",
+    "date": "التاريخ",
+    "view": "عرض"
   },
   "footer": {
     "quickLinks": "روابط سريعة",
@@ -359,10 +363,75 @@
     "navGallery": "معرض الصور",
     "blog": "المقالات والأخبار",
     "comments": "التعليقات",
+    "inquiries": "الاستفسارات",
     "admissions": "طلبات القبول",
     "navRequirements": "شروط القبول",
     "careers": "وظائف التدريس",
-    "inquiries": "الاستفسارات",
+    "jobRequirements": "متطلبات التوظيف",
+    "formDocuments": "النماذج والمستندات",
+    "requiredField": "مطلوب",
+    "optionalField": "اختياري",
+    "pageGuide": {
+      "viewOnSite": "عرض على الموقع",
+      "affectsSection": "يؤثر على قسم",
+      "livePreview": "معاينة حية",
+      "noPreviewData": "لا توجد بيانات للمعاينة بعد — أضف محتوى لرؤية النتيجة هنا."
+    },
+    "pageGuides": {
+      "hero": {
+        "section": "الصفحة الرئيسية",
+        "description": "إدارة شرائح البانر المتحرك في أعلى الصفحة الرئيسية: الصور، العناوين، والأزرار."
+      },
+      "sections": {
+        "section": "الصفحة الرئيسية",
+        "description": "تعديل محتوى الأقسام المحددة مسبقاً في اللاندينج (نصوص، صور، إخفاء/نشر). لا يمكن إضافة أقسام جديدة."
+      },
+      "studentLife": {
+        "section": "صفحة حياة الطالب",
+        "description": "إدارة الأنشطة، النوادي، والإحصائيات المعروضة في صفحة حياة الطالب."
+      },
+      "about": {
+        "section": "صفحة من نحن",
+        "description": "تعديل أقسام صفحة من نحن: الرؤية، الرسالة، القيم، ومحتوى تعريفي عن المدرسة."
+      },
+      "pages": {
+        "section": "صفحات مخصصة",
+        "description": "إنشاء وتحرير صفحات ثابتة بروابط مخصصة (مثل السياسات والشروط)."
+      },
+      "formDocuments": {
+        "section": "نماذج أولياء الأمور",
+        "description": "إدارة النماذج والمستندات التي يمكن لأولياء الأمور تحميلها من بوابة النماذج."
+      },
+      "education": {
+        "section": "البرامج الأكاديمية",
+        "description": "إدارة المراحل والبرامج التعليمية المعروضة في صفحة الأكاديميات."
+      },
+      "gallery": {
+        "section": "الصفحة الرئيسية — معرض الصور",
+        "description": "رفع وترتيب صور المدرسة والأنشطة المعروضة في معرض الصور."
+      },
+      "blog": {
+        "section": "الأخبار والمقالات",
+        "description": "كتابة ونشر أخبار المدرسة والمقالات التعليمية."
+      },
+      "jobRequirements": {
+        "section": "التوظيف — نموذج المتقدم",
+        "description": "تحدد المستندات المطلوبة من كل متقدم حسب نوع الدوام. عند التقديم على وظيفة، يُطلب من المتقدم رفع هذه المستندات."
+      }
+    },
+    "jobRequirementsTitle": "متطلبات التوظيف",
+    "jobRequirementsSubtitle": "إدارة المستندات والشروط المطلوبة لكل نوع وظيفة.",
+    "employmentTypeFullTime": "دوام كامل",
+    "employmentTypePartTime": "دوام جزئي",
+    "employmentTypeContract": "عقد",
+    "addRequirement": "إضافة متطلب",
+    "requiredDocuments": "المستندات المطلوبة",
+    "basicInfo": "معلومات أساسية",
+    "optionalDetails": "تفاصيل اختيارية",
+    "minYearsExperience": "أقل سنوات خبرة",
+    "jobReqPreviewHint": "عند التقديم على وظيفة بهذا النوع، سيُطلب من المتقدم رفع هذه المستندات:",
+    "formDocumentsTitle": "النماذج والمستندات",
+    "formDocumentsSubtitle": "إدارة النماذج والمستندات المعروضة لأولياء الأمور والموظفين.",
     "navUsers": "المستخدمون",
     "navRoles": "الأدوار والصلاحيات",
     "navEmail": "قوالب البريد الإلكتروني",
@@ -427,12 +496,29 @@
     "applied": "تاريخ التقديم",
     "audit": "سجل التدقيق",
     "auditSubtitle": "سجل النشاط وتغييرات الحالة على مستوى النظام",
+    "audit.filterCategory": "تصفية حسب الفئة",
+    "audit.allCategories": "كل الفئات",
+    "audit.searchAction": "بحث",
+    "audit.searchPlaceholder": "ابحث في الإجراءات أو التفاصيل...",
+    "audit.noResults": "لا توجد سجلات مطابقة للبحث.",
+    "audit.localhost": "محلي",
+    "audit.category.auth": "الأمان والدخول",
+    "audit.category.admissions": "القبول",
+    "audit.category.jobs": "التوظيف",
+    "audit.category.content": "المحتوى",
+    "audit.category.users": "المستخدمون",
+    "audit.category.inquiries": "الاستفسارات",
+    "audit.category.system": "النظام",
+    "audit.category.other": "أخرى",
     "actionQueue": "يحتاج إجراء",
     "moduleGrid": "كل الوحدات",
     "manageModule": "إدارة",
     "viewFullAudit": "عرض سجل التدقيق الكامل",
     "contentDrafts": "مسودات محتوى معلقة",
     "unreadNotifications": "إشعارات غير مقروءة",
+    "notificationBell": "التنبيهات",
+    "viewAllNotifications": "عرض كل الإشعارات",
+    "noUnreadNotifications": "لا توجد إشعارات غير مقروءة",
     "failedEmails": "إيميلات فاشلة",
     "review": "مراجعة",
     "filterAction": "تصفية حسب الإجراء",
@@ -607,8 +693,8 @@
     },
     "sectionsCrud": {
       "title": "أقسام الصفحة الرئيسية",
-      "subtitle": "إدارة الأقسام المعروضة على الصفحة الرئيسية للمدرسة.",
-      "addNew": "+ إضافة قسم جديد"
+      "subtitle": "تعديل محتوى الأقسام المحددة مسبقاً في الصفحة الرئيسية (النصوص، الصور، النشر/الإخفاء). لا يمكن إضافة أقسام جديدة.",
+      "editTitle": "تعديل قسم"
     },
     "careersCrud": {
       "title": "إدارة التوظيف والوظائف",
@@ -765,7 +851,7 @@
     "contract": "عقد",
     "recentlyPosted": "نُشر حديثاً",
     "viewDetails": "عرض التفاصيل",
-    "applyNow": "قدّم الآن",
+    "applyNow": "قدم الآن",
     "noPositions": "لا توجد وظائف متاحة حالياً",
     "noPositionsDesc": "لم نجد وظائف تطابق البحث الحالي. يرجى المتابعة لاحقاً.",
     "applicationTitle": "طلب انضمام للوظيفة",
@@ -858,6 +944,14 @@
     "motherPhone": "هاتف الأم",
     "emergencyContactAddress": "عنوان شخص الطوارئ",
     "emergencyContactPhone": "رقم هاتف الطوارئ",
+    "emergencyContactName": "اسم شخص الاتصال بالطوارئ",
+    "emergencyContactRelation": "صلة القرابة لشخص الطوارئ",
+    "streetAddress": "العنوان التفصيلي للسكن (الشارع/الرقم)",
+    "city": "المدينة / المنطقة",
+    "governorate": "المحافظة",
+    "nationalId": "الرقم القومي للطالب / رقم شهادة الميلاد",
+    "parentNationalId": "الرقم القومي / رقم جواز السفر لولي الأمر",
+    "addressSection": "عنوان السكن والإقامة التفصيلي",
     "previousSchool": "المدرسة السابقة (إن وجدت)",
     "languagesSpoken": "اللغات التي يتحدث بها الطالب",
     "specialNeeds": "هل يحتاج الطالب لرعاية تعليمية خاصة؟",
@@ -911,5 +1005,39 @@
     "notFound": "لم يتم العثور على طلب الالتحاق",
     "noRequirements": "لا توجد متطلبات مستندات خاصة لهذه المرحلة الدراسية",
     "referenceNumber": "الرقم المرجعي"
+  },
+  "application": {
+    "applyTitle": "طلب توظيف جديد / انضمام لكادر المعلمين",
+    "steps": {
+      "personal": "البيانات الشخصية والعنوان",
+      "qualifications": "المؤهلات والخبرات التدريسية",
+      "documents": "المستندات والسيرة الذاتية",
+      "declarations": "الإقرارات والمراجعة النهائة"
+    },
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف / الموبايل",
+    "nationalId": "الرقم القومي / رقم جواز السفر",
+    "dateOfBirth": "تاريخ الميلاد",
+    "gender": "الجنس",
+    "nationality": "الجنسية",
+    "streetAddress": "العنوان التفصيلي للسكن",
+    "city": "المدينة",
+    "governorate": "المحافظة",
+    "yearsExperience": "عدد سنوات الخبرة التدريسية",
+    "curriculum": "المناهج والبرامج السابقة",
+    "subjects": "المواد الدراسية التي تقوم بتدريسها",
+    "qualification": "المؤهل الدراسي الأعلى",
+    "university": "الجامعة / الكلية",
+    "graduationYear": "سنة التخرج",
+    "major": "التخصص الدقيق",
+    "licenseNo": "رقم رخصة التدريس / ترخيص المزاولة (إن وجد)",
+    "noticePeriod": "فترة الإشعار / التفرغ للبدء",
+    "expectedSalary": "الراتب المتوقع (شهرياً)",
+    "emergencyContactName": "اسم شخص للاتصال به عند الطوارئ",
+    "emergencyContactPhone": "هاتف الطوارئ",
+    "coverLetter": "خطاب التغطية / نبذة مختصرة عن خبراتك",
+    "safeguarding": "أقر بصحة جميع البيانات المدونة وبالموافقة على سياسة حماية الأطفال والتعليم بمدرسة مانهاتن للغات.",
+    "submit": "تقديم الطلب النهائي"
   }
 }

@@ -1,26 +1,16 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Clock, Phone, MessageSquare, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Clock, Phone, MessageSquare, ArrowRight, AlertCircle } from 'lucide-react';
 import { admissionsApi, requirementsApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Input';
 import { StatusBadge, LoadingSpinner } from '../../../components/ui/Badge';
 import { StepIndicator } from '../../../components/ui/StepIndicator';
 import { mediaUrl } from '../../../lib/utils';
-
-const DOC_LABELS: Record<string, string> = {
-  BIRTH_CERTIFICATE: 'Birth Certificate',
-  PREVIOUS_REPORT: 'Previous School Report',
-  HEALTH_RECORD: 'Health Record',
-  IMMUNIZATION_RECORD: 'Immunization Record',
-  STUDENT_PHOTO: 'Student Photo',
-  PARENT_PASSPORT: 'Parent Passport',
-  SCHOOL_REFERENCE: 'School Reference',
-  TRANSCRIPT: 'Academic Transcript',
-  PASSPORT: 'Student Passport',
-};
+import { getApiErrorMessage } from '../../../lib/formData';
+import { getAdmissionDocumentMeta } from './admissionWizardConstants';
 
 export function ParentAdmissionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +19,17 @@ export function ParentAdmissionDetailPage() {
   const queryClient = useQueryClient();
   const [docType, setDocType] = useState('BIRTH_CERTIFICATE');
   const [file, setFile] = useState<File | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [completeError, setCompleteError] = useState<string | null>(null);
+  const [completeSuccess, setCompleteSuccess] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const location = useLocation();
+  const routeState = location.state as {
+    incompleteDocs?: boolean;
+    referenceNumber?: string;
+    studentName?: string;
+  } | null;
 
   const { data: admission, isLoading } = useQuery({
     queryKey: ['admission', id],
@@ -51,12 +52,46 @@ export function ParentAdmissionDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admission', id] });
       setFile(null);
+      setUploadError(null);
+    },
+    onError: (error) => {
+      setUploadError(getApiErrorMessage(error, 'فشل رفع المستند. تأكد من الملف وحاول مرة أخرى.'));
     },
   });
 
   const submitMutation = useMutation({
     mutationFn: () => admissionsApi.submit(id!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admission', id] }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['admission', id] });
+      queryClient.invalidateQueries({ queryKey: ['my-admissions'] });
+      const refNum = (res.data as { referenceNumber?: string })?.referenceNumber;
+      navigate('/portal/parent', {
+        state: {
+          submitted: true,
+          referenceNumber: refNum,
+          studentName: admission
+            ? `${admission.studentFirstName} ${admission.studentLastName}`
+            : undefined,
+        },
+      });
+    },
+    onError: (error) => {
+      setSubmitError(getApiErrorMessage(error, t('admission.errorSubmit', 'فشل إرسال الطلب. يرجى المحاولة مرة أخرى.')));
+    },
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => admissionsApi.completeDocuments(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admission', id] });
+      queryClient.invalidateQueries({ queryKey: ['my-admissions'] });
+      setCompleteError(null);
+      setCompleteSuccess('تم تأكيد استكمال جميع المستندات المطلوبة بنجاح.');
+    },
+    onError: (error) => {
+      setCompleteSuccess(null);
+      setCompleteError(getApiErrorMessage(error, 'فشل تأكيد استكمال المستندات. تأكد من رفع كل المستندات المطلوبة.'));
+    },
   });
 
   if (isLoading) return <LoadingSpinner />;
@@ -87,7 +122,76 @@ export function ParentAdmissionDetailPage() {
   const gradeReq = requirements.find((r: { gradeLevel: string }) => r.gradeLevel === admission.gradeLevel);
   const requiredDocs: string[] = gradeReq?.requiredDocumentTypes ?? [];
   const uploadedTypes = new Set((admission.documents || []).map((d: { documentType: string }) => d.documentType));
-  const canEdit = admission.status !== 'REJECTED';
+  const missingDocs = requiredDocs.filter((type) => !uploadedTypes.has(type));
+  const isDraft = admission.status === 'DRAFT';
+  const canUploadDocuments = ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW'].includes(admission.status);
+  const canCompleteDocuments =
+    ['SUBMITTED', 'UNDER_REVIEW'].includes(admission.status) &&
+    missingDocs.length === 0 &&
+    !admission.documentsCompletedAt;
+  const documentsFullyComplete =
+    !isDraft &&
+    missingDocs.length === 0 &&
+    (admission.documentsCompletedAt || !['SUBMITTED', 'UNDER_REVIEW'].includes(admission.status));
+  const effectiveTermsAccepted = termsAccepted || admission.termsAccepted;
+
+  async function handleSubmit() {
+    setSubmitError(null);
+
+    if (!isDraft) {
+      setSubmitError('تم إرسال هذا الطلب مسبقاً. يمكنك استكمال المستندات الناقصة من نفس الصفحة.');
+      return;
+    }
+
+    if (file) {
+      setSubmitError('يوجد مستند محدد لم يُرفع بعد. اضغط «رفع المستند الآن» أو ألغِ الاختيار ثم أعد المحاولة.');
+      return;
+    }
+
+    if (uploadMutation.isPending) {
+      setSubmitError('انتظر حتى يكتمل رفع المستند الحالي ثم أعد المحاولة.');
+      return;
+    }
+
+    if (!effectiveTermsAccepted) {
+      setSubmitError('يجب الموافقة على الشروط والأنظمة قبل إرسال الطلب.');
+      return;
+    }
+
+    if (!admission.termsAccepted && termsAccepted) {
+      try {
+        await admissionsApi.update(id!, { termsAccepted: true });
+      } catch (error) {
+        setSubmitError(getApiErrorMessage(error, 'فشل حفظ الموافقة على الشروط.'));
+        return;
+      }
+    }
+
+    submitMutation.mutate();
+  }
+
+  function handleCompleteDocuments() {
+    setCompleteError(null);
+    setCompleteSuccess(null);
+
+    if (file) {
+      setCompleteError('يوجد مستند محدد لم يُرفع بعد. ارفع المستند أولاً ثم أكّد الاستكمال.');
+      return;
+    }
+
+    if (uploadMutation.isPending) {
+      setCompleteError('انتظر حتى يكتمل رفع المستند الحالي ثم أعد المحاولة.');
+      return;
+    }
+
+    if (missingDocs.length > 0) {
+      const labels = missingDocs.map((code) => getAdmissionDocumentMeta(code).title).join('، ');
+      setCompleteError(`المستندات المطلوبة التالية غير مرفوعة: ${labels}`);
+      return;
+    }
+
+    completeMutation.mutate();
+  }
 
   const wizardSteps = [
     t('admission.steps.student'),
@@ -170,7 +274,15 @@ export function ParentAdmissionDetailPage() {
         </div>
       )}
 
-      <StepIndicator steps={wizardSteps} currentStep={canEdit ? 4 : 5} />
+      <StepIndicator steps={wizardSteps} currentStep={canUploadDocuments ? 4 : 5} />
+
+      {(routeState?.incompleteDocs || (missingDocs.length > 0 && !isDraft)) && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-sm text-amber-900 dark:text-amber-200">
+          <strong>استكمال الطلب:</strong> تم إرسال طلبك بنجاح
+          {admission.referenceNumber ? ` (المرجع: ${admission.referenceNumber})` : ''}.
+          يتبقى رفع {missingDocs.length} مستند مطلوب لاستكمال الملف.
+        </div>
+      )}
 
       {/* Details Overview Card */}
       <section className="glass-card rounded-2xl p-6 space-y-6">
@@ -181,8 +293,10 @@ export function ParentAdmissionDetailPage() {
         <div className="grid sm:grid-cols-2 gap-4 text-xs">
           {/* Father / Guardian Info */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
-            <h4 className="font-bold text-sky-600 dark:text-sky-400 text-sm">بيانات الأب / ولي الأمر</h4>
+            <h4 className="font-bold text-sky-600 dark:text-sky-400 text-sm">بيانات الأب / ولي الأمر والطالب</h4>
             <p><strong>اسم ولي الأمر:</strong> {admission.parentName}</p>
+            <p><strong>الرقم القومي لولي الأمر:</strong> {admission.parentNationalId || 'غير مدخل'}</p>
+            <p><strong>الرقم القومي للطالب:</strong> {admission.nationalId || 'غير مدخل'}</p>
             <p><strong>البريد الإلكتروني:</strong> {admission.parentEmail}</p>
             <p><strong>الهاتف:</strong> {admission.parentPhone}</p>
             <p><strong>الجنسية:</strong> {admission.parentNationality || 'غير محدد'}</p>
@@ -191,20 +305,21 @@ export function ParentAdmissionDetailPage() {
 
           {/* Mother Info (Extracted) */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
-            <h4 className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">بيانات الأم (Mother's Details)</h4>
+            <h4 className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">بيانات الأم والفيصل السكني</h4>
             <p><strong>اسم الأم:</strong> {admission.motherName || 'غير مدخل'}</p>
             <p><strong>الهاتف:</strong> {admission.motherPhone || 'غير مدخل'}</p>
             <p><strong>المهنة:</strong> {admission.motherOccupation || 'غير مدخل'}</p>
-            <p><strong>الجنسية:</strong> {admission.motherNationality || 'غير محدد'}</p>
-            <p><strong>عنوان العمل:</strong> {admission.motherEmployerAddress || 'غير محدد'}</p>
+            <p><strong>العنوان التفصيلي:</strong> {admission.streetAddress || 'غير مدخل'}</p>
+            <p><strong>المدينة / المحافظة:</strong> {admission.city ? `${admission.city} ${admission.governorate || ''}` : 'غير مدخل'}</p>
           </div>
         </div>
 
         {/* Emergency Contact */}
-        {admission.emergencyContactPhone && (
+        {(admission.emergencyContactPhone || admission.emergencyContactName) && (
           <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
             <h4 className="font-bold text-amber-700 dark:text-amber-400 text-sm">جهة الاتصال للطوارئ</h4>
-            <p><strong>الهاتف:</strong> {admission.emergencyContactPhone}</p>
+            {admission.emergencyContactName && <p><strong>الاسم:</strong> {admission.emergencyContactName} ({admission.emergencyContactRelation || 'جهة اتصال'})</p>}
+            {admission.emergencyContactPhone && <p><strong>الهاتف:</strong> {admission.emergencyContactPhone}</p>}
             {admission.emergencyContactAddress && <p><strong>العنوان:</strong> {admission.emergencyContactAddress}</p>}
           </div>
         )}
@@ -270,7 +385,7 @@ export function ParentAdmissionDetailPage() {
               >
                 <div className="flex items-center gap-2.5">
                   <span className="text-lg">{isUploaded ? '✅' : '📌'}</span>
-                  <span className="text-xs font-bold">{DOC_LABELS[type] || type.replace(/_/g, ' ')}</span>
+                  <span className="text-xs font-bold">{getAdmissionDocumentMeta(type).title}</span>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isUploaded ? 'bg-emerald-500 text-white' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
@@ -298,7 +413,7 @@ export function ParentAdmissionDetailPage() {
                     </div>
                     <div>
                       <div className="font-bold text-slate-900 dark:text-slate-100">
-                        {DOC_LABELS[doc.documentType] || doc.documentType.replace(/_/g, ' ')}
+                        {getAdmissionDocumentMeta(doc.documentType).title}
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                         {doc.fileName}
@@ -321,8 +436,8 @@ export function ParentAdmissionDetailPage() {
           </div>
         )}
 
-        {/* File Upload Box (If editing is allowed) */}
-        {canEdit && (
+        {/* File Upload Box */}
+        {canUploadDocuments && (
           <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border-2 border-dashed border-slate-300 dark:border-slate-700 space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <Select
@@ -330,8 +445,8 @@ export function ParentAdmissionDetailPage() {
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
               >
-                {Object.entries(DOC_LABELS).map(([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
+                {requiredDocs.map((val) => (
+                  <option key={val} value={val}>{getAdmissionDocumentMeta(val).title}</option>
                 ))}
               </Select>
 
@@ -357,7 +472,10 @@ export function ParentAdmissionDetailPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setFile(null)}
+                  onClick={() => {
+                    setFile(null);
+                    setUploadError(null);
+                  }}
                   className="text-red-500 font-bold hover:underline"
                 >
                   إلغاء
@@ -365,10 +483,20 @@ export function ParentAdmissionDetailPage() {
               </div>
             )}
 
+            {uploadError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
             <div className="flex justify-end">
               <Button
                 variant="gold"
-                onClick={() => uploadMutation.mutate()}
+                onClick={() => {
+                  setUploadError(null);
+                  uploadMutation.mutate();
+                }}
                 disabled={!file || uploadMutation.isPending}
                 className="rounded-xl px-6 font-bold"
               >
@@ -379,10 +507,114 @@ export function ParentAdmissionDetailPage() {
         )}
       </section>
 
-      {canEdit && (
-        <Button variant="gold" onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending} className="w-full sm:w-auto">
-          {t('admission.submitApplication')}
-        </Button>
+      {isDraft && (
+        <section className="glass-card rounded-2xl p-5 space-y-4 border border-slate-200 dark:border-slate-800">
+          {!admission.termsAccepted && (
+            <label className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (submitError) setSubmitError(null);
+                }}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+              />
+              <span>{t('admission.termsAccepted')}</span>
+            </label>
+          )}
+
+          {missingDocs.length > 0 && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200">
+              <strong>تنبيه:</strong> يمكنك إرسال الطلب الآن واستكمال {missingDocs.length} مستند لاحقاً:
+              {missingDocs.map((code) => getAdmissionDocumentMeta(code).title).join('، ')}
+            </div>
+          )}
+
+          {submitError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{submitError}</span>
+            </div>
+          )}
+
+          <Button
+            variant="gold"
+            onClick={() => void handleSubmit()}
+            disabled={submitMutation.isPending || uploadMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            {submitMutation.isPending
+              ? t('common.submitting', 'جاري إرسال الطلب...')
+              : t('admission.submitApplication')}
+          </Button>
+        </section>
+      )}
+
+      {!isDraft && canUploadDocuments && missingDocs.length > 0 && (
+        <section className="glass-card rounded-2xl p-5 space-y-4 border border-slate-200 dark:border-slate-800">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            ارفع المستندات الناقصة أعلاه ثم اضغط «تأكيد استكمال المستندات» لإعلام الإدارة بأن الملف مكتمل.
+          </p>
+
+          {completeError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{completeError}</span>
+            </div>
+          )}
+
+          {completeSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{completeSuccess}</span>
+            </div>
+          )}
+        </section>
+      )}
+
+      {canCompleteDocuments && (
+        <section className="glass-card rounded-2xl p-5 space-y-4 border border-slate-200 dark:border-slate-800">
+          {completeError && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{completeError}</span>
+            </div>
+          )}
+
+          {completeSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{completeSuccess}</span>
+            </div>
+          )}
+
+          <Button
+            variant="gold"
+            onClick={() => void handleCompleteDocuments()}
+            disabled={completeMutation.isPending || uploadMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            {completeMutation.isPending ? 'جاري تأكيد الاستكمال...' : 'تأكيد استكمال المستندات'}
+          </Button>
+        </section>
+      )}
+
+      {!isDraft && documentsFullyComplete && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            {admission.documentsCompletedAt
+              ? 'تم استكمال جميع المستندات المطلوبة وإعلام الإدارة.'
+              : 'تم إرسال الطلب. جميع المستندات المطلوبة مرفوعة.'}
+          </span>
+        </div>
+      )}
+
+      {admission.status === 'REJECTED' && (
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-sm text-red-800 dark:text-red-200">
+          تم رفض هذا الطلب ولا يمكن تعديل المستندات.
+        </div>
       )}
     </div>
   );

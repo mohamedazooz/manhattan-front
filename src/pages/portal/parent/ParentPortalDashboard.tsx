@@ -1,8 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { GraduationCap, Plus, FileText, CheckCircle2, Clock, Phone, MessageSquare } from 'lucide-react';
-import { admissionsApi } from '../../../api';
+import { admissionsApi, requirementsApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
 import { StatusBadge, LoadingSpinner } from '../../../components/ui/Badge';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -11,15 +11,49 @@ import { useAppLanguage } from '../../../i18n';
 import { useAuth } from '../../../lib/auth';
 import type { Admission } from '../../../types';
 
-function docProgress(admission: Admission) {
+function getRequiredDocCount(admission: Admission, requirements: Array<{ gradeLevel: string; requiredDocumentTypes?: string[] }>) {
+  const gradeReq = requirements.find((r) => r.gradeLevel === admission.gradeLevel);
+  return gradeReq?.requiredDocumentTypes?.length ?? 0;
+}
+
+function getMissingDocCount(
+  admission: Admission,
+  requirements: Array<{ gradeLevel: string; requiredDocumentTypes?: string[] }>,
+) {
+  const gradeReq = requirements.find((r) => r.gradeLevel === admission.gradeLevel);
+  const requiredDocs = gradeReq?.requiredDocumentTypes ?? [];
+  const uploaded = new Set((admission.documents ?? []).map((d) => d.documentType));
+  return requiredDocs.filter((type) => !uploaded.has(type)).length;
+}
+
+function isIncompleteAdmission(
+  admission: Admission,
+  requirements: Array<{ gradeLevel: string; requiredDocumentTypes?: string[] }>,
+) {
+  if (admission.status === 'DRAFT') return true;
+  if (['SUBMITTED', 'UNDER_REVIEW'].includes(admission.status) && !admission.documentsCompletedAt) {
+    return getMissingDocCount(admission, requirements) > 0;
+  }
+  return false;
+}
+
+function docProgress(admission: Admission, requiredCount: number) {
   const uploaded = admission.documents?.length ?? 0;
-  return Math.min(100, uploaded * 20);
+  if (requiredCount <= 0) return Math.min(100, uploaded * 20);
+  return Math.min(100, Math.round((uploaded / requiredCount) * 100));
 }
 
 export function ParentPortalDashboard() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
   const { user } = useAuth();
+  const location = useLocation();
+
+  const submissionState = location.state as {
+    submitted?: boolean;
+    referenceNumber?: string;
+    studentName?: string;
+  } | null;
 
   const { data: admissions = [], isLoading } = useQuery({
     queryKey: ['my-admissions'],
@@ -27,10 +61,15 @@ export function ParentPortalDashboard() {
     refetchInterval: 10000,
   });
 
+  const { data: requirements = [] } = useQuery({
+    queryKey: ['admission-requirements', lang],
+    queryFn: () => requirementsApi.list(false, lang).then((r) => (Array.isArray(r.data) ? r.data : [])),
+  });
+
   if (isLoading) return <LoadingSpinner />;
 
   const active = admissions.filter((a) => ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW'].includes(a.status));
-  const draftAdmissions = admissions.filter((a) => a.status === 'DRAFT');
+  const incompleteAdmissions = admissions.filter((a) => isIncompleteAdmission(a, requirements));
   const acceptedAdmissions = admissions.filter((a) => a.status === 'ACCEPTED');
   const accepted = acceptedAdmissions.length;
 
@@ -45,9 +84,34 @@ export function ParentPortalDashboard() {
         </div>
         <Button to="/portal/parent/admissions/new" variant="gold">
           <Plus className="w-4 h-4" />
-          {t('portal.parent.newApplication')}
+          {lang === 'ar' ? 'تقديم طلب قبول جديد (طالب آخر)' : t('portal.parent.newApplication')}
         </Button>
       </div>
+
+      {/* Newly Submitted Application Banner */}
+      {submissionState?.submitted && (
+        <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in shadow-xl">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+              <span>تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسية</span>
+            </div>
+            {submissionState.studentName && (
+              <h4 className="font-bold text-base text-slate-800 dark:text-slate-100">
+                اسم الطالب: {submissionState.studentName}
+              </h4>
+            )}
+            {submissionState.referenceNumber && (
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                الرقم المرجعي للطلب: <strong className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 font-mono text-emerald-700 dark:text-emerald-300 text-sm border border-emerald-500/30">{submissionState.referenceNumber}</strong>
+              </p>
+            )}
+          </div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-800/50 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
+            يمكنك متابعة وتتبع حالة هذا الطلب ومراحل المراجعة أدناه
+          </span>
+        </div>
+      )}
 
       {/* Notice for Parent with NO applications yet */}
       {admissions.length === 0 && (
@@ -67,10 +131,10 @@ export function ParentPortalDashboard() {
         </div>
       )}
 
-      {/* Notice for Incomplete / Draft Applications */}
-      {draftAdmissions.map((draft) => (
+      {/* Notice for Incomplete Applications */}
+      {incompleteAdmissions.map((incomplete) => (
         <div
-          key={`draft-alert-${draft.id}`}
+          key={`incomplete-alert-${incomplete.id}`}
           className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div className="space-y-1">
@@ -79,14 +143,18 @@ export function ParentPortalDashboard() {
               <span>{t('portal.parent.incompleteNoticeTitle')}</span>
             </div>
             <h4 className="font-bold text-lg text-primary-dark dark:text-white">
-              {draft.studentFirstName} {draft.studentLastName} ({draft.gradeLevel})
+              {incomplete.studentFirstName} {incomplete.studentLastName} ({incomplete.gradeLevel})
             </h4>
             <p className="text-sm text-neutral-medium">
-              {t('portal.parent.incompleteNoticeDesc')}
+              {incomplete.status === 'DRAFT'
+                ? t('portal.parent.incompleteNoticeDesc')
+                : `يتبقى رفع ${getMissingDocCount(incomplete, requirements)} مستند مطلوب لاستكمال الطلب المُرسَل.`}
             </p>
           </div>
-          <Button to={`/portal/parent/admissions/${draft.id}`} variant="gold" className="shrink-0">
-            {t('portal.parent.resumeApplication')}
+          <Button to={`/portal/parent/admissions/${incomplete.id}`} variant="gold" className="shrink-0">
+            {incomplete.status === 'DRAFT'
+              ? t('portal.parent.resumeApplication')
+              : 'استكمال المستندات'}
           </Button>
         </div>
       ))}
@@ -167,36 +235,48 @@ export function ParentPortalDashboard() {
         ) : (
           <div className="space-y-4">
             {admissions.map((a: Admission) => (
-              <div key={a.id} className="glass-card rounded-xl p-5">
+              <div key={a.id} className="glass-card rounded-xl p-5 border border-slate-200/80 dark:border-slate-800/80 hover:shadow-md transition-all">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-semibold text-lg">
-                      {a.studentFirstName} {a.studentLastName}
-                    </h4>
-                    <p className="text-sm text-neutral-medium">
-                      {a.gradeLevel}
-                      {a.createdAt ? ` · ${formatDate(a.createdAt, lang)}` : ''}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-lg text-slate-900 dark:text-slate-100">
+                        {a.studentFirstName} {a.studentLastName}
+                      </h4>
+                      {a.referenceNumber && (
+                        <span className="px-2.5 py-0.5 text-xs font-mono bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold rounded-lg">
+                          {a.referenceNumber}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-medium dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                      <span><strong>المرحلة:</strong> {a.gradeLevel}</span>
+                      {a.createdAt && <span>· <strong>تاريخ التقديم:</strong> {formatDate(a.createdAt, lang)}</span>}
+                      {a.documents && a.documents.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/20">
+                          📁 {a.documents.length} مستند مرفق
+                        </span>
+                      )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge status={a.status} />
                     <Link to={`/portal/parent/admissions/${a.id}`}>
-                      <Button variant={a.status === 'DRAFT' ? 'gold' : 'outline'} className="!py-2 !px-4 text-xs font-semibold">
-                        {a.status === 'DRAFT' ? t('portal.parent.resumeApplication') : t('portal.parent.viewDetails')}
+                      <Button variant={a.status === 'DRAFT' ? 'gold' : 'outline'} className="!py-2 !px-4 text-xs font-bold rounded-xl">
+                        {a.status === 'DRAFT' ? t('portal.parent.resumeApplication') : t('portal.parent.viewDetails', 'عرض تفاصيل الطلب')}
                       </Button>
                     </Link>
                   </div>
                 </div>
-                {a.status === 'DRAFT' && (
+                {(a.status === 'DRAFT' || (['SUBMITTED', 'UNDER_REVIEW'].includes(a.status) && !a.documentsCompletedAt)) && (
                   <div className="mt-4">
                     <div className="flex justify-between text-xs text-neutral-medium mb-1">
                       <span>{t('portal.parent.progress')}</span>
-                      <span>{docProgress(a)}%</span>
+                      <span>{docProgress(a, getRequiredDocCount(a, requirements))}%</span>
                     </div>
                     <div className="h-2 bg-neutral-light rounded-full overflow-hidden">
                       <div
                         className="h-full bg-sage rounded-full transition-all"
-                        style={{ width: `${docProgress(a)}%` }}
+                        style={{ width: `${docProgress(a, getRequiredDocCount(a, requirements))}%` }}
                       />
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth';
 import { useTheme } from '../../lib/theme';
 import { PermissionGuard } from '../auth/ProtectedRoute';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { AdminNotificationBell } from './AdminNotificationBell';
 import { cn } from '../../lib/utils';
 import {
   LayoutDashboard,
@@ -62,7 +63,10 @@ const navSections: NavSection[] = [
   },
   {
     titleKey: 'admin.navCareers',
-    items: [{ to: '/admin/careers', labelKey: 'admin.careers', icon: Briefcase, perm: 'MANAGE_JOBS' }],
+    items: [
+      { to: '/admin/careers', labelKey: 'admin.careers', icon: Briefcase, perm: 'MANAGE_JOBS' },
+      { to: '/admin/job-requirements', labelKey: 'admin.jobRequirements', icon: ClipboardList, perm: 'MANAGE_JOBS' },
+    ],
   },
   {
     titleKey: 'admin.navContent',
@@ -72,6 +76,7 @@ const navSections: NavSection[] = [
       { to: '/admin/student-life', labelKey: 'admin.navStudentLife', icon: Compass, perm: 'MANAGE_LANDING' },
       { to: '/admin/about', labelKey: 'admin.about', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/pages', labelKey: 'admin.pages', icon: FileText, perm: 'MANAGE_ABOUT_US' },
+      { to: '/admin/form-documents', labelKey: 'admin.formDocuments', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/education', labelKey: 'admin.navEducation', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
       { to: '/admin/gallery', labelKey: 'admin.navGallery', icon: Camera, perm: 'MANAGE_GALLERY' },
       { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
@@ -103,7 +108,7 @@ export function AdminLayout() {
   const activeNav = allNavItems.find((item) => item.to === location.pathname);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-neutral-dark dark:text-slate-100 transition-colors">
+    <div className="admin-shell flex min-h-screen bg-slate-50 dark:bg-slate-950 text-neutral-dark dark:text-slate-100 transition-colors">
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -113,16 +118,18 @@ export function AdminLayout() {
 
       <aside
         className={cn(
-          'fixed inset-y-0 z-50 w-64 bg-primary-dark text-white flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 shadow-lg',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed inset-y-0 start-0 z-50 w-64 bg-primary-dark text-white flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 shadow-lg',
+          mobileOpen
+            ? 'translate-x-0'
+            : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full',
         )}
       >
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="MLS Logo" className="h-9 w-auto object-contain bg-white/10 rounded p-1" />
             <div>
-              <div className="font-bold text-base leading-snug tracking-tight">MLS Admin</div>
-              <div className="text-xs text-white/60 truncate max-w-[130px]">
+              <div className="font-bold text-lg leading-snug tracking-tight">MLS Admin</div>
+              <div className="text-sm text-white/70 truncate max-w-[130px]">
                 {user?.fullName || 'Administrator'}
               </div>
             </div>
@@ -138,7 +145,7 @@ export function AdminLayout() {
         <nav className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
           {navSections.map((section) => (
             <div key={section.titleKey}>
-              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+              <div className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-widest text-white/50">
                 {t(section.titleKey)}
               </div>
               <div className="space-y-1">
@@ -150,14 +157,14 @@ export function AdminLayout() {
                       onClick={() => setMobileOpen(false)}
                       className={({ isActive }) =>
                         cn(
-                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all',
                           isActive
                             ? 'bg-white/20 text-white shadow-xs font-semibold'
                             : 'text-white/75 hover:bg-white/10 hover:text-white',
                         )
                       }
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <item.icon className="h-[1.125rem] w-[1.125rem] shrink-0" />
                       <span>{t(item.labelKey)}</span>
                     </NavLink>
                   </PermissionGuard>
@@ -170,16 +177,16 @@ export function AdminLayout() {
         <div className="p-3 border-t border-white/10 space-y-1 bg-black/10">
           <button
             onClick={() => navigate('/')}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base text-white/80 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <Home className="h-4 w-4 shrink-0" />
+            <Home className="h-[1.125rem] w-[1.125rem] shrink-0" />
             <span>{t('admin.site', 'View Site')}</span>
           </button>
           <button
             onClick={() => logout().then(() => navigate('/admin/login'))}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-colors"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base text-red-300 hover:bg-red-500/20 hover:text-red-100 transition-colors"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
+            <LogOut className="h-[1.125rem] w-[1.125rem] shrink-0" />
             <span>{t('admin.logout', 'Logout')}</span>
           </button>
         </div>
@@ -194,7 +201,7 @@ export function AdminLayout() {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
+            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
               {activeNav ? t(activeNav.labelKey) : t('admin.dashboard')}
             </h1>
           </div>
@@ -202,7 +209,7 @@ export function AdminLayout() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-300 dark:border-slate-700 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-300 dark:border-slate-700 shadow-2xs"
               title={t('common.back', 'Back')}
             >
               <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -210,7 +217,7 @@ export function AdminLayout() {
             </button>
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 transition-all shadow-2xs"
               title={t('admin.site', 'View Site')}
             >
               <Home className="h-3.5 w-3.5" />
@@ -225,14 +232,18 @@ export function AdminLayout() {
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
-            <div className="text-xs text-slate-500 dark:text-slate-400 hidden md:block border-s border-slate-200 dark:border-slate-700 ps-3">
+            <PermissionGuard permission="VIEW_DASHBOARD">
+              <AdminNotificationBell />
+            </PermissionGuard>
+
+            <div className="text-sm text-slate-500 dark:text-slate-400 hidden md:block border-s border-slate-200 dark:border-slate-700 ps-3">
               {t('admin.welcomeUser', 'Welcome')},{' '}
               <span className="font-semibold text-slate-700 dark:text-slate-200">{user?.fullName}</span>
             </div>
             <LanguageSwitcher />
             <button
               onClick={() => logout().then(() => navigate('/admin/login'))}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/50 transition-all shadow-2xs ms-1"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/50 transition-all shadow-2xs ms-1"
               title={t('admin.logout', 'Logout')}
             >
               <LogOut className="h-3.5 w-3.5" />

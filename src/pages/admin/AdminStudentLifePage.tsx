@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Input';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { PageHeader } from '../../components/ui/Badge';
+import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { useAppLanguage } from '../../i18n';
 import {
   Sparkles,
@@ -250,6 +251,8 @@ export function AdminStudentLifePage() {
             : 'Manage student clubs, sports academies, STEM activities, stats, and campus life pillars.'
         }
       />
+
+      <AdminPageGuide guideKey="studentLife" />
 
       {/* Action Header & Tabs */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">

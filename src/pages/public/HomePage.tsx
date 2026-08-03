@@ -286,7 +286,7 @@ export function HomePage() {
               </blockquote>
 
               {/* End of Message Divider & Signature Block */}
-              <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
+              <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
                 {/* School Name Label */}
                 <div className="text-start space-y-1">
                   <span className="text-xs font-bold text-gold/90 tracking-widest uppercase block">
@@ -298,45 +298,17 @@ export function HomePage() {
                   </p>
                 </div>
 
-                {/* Signature of Prof. Dr. Ibrahim Azzouz */}
-                <div className="text-center sm:text-end space-y-1">
-                  <div className="text-xs text-slate-400 font-medium">
+                {/* Signature */}
+                <div className="text-center sm:text-end space-y-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium">
                     {t('quotes.regards', lang === 'ar' ? 'مع خالص التحية والتقدير،' : 'With warm regards,')}
                   </div>
 
-                  {/* Signature Name with Calligraphic/Stylized Gradient & Flourish */}
-                  <div className="inline-block relative pt-1">
-                    <div
-                      className="text-2xl sm:text-3xl font-extrabold tracking-wide drop-shadow-md"
-                      style={{
-                        fontFamily: "'Amiri', 'Traditional Arabic', 'Cairo', serif",
-                        background:
-                          'linear-gradient(135deg, #f5e6a3 0%, #d4af37 50%, #b8942e 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
-                    >
-                      {t('quotes.directorName', lang === 'ar' ? 'الأستاذ الدكتور / إبراهيم عزوز' : 'Prof. Dr. Ibrahim Azzouz')}
-                    </div>
+                  <p className="text-base sm:text-lg font-semibold text-gold">
+                    {t('quotes.directorName', lang === 'ar' ? 'إبراهيم عزوز' : 'Ibrahim Azzouz')}
+                  </p>
 
-                    {/* Handwritten Signature SVG Flourish Line */}
-                    <svg
-                      className="w-full h-3 text-gold/70 mt-1"
-                      viewBox="0 0 240 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M4 14C65 20 175 2 236 11M35 17C95 9 155 19 205 13"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* Director Role Title */}
-                  <p className="text-xs sm:text-sm font-semibold text-slate-300 tracking-wider">
+                  <p className="text-[11px] font-medium text-slate-300 tracking-wide">
                     {t('quotes.directorRole', lang === 'ar' ? 'رئيس مجلس الإدارة ومدير المدرسة' : 'Chairman & School Director')}
                   </p>
                 </div>

@@ -41,9 +41,12 @@ export interface LandingSection {
 export interface EducationProgram {
   id: string;
   title: string;
+  titleAr?: string;
   slug: string;
   summary?: string;
+  summaryAr?: string;
   content: string;
+  contentAr?: string;
   level: string;
   coverImageUrl?: string;
   status: string;
@@ -57,8 +60,10 @@ export interface EducationProgram {
 export interface BlogPost {
   id: string;
   title: string;
+  titleAr?: string;
   slug: string;
   content: string;
+  contentAr?: string;
   coverImageUrl?: string;
   status: string;
   category?: { id: string; name: string };
@@ -89,7 +94,9 @@ export interface StaticPage {
   id: string;
   slug: string;
   title: string;
+  titleAr?: string;
   content: string;
+  contentAr?: string;
   status: string;
   sortOrder?: number;
   metaTitle?: string;
@@ -139,11 +146,22 @@ export interface Admission {
   motherPhone?: string;
   emergencyContactAddress?: string;
   emergencyContactPhone?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  streetAddress?: string;
+  city?: string;
+  governorate?: string;
+  nationalId?: string;
+  parentNationalId?: string;
   healthConditions?: Record<string, boolean> | any;
   healthNotes?: string;
+  hasAllergy?: boolean;
+  allergyDetails?: string;
+  enrollmentDate?: string;
   signedByName?: string;
   signedDate?: string;
   termsAccepted?: boolean;
+  documentsCompletedAt?: string | null;
   currentStep?: number;
   status: string;
   referenceNumber?: string | null;
@@ -162,6 +180,7 @@ export interface Admission {
 
 export interface JobApplication {
   id: string;
+  referenceNumber?: string | null;
   fullName: string;
   email: string;
   phone: string;
@@ -171,12 +190,42 @@ export interface JobApplication {
   subjectsTaught?: string;
   highestQualification?: string;
   teachingLicenseNo?: string;
+  availableStartDate?: string;
+  nationalId?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  streetAddress?: string;
+  city?: string;
+  governorate?: string;
+  university?: string;
+  graduationYear?: number;
+  major?: string;
+  noticePeriod?: string;
+  expectedSalary?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
   safeguardingAccepted?: boolean;
+  pledgeOriginalsAtInterview?: boolean;
   currentStep?: number;
   status: string;
+  rating?: number | null;
+  interviewDate?: string | null;
+  interviewLocation?: string | null;
+  interviewNotes?: string | null;
+  matchScore?: number | null;
   createdAt?: string;
   job?: Job;
   documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }>;
+  comments?: Array<{ id: string; comment: string; createdAt: string; author?: { fullName: string } }>;
+  statusHistory?: Array<{
+    id: string;
+    fromStatus: string;
+    toStatus: string;
+    note?: string | null;
+    createdAt: string;
+    changedBy?: { fullName: string; email: string } | null;
+  }>;
 }
 
 export interface DashboardStats {
@@ -245,11 +294,30 @@ export interface DashboardModuleMeta {
   statsKey: string;
 }
 
+export type AuditCategory =
+  | 'auth'
+  | 'admissions'
+  | 'jobs'
+  | 'content'
+  | 'users'
+  | 'system'
+  | 'inquiries'
+  | 'other';
+
+export type AuditSeverity = 'info' | 'success' | 'warning' | 'danger';
+
 export interface AuditLogEntry {
   id: string;
   action: string;
   actionLabel?: string;
+  actionLabelEn?: string;
   details?: string | null;
+  detailsLabel?: string | null;
+  detailsLabelEn?: string | null;
+  category?: AuditCategory;
+  moduleLabel?: string;
+  moduleLabelEn?: string;
+  severity?: AuditSeverity;
   ipAddress?: string | null;
   createdAt: string;
   user?: { id: string; email: string; fullName: string } | null;
@@ -269,6 +337,40 @@ export interface Notification {
   message: string;
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
   status: 'UNREAD' | 'READ' | 'ARCHIVED';
+  userId?: string | null;
+  entityType?: 'CONTACT_INQUIRY' | 'ADMISSION' | 'JOB_APPLICATION' | 'BLOG_COMMENT' | null;
+  entityId?: string | null;
   createdAt: string;
   user?: { id: string; email: string; fullName: string } | null;
+}
+
+export interface GalleryImage {
+  id: string;
+  title: string;
+  titleAr?: string;
+  caption?: string;
+  captionAr?: string;
+  imageUrl: string;
+  altText?: string;
+  category: string;
+  status: string;
+  sortOrder?: number;
+}
+
+export interface FormDocument {
+  id: string;
+  category: 'STUDENT' | 'STAFF';
+  subCategory?: string;
+  titleAr: string;
+  titleEn: string;
+  descAr: string;
+  descEn: string;
+  title?: string;
+  description?: string;
+  requiredStatus: 'REQUIRED' | 'TRANSFER' | 'OPTIONAL';
+  downloadUrl?: string;
+  downloadName?: string;
+  iconType?: string;
+  status: string;
+  sortOrder?: number;
 }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { 
   User, 
@@ -16,157 +16,58 @@ import {
   Paperclip,
   Trash2
 } from 'lucide-react';
-import { admissionsApi } from '../../../api';
+import { admissionsApi, requirementsApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
 import { StepIndicator } from '../../../components/ui/StepIndicator';
 import { useAuth } from '../../../lib/auth';
-
-const GRADE_OPTIONS = [
-  'Kindergarten',
-  'Grade 1',
-  'Grade 2',
-  'Grade 3',
-  'Grade 4',
-  'Grade 5',
-  'Grade 6',
-  'Grade 7',
-  'Grade 8',
-  'Grade 9'
-];
-
-const HEALTH_CONDITIONS_LIST = [
-  { key: 'hearing', labelKey: 'admission.healthConditions.hearing', icon: '👂' },
-  { key: 'asthma', labelKey: 'admission.healthConditions.asthma', icon: '🫁' },
-  { key: 'heart', labelKey: 'admission.healthConditions.heart', icon: '❤️' },
-  { key: 'adhd', labelKey: 'admission.healthConditions.adhd', icon: '⚡' },
-  { key: 'epilepsy', labelKey: 'admission.healthConditions.epilepsy', icon: '🧠' },
-  { key: 'behavioral', labelKey: 'admission.healthConditions.behavioral', icon: '🤝' },
-  { key: 'anemia', labelKey: 'admission.healthConditions.anemia', icon: '🩸' },
-  { key: 'dental', labelKey: 'admission.healthConditions.dental', icon: '🦷' },
-  { key: 'speech', labelKey: 'admission.healthConditions.speech', icon: '🗣️' },
-  { key: 'diabetes', labelKey: 'admission.healthConditions.diabetes', icon: '💉' },
-  { key: 'vision', labelKey: 'admission.healthConditions.vision', icon: '👁️' },
-  { key: 'headInjury', labelKey: 'admission.healthConditions.headInjury', icon: '🤕' },
-  { key: 'other', labelKey: 'admission.healthConditions.other', icon: '📋' },
-];
-
-const REQUIRED_DOCUMENTS_LIST = [
-  {
-    code: 'BIRTH_CERTIFICATE',
-    title: 'شهادة الميلاد الرقمية / المميكنة',
-    titleEn: 'Computerized Birth Certificate',
-    desc: 'صورة طبق الأصل من شهادة الميلاد بالرقم القومي للطالب',
-    icon: '📄',
-    required: true,
-  },
-  {
-    code: 'PREVIOUS_REPORT',
-    title: 'أحدث شهادة دراسية / بيان نجاح',
-    titleEn: 'Previous School Report',
-    desc: 'آخر كشف درجات أو بيان نجاح معتمد من المدرسة السابقة',
-    icon: '🎓',
-    required: false,
-  },
-  {
-    code: 'STUDENT_PHOTO',
-    title: 'صورة شخصية حديثة للطالب',
-    titleEn: 'Recent Student Photo',
-    desc: 'صورة شخصية بخلفية بيضاء وواضحة المعالم للطالب',
-    icon: '🖼️',
-    required: true,
-  },
-  {
-    code: 'PARENT_PASSPORT',
-    title: 'بطاقة الرقم القومي / جواز سفر ولي الأمر',
-    titleEn: 'Parent ID / Passport',
-    desc: 'صورة سارية لبطاقة الرقم القومي أو جواز السفر لولي الأمر',
-    icon: '🪪',
-    required: true,
-  },
-  {
-    code: 'HEALTH_RECORD',
-    title: 'البطاقة الصحية / كارت التطعيمات',
-    titleEn: 'Health / Vaccination Record',
-    desc: 'كارت التطعيمات أو الشهادة الطبية الأولية للطالب',
-    icon: '🏥',
-    required: false,
-  },
-  {
-    code: 'SCHOOL_REFERENCE',
-    title: 'إفادة / توصية من المدرسة السابقة',
-    titleEn: 'School Recommendation Letter',
-    desc: 'إفادة حسن سير وسلوك أو خطاب توصية (إن وجد)',
-    icon: '📋',
-    required: false,
-  },
-];
+import { useAppLanguage } from '../../../i18n';
+import {
+  GRADE_OPTIONS,
+  HEALTH_CONDITIONS_LIST,
+  REQUIRED_DOCUMENTS_LIST,
+  getAdmissionDocumentMeta,
+  createInitialAdmissionForm,
+  type RequiredDocumentItem,
+  type AdmissionWizardFormState,
+} from './admissionWizardConstants';
+import {
+  buildAdmissionSteps,
+  getMissingRequiredDocumentCodes,
+  getStepValidationHint,
+  isCurrentStepValid,
+} from './admissionWizardValidation';
+import { getApiErrorMessage } from '../../../lib/formData';
 
 export function AdmissionWizard() {
   const { t } = useTranslation();
+  const lang = useAppLanguage();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [step, setStep] = useState(1);
   const [documentFiles, setDocumentFiles] = useState<Record<string, File | null>>({});
-  const [form, setForm] = useState({
-    // Step 1: Student
-    studentFirstName: '',
-    studentLastName: '',
-    dateOfBirth: '',
-    gradeLevel: 'Kindergarten',
-    nationality: '',
-    gender: '',
-    academicYear: '2026-2027',
-    previousSchool: '',
-    languagesSpoken: 'Arabic, English',
-    siblingEnrolled: false,
+  const [form, setForm] = useState<AdmissionWizardFormState>(() => createInitialAdmissionForm(user));
 
-    // Step 2: Parents & Emergency
-    parentName: user?.fullName || '',
-    parentEmail: user?.email || '',
-    parentPhone: '',
-    parentRelationship: 'father',
-    parentNationality: '',
-    parentEmployer: '',
-
-    motherName: '',
-    motherNationality: '',
-    motherOccupation: '',
-    motherEmployerAddress: '',
-    motherPhone: '',
-
-    emergencyContactAddress: '',
-    emergencyContactPhone: '',
-
-    // Step 4: Medical / Health Record
-    hasAllergy: false,
-    allergyDetails: '',
-    healthConditions: HEALTH_CONDITIONS_LIST.reduce<Record<string, boolean>>((acc, item) => {
-      acc[item.key] = false;
-      return acc;
-    }, {}),
-    healthNotes: '',
-    specialNeeds: false,
-    specialNeedsDetails: '',
-
-    // Step 5: Declaration & Signature
-    signedByName: user?.fullName || '',
-    signedDate: new Date().toISOString().split('T')[0],
-    termsAccepted: false,
+  const { data: requirements = [] } = useQuery({
+    queryKey: ['admission-requirements', lang],
+    queryFn: () => requirementsApi.list(false, lang).then((r) => r.data),
   });
 
-  const steps = [
-    t('admission.steps.student', 'بيانات الطالب'),
-    t('admission.steps.family', 'بيانات الأسرة والطوارئ'),
-    t('admission.steps.documents', 'رفع المستندات'),
-    t('admission.steps.health', 'السجل الطبي والصحي'),
-    t('admission.steps.policies', 'اللوائح والتوقيع'),
-    t('admission.steps.review', 'مراجعة واعتماد الطلب'),
-  ];
+  const requiredDocumentsList = useMemo((): RequiredDocumentItem[] => {
+    const match = requirements.find(
+      (r: { gradeLevel: string }) => r.gradeLevel === form.gradeLevel,
+    );
+    if (!match?.requiredDocumentTypes?.length) {
+      return REQUIRED_DOCUMENTS_LIST;
+    }
+    return match.requiredDocumentTypes.map((code: string) => getAdmissionDocumentMeta(code));
+  }, [requirements, form.gradeLevel]);
+
+  const steps = buildAdmissionSteps(t);
 
   const mutation = useMutation({
     mutationFn: async () => {
-      // 1. Create Application
+      // 1. Create Application with all filled form data
       const res = await admissionsApi.create({
         ...form,
         healthConditions: form.healthConditions,
@@ -174,25 +75,44 @@ export function AdmissionWizard() {
       });
       const appId = res.data.id;
 
-      // 2. Upload Document Files
+      // 2. Upload Document Files sequentially
       for (const [docCode, fileObj] of Object.entries(documentFiles)) {
         if (fileObj) {
           const fd = new FormData();
           fd.append('file', fileObj);
           fd.append('documentType', docCode);
-          await admissionsApi.uploadDocument(appId, fd).catch(() => null);
+          await admissionsApi.uploadDocument(appId, fd).catch((err) => {
+            console.warn(`Error uploading document ${docCode}:`, err);
+          });
         }
       }
 
-      // 3. Submit application to admin
-      await admissionsApi.submit(appId).catch((err) => {
-        console.warn('Submission submit notice:', err);
-      });
+      // 3. Submit application to admin and get reference number
+      const submitRes = await admissionsApi.submit(appId);
+      const refNum = (submitRes.data as { referenceNumber?: string })?.referenceNumber || '';
+      const missingDocs = getMissingRequiredDocumentCodes(requiredDocumentsList, documentFiles);
 
-      return appId;
+      return { appId, referenceNumber: refNum, missingDocs };
     },
-    onSuccess: (appId) => {
-      navigate(`/portal/parent/admissions/${appId}`);
+    onSuccess: (data) => {
+      if (data.missingDocs.length > 0) {
+        navigate(`/portal/parent/admissions/${data.appId}`, {
+          state: {
+            incompleteDocs: true,
+            referenceNumber: data.referenceNumber,
+            studentName: `${form.studentFirstName} ${form.studentLastName}`,
+          },
+        });
+        return;
+      }
+
+      navigate('/portal/parent', {
+        state: {
+          submitted: true,
+          referenceNumber: data.referenceNumber,
+          studentName: `${form.studentFirstName} ${form.studentLastName}`,
+        },
+      });
     },
   });
 
@@ -213,60 +133,11 @@ export function AdmissionWizard() {
     }));
   }
 
-  const isStep1Valid =
-    form.studentFirstName.trim().length >= 1 &&
-    form.studentLastName.trim().length >= 1 &&
-    form.dateOfBirth.trim() !== '' &&
-    form.gender.trim() !== '' &&
-    form.nationality.trim() !== '' &&
-    form.gradeLevel.trim() !== '';
-
-  const isStep2Valid =
-    form.parentName.trim().length >= 1 &&
-    form.parentEmail.trim().length >= 3 &&
-    form.parentPhone.trim().length >= 8 &&
-    form.emergencyContactPhone.trim().length >= 8;
-
-  const isStep3Valid = REQUIRED_DOCUMENTS_LIST
-    .filter((doc) => doc.required)
-    .every((doc) => !!documentFiles[doc.code]);
-
-  const isStep4Valid =
-    (!form.hasAllergy || form.allergyDetails.trim().length >= 1) &&
-    (!form.specialNeeds || form.specialNeedsDetails.trim().length >= 1);
-
-  const isStep5Valid = form.termsAccepted && form.signedByName.trim().length >= 1;
-
-  function isCurrentStepValid() {
-    if (step === 1) return isStep1Valid;
-    if (step === 2) return isStep2Valid;
-    if (step === 3) return isStep3Valid;
-    if (step === 4) return isStep4Valid;
-    if (step === 5) return isStep5Valid;
-    return true;
-  }
-
-  function getStepValidationHint() {
-    if (step === 1 && !isStep1Valid) {
-      return 'يرجى استكمال الحقول المطلوبة للطالب: اسم الطالب الأول، اسم العائلة، تاريخ الميلاد، الجنس، والجنسية.';
-    }
-    if (step === 2 && !isStep2Valid) {
-      return 'يرجى استكمال الحقول المطلوبة للوالدين: اسم ولي الأمر، البريد الإلكتروني، هاتف ولي الأمر وهاتف الطوارئ (8 أرقام على الأقل).';
-    }
-    if (step === 3 && !isStep3Valid) {
-      return 'يرجى رفع المستندات المطلوبة (شهادة الميلاد المميكنة، صورة الطالب، وبطاقة/جواز ولي الأمر).';
-    }
-    if (step === 4 && !isStep4Valid) {
-      return 'يرجى كتابة تفاصيل الحساسية أو الرعاية الخاصة المطلوبة للطالب.';
-    }
-    if (step === 5 && !isStep5Valid) {
-      return 'يرجى إدخال اسم ولي الأمر الموقّع بالكامل والموافقة على الشروط واللوائح التنظيمية.';
-    }
-    return null;
-  }
+  const validationHint = getStepValidationHint(step, form, requiredDocumentsList, documentFiles);
+  const stepValid = isCurrentStepValid(step, form, requiredDocumentsList, documentFiles);
 
   function next() {
-    if (!isCurrentStepValid()) return;
+    if (!stepValid) return;
     if (step < 6) setStep(step + 1);
     else mutation.mutate();
   }
@@ -384,6 +255,20 @@ export function AdmissionWizard() {
               </label>
             </div>
 
+            <div className="grid sm:grid-cols-2 gap-5">
+              <label className="block text-sm space-y-1">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {t('admission.nationalId', 'الرقم القومي للطالب / رقم شهادة الميلاد')}
+                </span>
+                <input
+                  className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all text-sm"
+                  value={form.nationalId}
+                  onChange={(e) => setForm({ ...form, nationalId: e.target.value })}
+                  placeholder="14 رقم من شهادة الميلاد الرقمية"
+                />
+              </label>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-5 pt-2">
               <label className="block text-sm space-y-1">
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
@@ -462,6 +347,40 @@ export function AdmissionWizard() {
               </div>
             </div>
 
+            {/* Address Section */}
+            <div className="bg-amber-500/5 dark:bg-amber-500/10 p-5 rounded-2xl border border-amber-500/20 space-y-4">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                <span>📍</span>
+                <span>{t('admission.addressSection', 'عنوان السكن والإقامة التفصيلي')}</span>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-4">
+                <label className="block text-sm space-y-1 sm:col-span-2">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('admission.streetAddress', 'العنوان التفصيلي للسكن (الشارع/المبنى)')}
+                  </span>
+                  <input
+                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                    value={form.streetAddress}
+                    onChange={(e) => setForm({ ...form, streetAddress: e.target.value })}
+                    placeholder="رقم المبنى، الشارع، الحي"
+                  />
+                </label>
+
+                <label className="block text-sm space-y-1">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('admission.city', 'المدينة / المنطقة')}
+                  </span>
+                  <input
+                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    placeholder="مثال: القاهرة الجديدة / الشروق"
+                  />
+                </label>
+              </div>
+            </div>
+
             {/* Father Section */}
             <div className="bg-slate-50 dark:bg-slate-800/40 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold text-sm">
@@ -533,6 +452,18 @@ export function AdmissionWizard() {
                     className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
                     value={form.parentNationality}
                     onChange={(e) => setForm({ ...form, parentNationality: e.target.value })}
+                  />
+                </label>
+
+                <label className="block text-sm space-y-1">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('admission.parentNationalId', 'الرقم القومي / رقم جواز السفر لولي الأمر')}
+                  </span>
+                  <input
+                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                    value={form.parentNationalId}
+                    onChange={(e) => setForm({ ...form, parentNationalId: e.target.value })}
+                    placeholder="رقم بطاقة الرقم القومي أو الجواز"
                   />
                 </label>
               </div>
@@ -628,7 +559,31 @@ export function AdmissionWizard() {
                 <span>{t('admission.emergencySection', 'عنوان أقرب شخص الاتصال به عند الطوارئ (Emergency Contact)')}</span>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
+                <label className="block text-sm space-y-1">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('admission.emergencyContactName', 'اسم شخص الطوارئ')}
+                  </span>
+                  <input
+                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                    value={form.emergencyContactName}
+                    onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
+                    placeholder="الاسم الكامل"
+                  />
+                </label>
+
+                <label className="block text-sm space-y-1">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('admission.emergencyContactRelation', 'صلة القرابة')}
+                  </span>
+                  <input
+                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                    value={form.emergencyContactRelation}
+                    onChange={(e) => setForm({ ...form, emergencyContactRelation: e.target.value })}
+                    placeholder="مثال: عم الطالب / الخال"
+                  />
+                </label>
+
                 <label className="block text-sm space-y-1">
                   <span className="font-medium text-slate-700 dark:text-slate-300">
                     {t('admission.emergencyContactPhone', 'هاتف شخص الطوارئ')}
@@ -640,19 +595,19 @@ export function AdmissionWizard() {
                     placeholder="رقم الهاتف للطوارئ"
                   />
                 </label>
-
-                <label className="block text-sm space-y-1">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    {t('admission.emergencyContactAddress', 'عنوان أقرب شخص للطوارئ')}
-                  </span>
-                  <input
-                    className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
-                    value={form.emergencyContactAddress}
-                    onChange={(e) => setForm({ ...form, emergencyContactAddress: e.target.value })}
-                    placeholder="العنوان وملاحظات الوصول"
-                  />
-                </label>
               </div>
+
+              <label className="block text-sm space-y-1">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {t('admission.emergencyContactAddress', 'عنوان أقرب شخص للطوارئ')}
+                </span>
+                <input
+                  className="w-full border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm"
+                  value={form.emergencyContactAddress}
+                  onChange={(e) => setForm({ ...form, emergencyContactAddress: e.target.value })}
+                  placeholder="العنوان وملاحظات الوصول"
+                />
+              </label>
             </div>
           </div>
         )}
@@ -673,7 +628,7 @@ export function AdmissionWizard() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {REQUIRED_DOCUMENTS_LIST.map((doc) => {
+              {requiredDocumentsList.map((doc) => {
                 const currentFile = documentFiles[doc.code];
                 return (
                   <div
@@ -1022,7 +977,7 @@ export function AdmissionWizard() {
                   Object.entries(documentFiles)
                     .filter(([, f]) => !!f)
                     .map(([code, file]) => {
-                      const docDef = REQUIRED_DOCUMENTS_LIST.find((d) => d.code === code);
+                      const docDef = requiredDocumentsList.find((d) => d.code === code);
                       return (
                         <span key={code} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -1074,10 +1029,18 @@ export function AdmissionWizard() {
       </div>
 
       {/* Validation Hint Alert */}
-      {getStepValidationHint() && (
+      {validationHint && (
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold flex items-center gap-3 animate-pulse">
           <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <span>{getStepValidationHint()}</span>
+          <span>{validationHint}</span>
+        </div>
+      )}
+
+      {/* Mutation Error Alert */}
+      {mutation.isError && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-3">
+          <ShieldAlert className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>{getApiErrorMessage(mutation.error, 'حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.')}</span>
         </div>
       )}
 
@@ -1095,7 +1058,7 @@ export function AdmissionWizard() {
         <Button
           variant="gold"
           onClick={next}
-          disabled={mutation.isPending || !isCurrentStepValid()}
+          disabled={mutation.isPending || !stepValid}
           className="rounded-xl px-8 shadow-lg shadow-amber-500/20 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {step === 6

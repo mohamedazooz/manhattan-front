@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
+import { isStaffRole } from '../auth/RoleRoute';
 import { Button } from '../ui/Button';
 
 interface PortalLayoutProps {
@@ -10,7 +11,7 @@ interface PortalLayoutProps {
 
 export function PortalLayout({ portalType }: PortalLayoutProps) {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
   const navigate = useNavigate();
 
   const title =
@@ -54,7 +55,7 @@ export function PortalLayout({ portalType }: PortalLayoutProps) {
               <span>{t('common.back', 'رجوع')}</span>
             </button>
             <Link
-              to={portalType === 'parent' ? '/portal/parent' : '/portal/applicant'}
+              to={isStaffRole(role) ? '/admin' : portalType === 'parent' ? '/portal/parent' : '/portal/applicant'}
               className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary-light dark:bg-slate-800 text-primary dark:text-blue-400 hover:bg-primary/10 transition-colors"
             >
               <span>{t('nav.portalHome', 'لوحة التحكم')}</span>

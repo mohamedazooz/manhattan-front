@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../lib/auth';
+import { getAccessToken } from '../../api/client';
 import { LoadingSpinner } from '../ui/Badge';
 
 export function ProtectedRoute({
@@ -10,11 +11,14 @@ export function ProtectedRoute({
   adminOnly?: boolean;
 }) {
   const { user, loading, hasPermission, isAdmin } = useAuth();
+  const location = useLocation();
 
   if (loading) return <LoadingSpinner />;
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (!user || !getAccessToken()) {
+    const redirect = encodeURIComponent(location.pathname + location.search);
+    const loginPath = adminOnly ? `/admin/login?redirect=${redirect}` : `/login?redirect=${redirect}`;
+    return <Navigate to={loginPath} replace />;
   }
 
   if (adminOnly && !isAdmin) {

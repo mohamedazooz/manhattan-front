@@ -17,6 +17,8 @@ import { NewsPage } from '../pages/public/NewsPage';
 import { NewsDetailPage } from '../pages/public/NewsDetailPage';
 import { CareersPage } from '../pages/public/CareersPage';
 import { CareerDetailPage } from '../pages/public/CareerDetailPage';
+import { JobTrackPage } from '../pages/public/JobTrackPage';
+import { AdmissionTrackPage } from '../pages/public/AdmissionTrackPage';
 import { ContactPage } from '../pages/public/ContactPage';
 import { StaticParentPage } from '../pages/public/StaticParentPage';
 import { FormsAndDocumentsPage } from '../pages/public/FormsAndDocumentsPage';
@@ -48,10 +50,13 @@ import {
   AdminEmailPage,
 } from '../pages/admin/OpsAdminPages';
 import { AdminCareersPage } from '../pages/admin/AdminCareersPage';
+import { AdminJobRequirementsPage } from '../pages/admin/AdminJobRequirementsPage';
+import { AdminFormDocumentsPage } from '../pages/admin/AdminFormDocumentsPage';
 import { AdminAdmissionDetailRoute, AdminJobApplicationsRoute } from '../pages/admin/AdminDetailRoutes';
 import { GlobalBackButton } from '../components/common/GlobalBackButton';
 import { AuditLogPage } from '../pages/admin/AuditLogPage';
 import { GalleryPage } from '../pages/public/GalleryPage';
+import { NotFoundPage } from '../pages/public/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -70,11 +75,13 @@ export function AppRoutes() {
               <Route path="academics" element={<AcademicsPage />} />
               <Route path="academics/:slug" element={<ProgramDetailPage />} />
               <Route path="admissions" element={<AdmissionsPage />} />
+              <Route path="parents/track" element={<AdmissionTrackPage />} />
               <Route path="student-life" element={<StudentLifePage />} />
               <Route path="gallery" element={<GalleryPage />} />
               <Route path="news" element={<NewsPage />} />
               <Route path="news/:slug" element={<NewsDetailPage />} />
               <Route path="careers" element={<CareersPage />} />
+              <Route path="careers/track" element={<JobTrackPage />} />
               <Route path="careers/:id" element={<CareerDetailPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="parents/policies" element={<StaticParentPage />} />
@@ -90,6 +97,9 @@ export function AppRoutes() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="portal" element={<PortalRedirect />} />
+              <Route element={<PortalLayout portalType="applicant" />}>
+                <Route path="portal/applicant/apply/:jobId" element={<ApplicationWizard />} />
+              </Route>
               <Route element={<RoleRoute requiredRole="PARENT" />}>
                 <Route element={<PortalLayout portalType="parent" />}>
                   <Route path="portal/parent" element={<ParentPortalDashboard />} />
@@ -100,7 +110,6 @@ export function AppRoutes() {
               <Route element={<RoleRoute requiredRole="APPLICANT" />}>
                 <Route element={<PortalLayout portalType="applicant" />}>
                   <Route path="portal/applicant" element={<ApplicantPortalDashboard />} />
-                  <Route path="portal/applicant/apply/:jobId" element={<ApplicationWizard />} />
                   <Route path="portal/applicant/applications/:id" element={<ApplicantApplicationDetailPage />} />
                 </Route>
               </Route>
@@ -116,10 +125,12 @@ export function AppRoutes() {
                 <Route path="student-life" element={<AdminStudentLifePage />} />
                 <Route path="about" element={<AdminAboutPage />} />
                 <Route path="pages" element={<AdminPagesPage />} />
+              <Route path="form-documents" element={<AdminFormDocumentsPage />} />
                 <Route path="admissions" element={<AdminAdmissionsPage />} />
                 <Route path="admissions/:id" element={<AdminAdmissionDetailRoute />} />
                 <Route path="admission-requirements" element={<AdminRequirementsPage />} />
                 <Route path="careers" element={<AdminCareersPage />} />
+                <Route path="job-requirements" element={<AdminJobRequirementsPage />} />
                 <Route path="careers/:id/applications" element={<AdminJobApplicationsRoute />} />
                 <Route path="inquiries" element={<AdminInquiriesPage />} />
                 <Route path="notifications" element={<NotificationsAdminPage />} />
@@ -145,7 +156,7 @@ export function AppRoutes() {
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
