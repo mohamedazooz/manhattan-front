@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Readex+Pro:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary: #1b2a5e;
@@ -24,8 +24,8 @@
   --color-success-light: #e8f5ee;
   --color-warning: #d97706;
   --color-warning-light: #fef3c7;
-  --font-heading: 'Cairo', 'Playfair Display', Georgia, serif;
-  --font-body: 'Cairo', 'DM Sans', system-ui, sans-serif;
+  --font-heading: 'Cairo', 'Readex Pro', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 :root {
@@ -49,8 +49,9 @@
   --color-success-light: #e8f5ee;
   --color-warning: #d97706;
   --color-warning-light: #fef3c7;
-  --font-heading: 'Cairo', 'Playfair Display', Georgia, serif;
-  --font-body: 'Cairo', 'DM Sans', system-ui, sans-serif;
+  --font-heading: 'Cairo', 'Readex Pro', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+  color-scheme: light;
 }
 
 :root.dark, .dark {
@@ -166,38 +167,96 @@ h1, h2, h3, h4, h5, h6 {
 
 .dark .bg-white {
   background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.dark .bg-slate-50 {
+  background-color: #080c16;
+  color: #f8fafc;
+}
+
+.dark .bg-slate-100 {
+  background-color: #1e293b;
+  color: #f8fafc;
 }
 
 .dark .bg-neutral-light {
   background-color: #0b1120;
 }
 
-.dark .bg-neutral-light\/60 {
-  background-color: rgba(11, 17, 32, 0.7);
-}
-
-.dark .text-neutral-dark {
+.dark .text-neutral-dark,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
   color: #f8fafc;
 }
 
-.dark .text-neutral-medium {
+.dark .text-neutral-medium,
+.dark .text-slate-600,
+.dark .text-slate-500 {
   color: #94a3b8;
 }
 
 .dark .border-b,
 .dark .border-t,
+.dark .border-slate-200,
+.dark .border-slate-300,
 .dark .border-gray-200,
 .dark .border-gray-300 {
-  border-color: rgba(201, 162, 39, 0.12);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark header {
-  background-color: rgba(11, 17, 32, 0.95);
-  border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+.dark header.bg-white {
+  background-color: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dark .focus\:ring-primary:focus,
 .dark .focus\:border-primary:focus {
   border-color: var(--color-gold) !important;
   --tw-ring-color: rgba(201, 162, 39, 0.4) !important;
+}
+
+/* Admin dashboard — larger, clearer typography */
+.admin-shell {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.admin-shell .text-\[10px\] { font-size: 0.75rem; }
+.admin-shell .text-xs { font-size: 0.8125rem; line-height: 1.5; }
+.admin-shell .text-sm { font-size: 0.9375rem; line-height: 1.55; }
+.admin-shell .text-base { font-size: 1.0625rem; }
+.admin-shell .text-lg { font-size: 1.1875rem; }
+.admin-shell .text-xl { font-size: 1.3125rem; }
+.admin-shell .text-2xl { font-size: 1.625rem; }
+.admin-shell .text-3xl { font-size: 2rem; }
+
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
+  font-size: 0.9375rem;
+}
+
+.admin-shell label span {
+  font-size: 0.9375rem;
+}
+
+.admin-shell table {
+  font-size: 0.9375rem;
+}
+
+.admin-shell th {
+  font-weight: 700;
+  padding-block: 0.875rem;
+}
+
+.admin-shell td {
+  padding-block: 0.875rem;
+}
+
+.admin-shell button {
+  font-size: 0.9375rem;
 }

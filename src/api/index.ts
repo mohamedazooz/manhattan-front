@@ -142,18 +142,45 @@ export const careersApi = {
   updateApplication: (id: string, data: object) => api.patch(`/jobs/applications/${id}`, data),
   submitApplication: (id: string) => api.post(`/jobs/applications/${id}/submit`),
   allApplications: () => api.get('/jobs/admin/all-applications'),
-  updateApplicationStatus: (id: string, status: string) =>
-    api.patch(`/jobs/applications/${id}/status`, { status }),
+  adminGetApplication: (id: string) => api.get(`/jobs/admin/applications/${id}`),
+  updateApplicationStatus: (
+    id: string,
+    status: string,
+    note?: string,
+    interviewDate?: string,
+    interviewLocation?: string,
+    interviewNotes?: string,
+  ) =>
+    api.patch(`/jobs/applications/${id}/status`, {
+      status,
+      note,
+      interviewDate,
+      interviewLocation,
+      interviewNotes,
+    }),
+  evaluateApplication: (
+    id: string,
+    data: { rating?: number; interviewDate?: string; interviewLocation?: string; interviewNotes?: string; comment?: string },
+  ) => api.patch(`/jobs/applications/${id}/evaluate`, data),
+  trackApplication: (referenceNumber: string, phone: string) =>
+    api.get('/jobs/track-application', { params: { referenceNumber, phone } }),
+  exportApplications: (jobId?: string) =>
+    api.get('/jobs/admin/export-applications', { params: { jobId } }),
   uploadDocument: (applicationId: string, form: FormData) =>
     api.post(`/jobs/applications/${applicationId}/documents`, form),
   apply: (id: string, form: FormData) => api.post(`/jobs/${id}/apply`, form),
 };
 
 export const jobRequirementsApi = {
-  list: (all?: boolean) =>
-    all ? api.get('/job-requirements/admin') : api.get('/job-requirements'),
-  byType: (employmentType?: string) =>
-    api.get('/job-requirements/by-type', { params: { employmentType } }),
+  list: (all?: boolean, lang?: string) =>
+    all
+      ? api.get('/job-requirements/admin')
+      : api.get('/job-requirements', { params: { lang: langParam(lang) } }),
+  byType: (employmentType?: string, lang?: string) =>
+    api.get('/job-requirements/by-type', { params: { employmentType, lang: langParam(lang) } }),
+  create: (data: object) => api.post('/job-requirements', data),
+  update: (id: string, data: object) => api.patch(`/job-requirements/${id}`, data),
+  remove: (id: string) => api.delete(`/job-requirements/${id}`),
 };
 
 export const admissionsApi = {
@@ -168,6 +195,7 @@ export const admissionsApi = {
   uploadDocument: (id: string, form: FormData) =>
     api.post(`/admissions/${id}/documents`, form),
   submit: (id: string) => api.post(`/admissions/${id}/submit`),
+  completeDocuments: (id: string) => api.post(`/admissions/${id}/complete-documents`),
   updateStatus: (id: string, status: string) =>
     api.patch(`/admissions/${id}/status`, { status }),
   addNote: (id: string, noteContent: string) =>
@@ -175,8 +203,10 @@ export const admissionsApi = {
 };
 
 export const requirementsApi = {
-  list: (all?: boolean) =>
-    all ? api.get('/admission-requirements/admin') : api.get('/admission-requirements'),
+  list: (all?: boolean, lang?: string) =>
+    all
+      ? api.get('/admission-requirements/admin')
+      : api.get('/admission-requirements', { params: { lang: langParam(lang) } }),
   create: (data: object) => api.post('/admission-requirements', data),
   update: (id: string, data: object) => api.patch(`/admission-requirements/${id}`, data),
   remove: (id: string) => api.delete(`/admission-requirements/${id}`),
@@ -223,14 +253,26 @@ export const emailApi = {
 export const dashboardApi = {
   stats: () => api.get<DashboardStats>('/dashboard/stats'),
   modules: () => api.get('/dashboard/modules'),
-  activity: (params?: { limit?: number; module?: string }) =>
-    api.get('/dashboard/activity', { params }),
-  audit: (params?: { page?: number; limit?: number; action?: string; userId?: string }) =>
-    api.get('/dashboard/audit', { params }),
+  activity: (params?: {
+    limit?: number;
+    module?: string;
+    category?: string;
+    lang?: 'ar' | 'en';
+  }) => api.get('/dashboard/activity', { params }),
+  audit: (params?: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    userId?: string;
+    category?: string;
+    lang?: 'ar' | 'en';
+  }) => api.get('/dashboard/audit', { params }),
 };
 
 export const notificationsApi = {
-  list: (status?: string) => api.get('/notifications', { params: { status } }),
+  list: (status?: string, limit?: number) =>
+    api.get('/notifications', { params: { status, limit } }),
+  unreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
   create: (data: { title: string; message: string; type?: string; userId?: string }) =>
     api.post('/notifications', data),
   updateStatus: (id: string, status: string) =>
@@ -252,5 +294,22 @@ export const storageApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+};
+
+export const newsletterApi = {
+  subscribe: (email: string) => api.post('/newsletter/subscribe', { email }),
+};
+
+export const formDocumentsApi = {
+  list: (lang: string, category?: string) =>
+    api.get('/form-documents', {
+      params: { lang: langParam(lang), category },
+    }),
+  admin: () => api.get('/form-documents/admin'),
+  create: (data: object) => api.post('/form-documents', data),
+  update: (id: string, data: object) => api.patch(`/form-documents/${id}`, data),
+  updateStatus: (id: string, status: string) =>
+    api.patch(`/form-documents/${id}/status`, { status }),
+  remove: (id: string) => api.delete(`/form-documents/${id}`),
 };
 

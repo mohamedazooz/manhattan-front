@@ -9,6 +9,7 @@ import { Input, Select } from '../../../components/ui/Input';
 import { StatusBadge, LoadingSpinner } from '../../../components/ui/Badge';
 import { ChecklistItem } from '../../../components/ui/ChecklistItem';
 import { mediaUrl } from '../../../lib/utils';
+import { HiringDocumentsSection } from '../../../components/careers/HiringDocumentsSection';
 
 const DOC_LABELS: Record<string, string> = {
   CV_RESUME: 'CV / Resume',
@@ -76,7 +77,7 @@ export function ApplicantApplicationDetailPage() {
     );
   }
 
-  const canEdit = application.status === 'DRAFT';
+  const canEdit = application.status !== 'REJECTED';
   const uploadedTypes = new Set((application.documents || []).map((d: { documentType: string }) => d.documentType));
 
   return (
@@ -142,10 +143,18 @@ export function ApplicantApplicationDetailPage() {
       )}
 
       <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h3 className="font-semibold">{t('application.details')}</h3>
-        <div className="grid sm:grid-cols-2 gap-3 text-sm">
+        <h3 className="font-semibold text-lg border-b pb-2 text-slate-800 dark:text-slate-100">تفاصيل طلب التوظيف والبيانات الشخصية</h3>
+        <div className="grid sm:grid-cols-2 gap-4 text-sm">
+          <p><strong>{t('application.fullName')}:</strong> {application.fullName}</p>
+          <p><strong>{t('application.phone')}:</strong> {application.phone}</p>
+          {application.nationalId && <p><strong>{t('application.nationalId')}:</strong> {application.nationalId}</p>}
+          {application.dateOfBirth && <p><strong>{t('application.dateOfBirth')}:</strong> {String(application.dateOfBirth).split('T')[0]}</p>}
+          {application.gender && <p><strong>{t('application.gender')}:</strong> {application.gender === 'male' ? 'ذكر' : application.gender === 'female' ? 'أنثى' : application.gender}</p>}
+          {application.nationality && <p><strong>{t('application.nationality')}:</strong> {application.nationality}</p>}
+          {application.streetAddress && <p><strong>{t('application.streetAddress')}:</strong> {application.streetAddress} {application.city ? `(${application.city})` : ''}</p>}
+          {application.emergencyContactName && <p><strong>شخص الطوارئ:</strong> {application.emergencyContactName} ({application.emergencyContactPhone || 'بدون هاتف'})</p>}
           {application.yearsExperience != null && (
-            <p><strong>{t('application.yearsExperience')}:</strong> {application.yearsExperience}</p>
+            <p><strong>{t('application.yearsExperience')}:</strong> {application.yearsExperience} سنة/سنوات</p>
           )}
           {application.curriculumExperience && (
             <p><strong>{t('application.curriculum')}:</strong> {application.curriculumExperience}</p>
@@ -153,8 +162,32 @@ export function ApplicantApplicationDetailPage() {
           {application.subjectsTaught && (
             <p><strong>{t('application.subjects')}:</strong> {application.subjectsTaught}</p>
           )}
+          {application.highestQualification && (
+            <p><strong>{t('application.qualification')}:</strong> {application.highestQualification}</p>
+          )}
+          {application.university && (
+            <p><strong>{t('application.university')}:</strong> {application.university} {application.graduationYear ? `(${application.graduationYear})` : ''}</p>
+          )}
+          {application.major && (
+            <p><strong>{t('application.major')}:</strong> {application.major}</p>
+          )}
+          {application.noticePeriod && (
+            <p><strong>{t('application.noticePeriod')}:</strong> {application.noticePeriod}</p>
+          )}
+          {application.expectedSalary && (
+            <p><strong>{t('application.expectedSalary')}:</strong> {application.expectedSalary}</p>
+          )}
         </div>
       </section>
+
+      <HiringDocumentsSection
+        pledged={!!application.pledgeOriginalsAtInterview}
+        onPledgeChange={() => {}}
+        documentFiles={{}}
+        onFileChange={() => {}}
+        uploadedDocs={application.documents || []}
+        readOnly={true}
+      />
 
       <section className="glass-card rounded-2xl p-6">
         <h3 className="font-semibold mb-4">{t('application.documents')}</h3>
@@ -182,7 +215,7 @@ export function ApplicantApplicationDetailPage() {
                 <option key={val} value={val}>{label}</option>
               ))}
             </Select>
-            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             <Button onClick={() => uploadMutation.mutate()} disabled={!file || uploadMutation.isPending}>
               {t('admission.uploadDocument')}
             </Button>

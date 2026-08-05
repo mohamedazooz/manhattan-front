@@ -9,7 +9,12 @@ import {
 } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { authApi } from '../api';
-import { getAccessToken, setAccessToken } from '../api/client';
+import {
+  getAccessToken,
+  setAccessToken,
+  refreshAccessToken,
+  setOnAuthFailure,
+} from '../api/client';
 import type { JwtPayload, User } from '../types';
 
 interface AuthContextValue {
@@ -41,30 +46,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearAuth = useCallback(() => {
+    setAccessToken(null);
+    setUser(null);
+    setPermissions([]);
+    setRole(null);
+  }, []);
+
   const applyToken = useCallback((token: string, u: User) => {
     setAccessToken(token);
     const decoded = decodeToken(token);
+    const apiPermissions = u.permissions ?? [];
+    const jwtPermissions = decoded.permissions ?? [];
     setUser(u);
-    setPermissions(decoded.permissions);
-    setRole(decoded.role);
+    setPermissions(apiPermissions.length > 0 ? apiPermissions : jwtPermissions);
+    setRole(decoded.role || u.role || null);
   }, []);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setLoading(false);
-      return;
+    setOnAuthFailure(clearAuth);
+    return () => setOnAuthFailure(null);
+  }, [clearAuth]);
+
+  useEffect(() => {
+    async function bootstrapAuth() {
+      const token = getAccessToken();
+      if (token) {
+        try {
+          const { data } = await authApi.me();
+          applyToken(token, data);
+          return;
+        } catch {
+          clearAuth();
+        }
+      }
+
+      try {
+        const newToken = await refreshAccessToken();
+        const { data } = await authApi.me();
+        applyToken(newToken, data);
+      } catch {
+        clearAuth();
+      }
     }
-    authApi
-      .me()
-      .then(({ data }) => {
-        applyToken(token, data);
-      })
-      .catch(() => {
-        setAccessToken(null);
-      })
-      .finally(() => setLoading(false));
-  }, [applyToken]);
+
+    bootstrapAuth().finally(() => setLoading(false));
+  }, [applyToken, clearAuth]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -86,12 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
     } finally {
-      setAccessToken(null);
-      setUser(null);
-      setPermissions([]);
-      setRole(null);
+      clearAuth();
     }
-  }, []);
+  }, [clearAuth]);
 
   const value = useMemo(
     () => ({
@@ -102,8 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
-      hasPermission: (perm: string) => permissions.includes(perm),
-      isAdmin: role === 'ADMIN' || role === 'TEACHER' || role === 'HR',
+      hasPermission: (perm: string) => {
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN') return true;
+        return permissions.includes(perm);
+      },
+      isAdmin:
+        role === 'ADMIN' ||
+        role === 'SUPER_ADMIN' ||
+        role === 'TEACHER' ||
+        role === 'HR',
     }),
     [user, permissions, role, loading, login, register, logout],
   );

@@ -148,7 +148,7 @@ export function SeoAdminPage() {
               rows={2}
               value={form.defaultKeywords || ''}
               onChange={(e) => setForm({ ...form, defaultKeywords: e.target.value })}
-              placeholder="مدرسة منهاتن للغات, مدارس اللغات بالقاهرة, Manhattan Language School, International Education"
+              placeholder="مدرسة مانهاتن للغات, مدرسة لغات, رياض الأطفال, الابتدائي, الإعدادي, Manhattan Language School"
             />
           </div>
         </div>

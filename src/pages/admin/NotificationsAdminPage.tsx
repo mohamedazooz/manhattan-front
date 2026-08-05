@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { Input, Textarea, Select } from '../../components/ui/Input';
 import { formatDate } from '../../lib/utils';
+import { getNotificationTargetRoute } from '../../lib/notification-routes';
 import { useAppLanguage } from '../../i18n';
 import type { Notification } from '../../types';
 import { Eye, CheckCheck, Archive, Plus, Bell } from 'lucide-react';
@@ -16,20 +17,6 @@ const emptyForm = {
   message: '',
   type: 'INFO',
 };
-
-function getTargetRoute(row: Notification): string | null {
-  const text = `${row.title} ${row.message}`.toLowerCase();
-  if (text.includes('admission') || text.includes('قبول')) {
-    return '/admin/admissions';
-  }
-  if (text.includes('job') || text.includes('career') || text.includes('توظيف') || text.includes('وظيفة')) {
-    return '/admin/careers';
-  }
-  if (text.includes('inquiry') || text.includes('contact') || text.includes('استفسار') || text.includes('اتصل')) {
-    return '/admin/inquiries';
-  }
-  return null;
-}
 
 export function NotificationsAdminPage() {
   const lang = useAppLanguage();
@@ -43,6 +30,7 @@ export function NotificationsAdminPage() {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationsApi.list().then((r) => r.data as Notification[]),
+    refetchInterval: 30000,
   });
 
   const createMutation = useMutation({
@@ -66,7 +54,7 @@ export function NotificationsAdminPage() {
     if (row.status === 'UNREAD') {
       updateStatus(row.id, 'READ');
     }
-    const route = getTargetRoute(row);
+    const route = getNotificationTargetRoute(row);
     if (route) {
       navigate(route);
     }
@@ -159,7 +147,7 @@ export function NotificationsAdminPage() {
             key: 'actions',
             header: isAr ? 'الإجراءات' : 'Actions',
             render: (row: Notification) => {
-              const targetRoute = getTargetRoute(row);
+              const targetRoute = getNotificationTargetRoute(row);
               return (
                 <div className="flex items-center gap-2">
                   {targetRoute && (

@@ -7,14 +7,16 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const current = i18n.language === 'ar' ? 'ar' : 'en';
 
   return (
-    <div className={cn('flex rounded-lg border border-white/20 overflow-hidden text-xs bg-white/5 backdrop-blur-xs', className)}>
+    <div className={cn('flex rounded-xl border border-slate-300 dark:border-slate-700 overflow-hidden text-xs bg-slate-100 dark:bg-slate-900 shadow-2xs shrink-0', className)}>
       {(['en', 'ar'] as const).map((lang) => (
         <button
           key={lang}
           onClick={() => setAppLanguage(lang)}
           className={cn(
-            'px-2.5 py-1 font-semibold transition-colors',
-            current === lang ? 'bg-amber-400 text-slate-950 font-bold' : 'text-slate-200 hover:bg-white/10 hover:text-white',
+            'px-2.5 py-1 font-bold transition-all cursor-pointer select-none',
+            current === lang
+              ? 'bg-amber-400 text-slate-950 font-extrabold shadow-2xs'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
           )}
         >
           {lang.toUpperCase()}

@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { PageHeader } from '../../components/ui/Badge';
+import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { RichTextEditor } from '../../components/ui/RichTextEditor';
 import { mediaUrl } from '../../lib/utils';
 import { buildFormData, getApiErrorMessage, omitKeys } from '../../lib/formData';
@@ -20,16 +21,6 @@ const emptyHeroForm = {
   ctaTextAr: '',
   ctaLink: '',
   isActive: false,
-};
-
-const emptySectionForm = {
-  key: '',
-  title: '',
-  titleAr: '',
-  content: '',
-  contentAr: '',
-  imageUrl: '',
-  sortOrder: 0,
 };
 
 export function AdminHeroPage() {
@@ -117,6 +108,7 @@ export function AdminHeroPage() {
 
   return (
     <div className="w-full space-y-6">
+      <AdminPageGuide guideKey="hero" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <PageHeader title={t('admin.heroCrud.title', 'Hero Carousel Management')} />
@@ -220,10 +212,19 @@ export function AdminHeroPage() {
 }
 
 export function AdminSectionsPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptySectionForm);
+  const [form, setForm] = useState({
+    key: '',
+    title: '',
+    titleAr: '',
+    content: '',
+    contentAr: '',
+    imageUrl: '',
+    sortOrder: 0,
+  });
   const [image, setImage] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -246,20 +247,13 @@ export function AdminSectionsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (editId) {
-        if (image) {
-          const fd = buildFormData(omitKeys(form, ['key']));
-          fd.append('image', image);
-          return landingApi.updateSection(editId, fd);
-        }
-        return landingApi.updateSection(editId, omitKeys(form, ['key']));
-      }
+      if (!editId) return;
       if (image) {
-        const fd = buildFormData(form);
+        const fd = buildFormData(omitKeys(form, ['key']));
         fd.append('image', image);
-        return landingApi.createSection(fd);
+        return landingApi.updateSection(editId, fd);
       }
-      return landingApi.createSection(form);
+      return landingApi.updateSection(editId, omitKeys(form, ['key']));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sections'] });
@@ -272,15 +266,6 @@ export function AdminSectionsPage() {
     },
     onError: (error) => setSaveError(getApiErrorMessage(error, 'فشل حفظ القسم')),
   });
-
-  const openCreate = () => {
-    setEditId(null);
-    setForm(emptySectionForm);
-    setImage(null);
-    setCurrentImageUrl(null);
-    setSaveError(null);
-    setOpen(true);
-  };
 
   const openEdit = (section: LandingSection) => {
     setEditId(section.id);
@@ -306,14 +291,17 @@ export function AdminSectionsPage() {
 
   return (
     <div className="w-full space-y-6">
+      <AdminPageGuide guideKey="sections" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <PageHeader title="أقسام واجهة الموقع (Landing Sections)" />
+          <PageHeader title={t('admin.sectionsCrud.title', 'أقسام واجهة الموقع (Landing Sections)')} />
           <p className="text-sm text-slate-500 mt-1">
-            إدارة النصوص والصور الخاصة بأقسام الصفحة الرئيسية المتنوعة.
+            {t(
+              'admin.sectionsCrud.subtitle',
+              'تعديل محتوى الأقسام المحددة مسبقاً في الصفحة الرئيسية (النصوص، الصور، النشر/الإخفاء). لا يمكن إضافة أقسام جديدة.',
+            )}
           </p>
         </div>
-        <Button onClick={openCreate}>+ إضافة قسم جديد</Button>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
@@ -382,7 +370,7 @@ export function AdminSectionsPage() {
         />
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={editId ? 'تعديل قسم' : 'إضافة قسم جديد'} wide>
+      <Modal open={open} onClose={() => setOpen(false)} title={t('admin.sectionsCrud.editTitle', 'تعديل قسم')} wide>
         <form
           className="space-y-4"
           onSubmit={(e) => {

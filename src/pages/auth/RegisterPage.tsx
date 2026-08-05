@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GraduationCap, Briefcase, UserPlus, LogIn } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
-import { getPortalHomeForRole } from '../../components/auth/RoleRoute';
+import { getPostLoginRedirect } from '../../components/auth/RoleRoute';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 
@@ -33,11 +33,7 @@ export function RegisterPage({ accountType }: RegisterPageProps) {
     try {
       await register(form.email, form.password, form.fullName, accountType);
       const user = await login(form.email, form.password);
-      if (redirect) {
-        navigate(redirect);
-      } else {
-        navigate(getPortalHomeForRole(user.role));
-      }
+      navigate(getPostLoginRedirect(user.role, redirect ?? undefined));
     } catch {
       setError(t('auth.registerFailed', 'فشل إنشاء الحساب، يرجى المحاولة مرة أخرى'));
     } finally {

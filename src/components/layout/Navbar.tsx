@@ -86,14 +86,14 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation Bar */}
-        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 bg-slate-100/60 dark:bg-slate-900/60 p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink min-w-0">
+        <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-100/60 dark:bg-slate-900/60 p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink-0 overflow-hidden mx-3 xl:mx-5">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  'relative px-2 lg:px-2.5 xl:px-3 py-1 rounded-full text-[13px] xl:text-[14px] font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
+                  'relative px-2 xl:px-2.5 2xl:px-3 py-1 rounded-full text-xs xl:text-[13px] 2xl:text-sm font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
                   isActive
                     ? 'bg-white dark:bg-slate-800 text-primary dark:text-amber-400 shadow-xs border border-slate-200/60 dark:border-slate-700/60 font-extrabold'
                     : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
@@ -113,8 +113,8 @@ export function Navbar() {
         </nav>
 
         {/* Action Hub & Utilities */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="hidden sm:block">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ms-auto ps-2">
+          <div className="hidden sm:block me-1">
             <LanguageSwitcher />
           </div>
 
@@ -173,7 +173,7 @@ export function Navbar() {
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors"
+            className="xl:hidden p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -183,7 +183,7 @@ export function Navbar() {
 
       {/* Dynamic Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden animate-fade-in border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-950/98 backdrop-blur-2xl px-4 py-5 shadow-2xl space-y-4">
+        <div className="xl:hidden animate-fade-in border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-950/98 backdrop-blur-2xl px-4 py-5 shadow-2xl space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <LanguageSwitcher />
             <div className="flex items-center gap-2">

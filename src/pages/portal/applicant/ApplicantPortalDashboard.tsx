@@ -18,6 +18,7 @@ export function ApplicantPortalDashboard() {
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['my-job-applications'],
     queryFn: () => careersApi.myApplications().then((r) => r.data),
+    refetchInterval: 10000,
   });
 
   if (isLoading) return <LoadingSpinner />;
@@ -38,7 +39,7 @@ export function ApplicantPortalDashboard() {
         </div>
         <Button to="/careers" variant="gold">
           <Plus className="w-4 h-4" />
-          {t('portal.applicant.browseJobs')}
+          {lang === 'ar' ? 'تقديم طلب توظيف جديد' : t('portal.applicant.browseJobs')}
         </Button>
       </div>
 

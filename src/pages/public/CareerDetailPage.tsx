@@ -6,7 +6,12 @@ import { Button } from '../../components/ui/Button';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
 import { useAuth } from '../../lib/auth';
-import { getPortalHomeForRole } from '../../components/auth/RoleRoute';
+
+import { getBilingualText } from '../../lib/utils';
+
+function getApplyPath(jobId: string) {
+  return `/portal/applicant/apply/${jobId}`;
+}
 
 export function CareerDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,36 +27,38 @@ export function CareerDetailPage() {
   });
 
   if (isLoading) return <LoadingSpinner />;
-  if (!job) return <p className="p-12 text-center text-neutral-medium">Job position not found</p>;
+  if (!job) return <p className="p-12 text-center text-neutral-medium">{t('careers.noPositions')}</p>;
+
+  const title = getBilingualText(job, 'title', lang);
+  const location = getBilingualText(job, 'location', lang);
+  const description = getBilingualText(job, 'description', lang);
+  const requirements = getBilingualText(job, 'requirements', lang);
 
   function handleApply() {
-    if (!user) {
-      navigate(`/login?redirect=/portal/applicant/apply/${id}`);
+    const applyPath = getApplyPath(id!);
+    if (!user || role === 'PARENT') {
+      navigate(`/register/applicant?redirect=${encodeURIComponent(applyPath)}`);
       return;
     }
-    if (role === 'PARENT') {
-      navigate('/register/applicant');
-      return;
-    }
-    if (role === 'APPLICANT') {
-      navigate(`/portal/applicant/apply/${id}`);
-      return;
-    }
-    navigate(getPortalHomeForRole(role));
+    navigate(applyPath);
   }
+
+  const applyPath = getApplyPath(id!);
+  const registerApplicantUrl = `/register/applicant?redirect=${encodeURIComponent(applyPath)}`;
+  const loginUrl = `/login?redirect=${encodeURIComponent(applyPath)}&accountType=applicant`;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <PageHeader title={job.title} subtitle={`${job.location} · ${job.employmentType.replace('_', ' ')}`} />
+      <PageHeader title={title} subtitle={`${location} · ${job.employmentType.replace('_', ' ')}`} />
       <div className="grid md:grid-cols-12 gap-8">
         <div className="md:col-span-7 space-y-6">
           <div className="glass-card rounded-2xl p-6">
-            <h3 className="font-semibold text-lg mb-3 text-primary-dark">Position Description</h3>
-            <div className="prose-content text-sm text-neutral-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: job.description }} />
+            <h3 className="font-semibold text-lg mb-3 text-primary-dark dark:text-gold">{t('careers.positionDescription', 'الوصف الوظيفي')}</h3>
+            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: description }} />
           </div>
           <div className="glass-card rounded-2xl p-6">
-            <h3 className="font-semibold text-lg mb-3 text-primary-dark">Requirements & Qualifications</h3>
-            <div className="prose-content text-sm text-neutral-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: job.requirements }} />
+            <h3 className="font-semibold text-lg mb-3 text-primary-dark dark:text-gold">{t('careers.requirementsQualifications', 'المتطلبات والمؤهلات')}</h3>
+            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: requirements }} />
           </div>
         </div>
 
@@ -65,18 +72,18 @@ export function CareerDetailPage() {
                   {t('auth.registerApplicantDesc')}
                 </p>
                 <div className="flex flex-col gap-2">
-                  <Button variant="gold" onClick={() => navigate(`/login?redirect=/portal/applicant/apply/${id}`)}>
-                    {t('auth.loginBtn')}
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate(`/register/applicant?redirect=/portal/applicant/apply/${id}`)}>
+                  <Button variant="gold" onClick={() => navigate(registerApplicantUrl)}>
                     {t('auth.registerBtn')}
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate(loginUrl)}>
+                    {t('auth.loginBtn')}
                   </Button>
                 </div>
               </div>
             ) : role === 'PARENT' ? (
               <div className="text-center py-6 px-4 bg-ivory rounded-xl border space-y-3">
                 <p className="text-sm text-neutral-medium">{t('auth.switchToApplicant')}</p>
-                <Button variant="gold" to="/register/applicant">{t('auth.registerApplicant')}</Button>
+                <Button variant="gold" to={registerApplicantUrl}>{t('auth.registerApplicant')}</Button>
               </div>
             ) : (
               <div className="space-y-4">

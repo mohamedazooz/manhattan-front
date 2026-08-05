@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Briefcase,
@@ -14,12 +15,13 @@ import {
   Download,
   FileText,
   ExternalLink,
-  GraduationCap,
-  Award,
   Mail,
   Phone,
-  Calendar,
   Filter,
+  Star,
+  MessageSquare,
+  Sparkles,
+  Bell,
 } from 'lucide-react';
 import { careersApi } from '../../api';
 import { Button } from '../../components/ui/Button';
@@ -28,14 +30,16 @@ import { DataTable } from '../../components/ui/DataTable';
 import { useAppLanguage } from '../../i18n';
 import type { Job, JobApplication } from '../../types';
 import { mediaUrl } from '../../lib/utils';
+import { JobApplicationAdminDetails } from '../../components/careers/JobApplicationAdminDetails';
 
 export function AdminCareersPage() {
   const lang = useAppLanguage();
   const isAr = lang === 'ar';
   const queryClient = useQueryClient();
-
-  // Active Tab: 'JOBS' or 'APPLICANTS'
-  const [activeTab, setActiveTab] = useState<'JOBS' | 'APPLICANTS'>('JOBS');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkApplicationId = searchParams.get('applicationId');
+  const handledApplicationDeepLink = useRef<string | null>(null);
+  const allApplicationsSectionRef = useRef<HTMLDivElement>(null);
 
   // Job Search & Filters
   const [jobSearchTerm, setJobSearchTerm] = useState('');
@@ -54,9 +58,16 @@ export function AdminCareersPage() {
   // Applicant Detail Modal State
   const [selectedApp, setSelectedApp] = useState<JobApplication | null>(null);
   const [isAppDetailModalOpen, setIsAppDetailModalOpen] = useState(false);
+  const [loadingAppDetails, setLoadingAppDetails] = useState(false);
   const [updatingAppStatus, setUpdatingAppStatus] = useState(false);
 
-  // Job Form State
+  // Evaluation & Interview State
+  const [evalRating, setEvalRating] = useState<number>(0);
+  const [evalComment, setEvalComment] = useState<string>('');
+  const [interviewDateInput, setInterviewDateInput] = useState<string>('');
+  const [interviewLocationInput, setInterviewLocationInput] = useState<string>('');
+  const [submittingEval, setSubmittingEval] = useState<boolean>(false);
+
   const [jobForm, setJobForm] = useState({
     title: '',
     titleAr: '',
@@ -70,7 +81,6 @@ export function AdminCareersPage() {
     requirementsAr: '',
   });
 
-  // Queries
   const { data: jobs = [], isLoading: isLoadingJobs } = useQuery({
     queryKey: ['jobs-admin'],
     queryFn: () => careersApi.admin().then((r) => r.data),
@@ -81,14 +91,10 @@ export function AdminCareersPage() {
     queryFn: () => careersApi.allApplications().then((r) => r.data),
   });
 
-  // Metrics
   const totalJobs = jobs.length;
-  const openJobs = jobs.filter((j: Job) => j.status === 'OPEN').length;
-  const closedJobs = jobs.filter((j: Job) => j.status === 'CLOSED').length;
+  const openJobs = jobs.filter((job: Job) => job.status === 'OPEN').length;
+  const closedJobs = jobs.filter((job: Job) => job.status === 'CLOSED').length;
   const totalApps = allApplications.length;
-  const submittedApps = allApplications.filter(
-    (a: JobApplication) => a.status === 'SUBMITTED' || a.status === 'REVIEWING'
-  ).length;
 
   // Handlers for Jobs
   const openCreateJobModal = () => {
@@ -161,8 +167,17 @@ export function AdminCareersPage() {
   const handleAppStatusChange = async (appId: string, newStatus: string) => {
     setUpdatingAppStatus(true);
     try {
-      await careersApi.updateApplicationStatus(appId, newStatus);
+      await careersApi.updateApplicationStatus(
+        appId,
+        newStatus,
+        undefined,
+        interviewDateInput || undefined,
+        interviewLocationInput || undefined,
+      );
       queryClient.invalidateQueries({ queryKey: ['job-apps-all'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['my-job-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       if (selectedApp && selectedApp.id === appId) {
         setSelectedApp({ ...selectedApp, status: newStatus });
       }
@@ -176,14 +191,137 @@ export function AdminCareersPage() {
     }
   };
 
-  const openAppDetailsModal = (app: JobApplication) => {
-    setSelectedApp(app);
+  const openAppDetailsModal = async (app: JobApplication) => {
     setIsAppDetailModalOpen(true);
+    setLoadingAppDetails(true);
+    setSelectedApp(app);
+    setEvalRating(app.rating || 0);
+    setEvalComment('');
+    setInterviewDateInput(app.interviewDate ? new Date(app.interviewDate).toISOString().slice(0, 16) : '');
+    setInterviewLocationInput(app.interviewLocation || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد');
+
+    try {
+      const res = await careersApi.adminGetApplication(app.id);
+      const fullApp = res.data as JobApplication;
+      setSelectedApp(fullApp);
+      setEvalRating(fullApp.rating || 0);
+      setInterviewDateInput(
+        fullApp.interviewDate ? new Date(fullApp.interviewDate).toISOString().slice(0, 16) : '',
+      );
+      setInterviewLocationInput(fullApp.interviewLocation || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد');
+    } catch {
+      // Keep list row data if full fetch fails
+    } finally {
+      setLoadingAppDetails(false);
+    }
+  };
+
+  const clearApplicationDeepLink = () => {
+    if (!searchParams.get('applicationId')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('applicationId');
+    setSearchParams(next, { replace: true });
+    handledApplicationDeepLink.current = null;
+  };
+
+  const closeAppDetailModal = () => {
+    setIsAppDetailModalOpen(false);
+    clearApplicationDeepLink();
+  };
+
+  useEffect(() => {
+    if (!deepLinkApplicationId) {
+      handledApplicationDeepLink.current = null;
+      return;
+    }
+    if (handledApplicationDeepLink.current === deepLinkApplicationId) return;
+
+    const openFromApplication = (app: JobApplication) => {
+      handledApplicationDeepLink.current = deepLinkApplicationId;
+      openAppDetailsModal(app);
+    };
+
+    const fromList = allApplications.find((app: JobApplication) => app.id === deepLinkApplicationId);
+    if (fromList) {
+      openFromApplication(fromList);
+      return;
+    }
+
+    if (!isLoadingApps) {
+      careersApi
+        .adminGetApplication(deepLinkApplicationId)
+        .then((res) => openFromApplication(res.data as JobApplication))
+        .catch(() => undefined);
+    }
+  }, [deepLinkApplicationId, allApplications, isLoadingApps]);
+
+  const handleExportCsv = async () => {
+    try {
+      const res = await careersApi.exportApplications(appJobFilter);
+      const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `mls_job_applications_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export CSV', err);
+      alert(isAr ? 'فشل تصدير البيانات' : 'Failed to export data');
+    }
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!selectedApp) return;
+    setSubmittingEval(true);
+    try {
+      const res = await careersApi.evaluateApplication(selectedApp.id, {
+        rating: evalRating || undefined,
+        interviewDate: interviewDateInput || undefined,
+        interviewLocation: interviewLocationInput || undefined,
+        comment: evalComment.trim() || undefined,
+      });
+      setSelectedApp(res.data);
+      setEvalComment('');
+      queryClient.invalidateQueries({ queryKey: ['job-apps-all'] });
+    } catch (err) {
+      console.error(err);
+      alert(isAr ? 'فشل حفظ التقييم والملاحظات' : 'Failed to save evaluation');
+    } finally {
+      setSubmittingEval(false);
+    }
   };
 
   const handleViewApplicantsForJob = (jobId: string) => {
     setAppJobFilter(jobId);
-    setActiveTab('APPLICANTS');
+    setAppStatusFilter('ALL');
+    allApplicationsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const isNewApplication = (app: JobApplication) => app.status === 'SUBMITTED';
+
+  const getJobIdForApp = (app: JobApplication) => app.job?.id ?? (app as JobApplication & { jobId?: string }).jobId;
+
+  const newApplications = allApplications
+    .filter(isNewApplication)
+    .sort((a: JobApplication, b: JobApplication) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+  const newApplicationsCount = newApplications.length;
+
+  const countNewApplicationsForJob = (jobId: string) =>
+    allApplications.filter((app: JobApplication) => isNewApplication(app) && getJobIdForApp(app) === jobId).length;
+
+  const NewCountBadge = ({ count, className = '' }: { count: number; className?: string }) => {
+    if (count <= 0) return null;
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold shadow-sm animate-pulse ${className}`}
+      >
+        <Bell className="w-3 h-3" />
+        {count}
+      </span>
+    );
   };
 
   // Filters
@@ -263,53 +401,114 @@ export function AdminCareersPage() {
         </div>
 
         <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
+          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 relative">
             <Users className="w-6 h-6" />
+            {newApplicationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                {newApplicationsCount}
+              </span>
+            )}
           </div>
           <div>
             <div className="text-2xl font-black text-slate-900 dark:text-white">{totalApps}</div>
             <div className="text-xs text-slate-500 font-medium">
-              {isAr ? `إجمالي المتقدمين (${submittedApps} قيد المراجعة)` : `Total Applicants (${submittedApps} pending)`}
+              {isAr
+                ? `إجمالي المتقدمين (${newApplicationsCount} طلب جديد)`
+                : `Total Applicants (${newApplicationsCount} new)`}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Section Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
-        <button
-          onClick={() => setActiveTab('JOBS')}
-          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm border-b-2 transition-all ${
-            activeTab === 'JOBS'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Briefcase className="w-4 h-4" />
-          <span>{isAr ? 'الوظائف المعروضة والتعديل' : 'Job Openings & Management'}</span>
-          <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold">
-            {jobs.length}
-          </span>
-        </button>
+      {/* New Applications */}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Bell className="w-5 h-5 text-amber-500" />
+              {isAr ? 'طلبات جديدة' : 'New Applications'}
+            </h2>
+            <NewCountBadge count={newApplicationsCount} className="!animate-pulse" />
+          </div>
+          <p className="text-xs text-slate-500">
+            {isAr ? 'طلبات تم تقديمها ولم تُراجع بعد (SUBMITTED)' : 'Submitted applications awaiting first review'}
+          </p>
+        </div>
 
-        <button
-          onClick={() => setActiveTab('APPLICANTS')}
-          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm border-b-2 transition-all ${
-            activeTab === 'APPLICANTS'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>{isAr ? 'طلبات المتقدمين والسير الذاتية' : 'Applicants & Resumes'}</span>
-          <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-extrabold">
-            {allApplications.length}
-          </span>
-        </button>
-      </div>
+        <div className="glass-card rounded-2xl overflow-hidden border border-amber-200/80 dark:border-amber-900/50 bg-white dark:bg-slate-900">
+          {newApplications.length > 0 ? (
+            <DataTable
+              data={newApplications}
+              columns={[
+                {
+                  key: 'applicant',
+                  header: isAr ? 'المتقدم' : 'Candidate',
+                  render: (app: JobApplication) => (
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">{app.fullName}</div>
+                      <div className="text-xs text-slate-500">{app.email}</div>
+                      {app.referenceNumber && (
+                        <div className="text-[10px] font-mono text-primary mt-0.5">{app.referenceNumber}</div>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'job',
+                  header: isAr ? 'الوظيفة / القسم' : 'Position',
+                  render: (app: JobApplication) => (
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {app.job ? (isAr && app.job.titleAr ? app.job.titleAr : app.job.title) : '—'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'date',
+                  header: isAr ? 'تاريخ التقديم' : 'Submitted',
+                  render: (app: JobApplication) => (
+                    <span className="text-xs text-slate-500">
+                      {app.createdAt ? new Date(app.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : '—'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: isAr ? 'الإجراءات' : 'Actions',
+                  render: (app: JobApplication) => (
+                    <Button
+                      variant="primary"
+                      className="py-1 px-2.5 text-xs flex items-center gap-1"
+                      onClick={() => openAppDetailsModal(app)}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {isAr ? 'معاينة الطلب' : 'View Details'}
+                    </Button>
+                  ),
+                },
+              ]}
+            />
+          ) : (
+            <div className="text-center py-10 text-slate-500">
+              <CheckCircle className="w-10 h-10 mx-auto text-emerald-400 mb-2" />
+              <p className="font-semibold">{isAr ? 'لا توجد طلبات جديدة حالياً' : 'No new applications right now'}</p>
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* TAB 1: JOBS MANAGEMENT */}
-      {activeTab === 'JOBS' && (
+      {/* Job Departments / Positions */}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Briefcase className="w-5 h-5 text-primary" />
+            {isAr ? 'الأقسام والوظائف' : 'Departments & Positions'}
+          </h2>
+          <Button onClick={openCreateJobModal} variant="outline" className="text-xs py-1.5 px-3">
+            <Plus className="w-3.5 h-3.5 me-1" />
+            {isAr ? 'إضافة وظيفة' : 'Add Position'}
+          </Button>
+        </div>
+
         <div className="space-y-6">
           {/* Search & Status Filter */}
           <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -346,17 +545,21 @@ export function AdminCareersPage() {
                 {
                   key: 'title',
                   header: isAr ? 'المسمى الوظيفي' : 'Job Position',
-                  render: (r: Job) => (
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white text-base">
-                        {isAr && r.titleAr ? r.titleAr : r.title}
+                  render: (r: Job) => {
+                    const newCount = countNewApplicationsForJob(r.id);
+                    return (
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2 flex-wrap">
+                          <span>{isAr && r.titleAr ? r.titleAr : r.title}</span>
+                          <NewCountBadge count={newCount} />
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span>{isAr && r.locationAr ? r.locationAr : r.location}</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span>{isAr && r.locationAr ? r.locationAr : r.location}</span>
-                      </div>
-                    </div>
-                  ),
+                    );
+                  },
                 },
                 {
                   key: 'type',
@@ -371,14 +574,16 @@ export function AdminCareersPage() {
                   key: 'applicantsCount',
                   header: isAr ? 'المتقدمون' : 'Applicants',
                   render: (r: Job) => {
-                    const count = (r as any)._count?.applications ?? allApplications.filter((a: any) => a.jobId === r.id || a.job?.id === r.id).length;
+                    const count = (r as Job & { _count?: { applications?: number } })._count?.applications ?? allApplications.filter((a: JobApplication) => getJobIdForApp(a) === r.id).length;
+                    const newCount = countNewApplicationsForJob(r.id);
                     return (
                       <button
                         onClick={() => handleViewApplicantsForJob(r.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 transition-colors"
+                        className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-100 transition-colors"
                       >
                         <Users className="w-3.5 h-3.5" />
                         <span>{count} {isAr ? 'متقدم' : 'candidates'}</span>
+                        <NewCountBadge count={newCount} className="!static !animate-pulse ms-1" />
                       </button>
                     );
                   },
@@ -404,9 +609,14 @@ export function AdminCareersPage() {
                       <button
                         title={isAr ? 'عرض طلبات المتقدمين لهذه الوظيفة' : 'View Job Applicants'}
                         onClick={() => handleViewApplicantsForJob(r.id)}
-                        className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors"
+                        className="relative p-2 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors"
                       >
                         <Eye className="w-4 h-4" />
+                        {countNewApplicationsForJob(r.id) > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                            {countNewApplicationsForJob(r.id)}
+                          </span>
+                        )}
                       </button>
 
                       <Button
@@ -423,10 +633,21 @@ export function AdminCareersPage() {
             />
           </div>
         </div>
-      )}
+      </section>
 
-      {/* TAB 2: APPLICANTS & CVs MANAGEMENT */}
-      {activeTab === 'APPLICANTS' && (
+      {/* All Applications */}
+      <section ref={allApplicationsSectionRef} className="space-y-4 scroll-mt-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-purple-600" />
+            {isAr ? 'جميع طلبات المتقدمين' : 'All Applications'}
+          </h2>
+          <NewCountBadge count={newApplicationsCount} />
+          <span className="text-xs text-slate-500 font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
+            {allApplications.length} {isAr ? 'طلب' : 'total'}
+          </span>
+        </div>
+
         <div className="space-y-6">
           {/* Filters Bar */}
           <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -474,6 +695,17 @@ export function AdminCareersPage() {
                 <option value="DRAFT">{isAr ? 'مسودة (DRAFT)' : 'DRAFT'}</option>
               </select>
             </div>
+
+            {/* Export CSV Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportCsv}
+              className="w-full md:w-auto text-xs py-2 px-3 flex items-center justify-center gap-2 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+            >
+              <Download className="w-4 h-4" />
+              {isAr ? 'تصدير إلى Excel (CSV)' : 'Export CSV'}
+            </Button>
           </div>
 
           {/* Applicants Table */}
@@ -484,9 +716,14 @@ export function AdminCareersPage() {
                 columns={[
                   {
                     key: 'applicant',
-                    header: isAr ? 'المتقدم' : 'Candidate',
+                    header: isAr ? 'المتقدم والرقم المرجعي' : 'Candidate & Ref',
                     render: (app: JobApplication) => (
                       <div>
+                        {app.referenceNumber && (
+                          <div className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md inline-block mb-1 border border-amber-200 dark:border-amber-800">
+                            {app.referenceNumber}
+                          </div>
+                        )}
                         <div className="font-bold text-slate-900 dark:text-white text-base">{app.fullName}</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-3 mt-0.5">
                           <span className="flex items-center gap-1">
@@ -503,15 +740,39 @@ export function AdminCareersPage() {
                   },
                   {
                     key: 'jobTitle',
-                    header: isAr ? 'الوظيفة المتقدم لها' : 'Applied Position',
+                    header: isAr ? 'الوظيفة والمطابقة' : 'Position & Score',
                     render: (app: JobApplication) => {
                       const title = app.job ? (isAr && app.job.titleAr ? app.job.titleAr : app.job.title) : '-';
                       return (
-                        <div className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
-                          {title}
+                        <div>
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
+                            {title}
+                          </div>
+                          {app.matchScore !== undefined && app.matchScore !== null && (
+                            <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                              <Sparkles className="w-3 h-3 text-gold" />
+                              {app.matchScore}% {isAr ? 'مطابقة' : 'Match'}
+                            </div>
+                          )}
                         </div>
                       );
                     },
+                  },
+                  {
+                    key: 'rating',
+                    header: isAr ? 'التقييم (Rating)' : 'Rating',
+                    render: (app: JobApplication) => (
+                      <div className="flex items-center gap-0.5 text-amber-500">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-3.5 h-3.5 ${
+                              (app.rating || 0) >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    ),
                   },
                   {
                     key: 'experience',
@@ -594,7 +855,7 @@ export function AdminCareersPage() {
             )}
           </div>
         </div>
-      )}
+      </section>
 
       {/* CREATE / EDIT JOB MODAL */}
       {isJobModalOpen && (
@@ -820,13 +1081,16 @@ export function AdminCareersPage() {
                   <p className="text-sm font-semibold text-primary mt-0.5">
                     {selectedApp.job ? (isAr && selectedApp.job.titleAr ? selectedApp.job.titleAr : selectedApp.job.title) : ''}
                   </p>
+                  {selectedApp.referenceNumber && (
+                    <p className="text-xs font-mono text-slate-500 mt-1">{selectedApp.referenceNumber}</p>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
                 <StatusBadge status={selectedApp.status} />
                 <button
-                  onClick={() => setIsAppDetailModalOpen(false)}
+                  onClick={closeAppDetailModal}
                   className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <X className="w-6 h-6" />
@@ -859,156 +1123,124 @@ export function AdminCareersPage() {
                 </div>
               </div>
 
-              {/* Personal & Contact Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                  <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 mb-1">
-                    <Mail className="w-3.5 h-3.5" />
-                    {isAr ? 'البريد الإلكتروني' : 'Email Address'}
-                  </div>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm break-all">
-                    {selectedApp.email}
-                  </div>
+              {loadingAppDetails ? (
+                <div className="py-12 flex justify-center">
+                  <LoadingSpinner />
                 </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                  <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 mb-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    {isAr ? 'رقم الهاتف' : 'Phone Number'}
-                  </div>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">
-                    {selectedApp.phone}
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                  <div className="text-xs font-semibold text-slate-400 flex items-center gap-1 mb-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {isAr ? 'تاريخ تقديم الطلب' : 'Submitted Date'}
-                  </div>
-                  <div className="font-bold text-slate-900 dark:text-white text-sm">
-                    {selectedApp.createdAt ? new Date(selectedApp.createdAt).toLocaleDateString() : '-'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Academic & Experience Details */}
-              <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-gold" />
-                  {isAr ? 'الخبرات والتفاصيل الاكاديمية' : 'Qualifications & Experience'}
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                    <span className="text-slate-400 font-semibold block">{isAr ? 'سنوات الخبرة' : 'Years of Exp'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 block">
-                      {selectedApp.yearsExperience ?? 0} {isAr ? 'سنوات' : 'years'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                    <span className="text-slate-400 font-semibold block">{isAr ? 'أعلى مؤهل تعليمي' : 'Highest Qualification'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 block">
-                      {selectedApp.highestQualification || '-'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                    <span className="text-slate-400 font-semibold block">{isAr ? 'المواد المَدرّسة' : 'Subjects Taught'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 block">
-                      {selectedApp.subjectsTaught || '-'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                    <span className="text-slate-400 font-semibold block">{isAr ? 'خبرة المناهج' : 'Curriculum Experience'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 block">
-                      {selectedApp.curriculumExperience || '-'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                    <span className="text-slate-400 font-semibold block">{isAr ? 'رقم ترخيص التدريس' : 'License No.'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 block">
-                      {selectedApp.teachingLicenseNo || '-'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cover Letter */}
-              {selectedApp.coverLetter && (
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    {isAr ? 'خطاب التغطية / الرسالة التعريفية' : 'Cover Letter'}
-                  </h3>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl">
-                    {selectedApp.coverLetter}
-                  </p>
-                </div>
+              ) : (
+                <JobApplicationAdminDetails app={selectedApp} isAr={isAr} />
               )}
 
-              {/* Uploaded Documents Section */}
-              <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-4">
+              {/* HR Assessment & Interview Scorecard */}
+              <div className="p-5 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-950/20 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    {isAr ? 'المستندات والسيرة الذاتية المرفوعة' : 'Uploaded Documents & CV'}
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    {isAr ? 'تقييم HR وجدولة المقابلة (Assessment & Scorecard)' : 'HR Candidate Evaluation & Interview'}
                   </h3>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
-                    {selectedApp.documents?.length || 0} {isAr ? 'ملف' : 'files'}
-                  </span>
+                  {selectedApp.matchScore !== undefined && selectedApp.matchScore !== null && (
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300">
+                      {isAr ? `نسبة المطابقة الأكاديمية: ${selectedApp.matchScore}%` : `Match Score: ${selectedApp.matchScore}%`}
+                    </span>
+                  )}
                 </div>
 
-                {selectedApp.documents && selectedApp.documents.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedApp.documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-3 hover:border-primary transition-all"
-                      >
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div className="overflow-hidden">
-                            <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
-                              {doc.fileName || doc.documentType}
-                            </div>
-                            <div className="text-[10px] text-slate-400 uppercase font-semibold mt-0.5">
-                              {doc.documentType || 'CV_RESUME'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <a
-                            href={mediaUrl(doc.fileUrl)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-2 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-primary shadow-xs border border-slate-200 dark:border-slate-700 transition-colors"
-                            title={isAr ? 'معاينة / فتح الملف' : 'Open / View File'}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-
-                          <a
-                            href={mediaUrl(doc.fileUrl)}
-                            download
-                            className="p-2 rounded-lg bg-primary text-white hover:bg-primary-dark shadow-xs transition-colors"
-                            title={isAr ? 'تحميل الملف' : 'Download File'}
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Rating Stars Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      {isAr ? 'التقييم العام (Star Rating):' : 'Candidate Rating:'}
+                    </label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setEvalRating(star)}
+                          className="p-1 transition-transform hover:scale-110 focus:outline-hidden"
+                        >
+                          <Star
+                            className={`w-6 h-6 ${
+                              evalRating >= star
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-slate-300 dark:text-slate-700 hover:text-amber-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-slate-400 text-xs">
-                    {isAr ? 'لم يقم المتقدم برفع سيرته الذاتية أو أي مستندات.' : 'No uploaded CV or documents attached to this application.'}
+
+                  {/* Interview Date Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isAr ? 'تاريخ ووقت المقابلة الشخصية (Interview Date):' : 'Interview Date & Time:'}
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={interviewDateInput}
+                      onChange={(e) => setInterviewDateInput(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {isAr ? 'مقر المقابلة (Interview Location):' : 'Interview Location:'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مدرسة مانهاتن للغات، الشيخ زايد"
+                    value={interviewLocationInput}
+                    onChange={(e) => setInterviewLocationInput(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                  />
+                </div>
+
+                {/* Internal Comment Input */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {isAr ? 'إضافة ملاحظة إدارية داخلية جديدة (Internal HR Note):' : 'Add Internal HR Comment:'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder={isAr ? 'اكتب ملاحظات التقييم أو الانترفيو...' : 'Enter internal evaluation notes...'}
+                    value={evalComment}
+                    onChange={(e) => setEvalComment(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end">
+                  <Button
+                    type="button"
+                    disabled={submittingEval}
+                    onClick={handleSaveEvaluation}
+                    className="text-xs py-1.5 px-4 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    {submittingEval ? (isAr ? 'جاري الحفظ...' : 'Saving...') : isAr ? 'حفظ التقييم والملاحظات' : 'Save Scorecard & Rating'}
+                  </Button>
+                </div>
+
+                {/* Previous HR Comments List */}
+                {selectedApp.comments && selectedApp.comments.length > 0 && (
+                  <div className="pt-3 border-t border-amber-200/60 dark:border-amber-900/40 space-y-2">
+                    <div className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                      <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                      {isAr ? 'سجل الملاحظات الداخلية:' : 'Internal Comments Log:'}
+                    </div>
+                    <div className="space-y-2 max-h-36 overflow-y-auto">
+                      {selectedApp.comments.map((cm) => (
+                        <div key={cm.id} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold mb-1">
+                            <span>{cm.author?.fullName || 'HR Officer'}</span>
+                            <span>{new Date(cm.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</span>
+                          </div>
+                          <p className="text-slate-700 dark:text-slate-300">{cm.comment}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1016,7 +1248,7 @@ export function AdminCareersPage() {
 
             {/* Modal Footer */}
             <div className="pt-4 flex items-center justify-end border-t border-slate-100 dark:border-slate-800 shrink-0">
-              <Button onClick={() => setIsAppDetailModalOpen(false)}>
+              <Button onClick={closeAppDetailModal}>
                 {isAr ? 'إغلاق المعاينة' : 'Close Details'}
               </Button>
             </div>

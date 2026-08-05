@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
-import { getPortalHomeForRole } from '../../components/auth/RoleRoute';
+import { getPortalHomeForRole, getPostLoginRedirect } from '../../components/auth/RoleRoute';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { LogIn, UserPlus } from 'lucide-react';
+import { getAccessToken } from '../../api/client';
+import { LoadingSpinner } from '../../components/ui/Badge';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -30,11 +32,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      if (from) {
-        navigate(from);
-      } else {
-        navigate(getPortalHomeForRole(user.role));
-      }
+      navigate(getPostLoginRedirect(user.role, from));
     } catch {
       setError(t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة'));
     } finally {
@@ -121,20 +119,35 @@ export function LoginPage() {
 
 export function AdminLoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@manhattenschool.com');
-  const [password, setPassword] = useState('Admin123!');
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const redirectTo = searchParams.get('redirect');
+
+  if (authLoading) return <LoadingSpinner />;
+
+  if (user && isAdmin && getAccessToken()) {
+    const destination =
+      redirectTo && redirectTo.startsWith('/admin') ? redirectTo : '/admin';
+    return <Navigate to={destination} replace />;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/admin');
+      const user = await login(email, password);
+      const destination =
+        redirectTo && redirectTo.startsWith('/admin')
+          ? redirectTo
+          : getPortalHomeForRole(user.role);
+      navigate(destination);
     } catch {
       setError(t('auth.invalidCredentials', 'بيانات الدخول غير صحيحة'));
     } finally {
@@ -151,10 +164,8 @@ export function AdminLoginPage() {
           <p className="text-xs text-neutral-medium mt-1">Manhattan Language School Management Portal</p>
         </div>
 
-        <div className="mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200">
-          <p className="font-semibold mb-1">🔑 بيانات تسجيل الدخول للاختبار:</p>
-          <p><strong>الإيميل:</strong> admin@manhattenschool.com</p>
-          <p><strong>كلمة المرور:</strong> Admin123!</p>
+        <div className="mb-6 p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+          <p>استخدم بيانات حساب الإدارة المُعرّفة في بيئة التطوير أو المُوفّرة من مسؤول النظام.</p>
         </div>
 
         {error && <p className="text-accent text-sm mb-4 text-center">{error}</p>}

@@ -15,16 +15,19 @@ import {
   HeartHandshake,
   Phone,
   Mail,
+  Sparkles,
+  Quote,
 } from 'lucide-react';
 import { landingApi, blogApi, educationApi, requirementsApi, cmsApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/Badge';
-import { mediaUrl } from '../../lib/utils';
+import { getBilingualText, mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeroSlideshow } from '../../components/home/HeroSlideshow';
 import { PhotoGallery } from '../../components/home/PhotoGallery';
+import { SchoolMap } from '../../components/common/SchoolMap';
 import { useAuth } from '../../lib/auth';
 
 const trustIcons = [
@@ -216,7 +219,7 @@ export function HomePage() {
                   {t('applicantFlows.teacherTitle', 'التقديم على وظيفة معلم / كادر تعليمي')}
                 </h3>
                 <p className="text-white/80 text-sm leading-relaxed mb-6">
-                  {t('applicantFlows.teacherSubtitle', 'انضم لنخبة المعلمين في واحدة من أرقى المدارس الدولية وثنائية اللغة')}
+                  {t('applicantFlows.teacherSubtitle', 'انضم لنخبة المعلمين في مدرسة مانهاتن للغات (رياض الأطفال والابتدائي والإعدادي)')}
                 </p>
               </div>
 
@@ -237,18 +240,80 @@ export function HomePage() {
 
       {/* Chairman Inspiring Quote Banner */}
       {chairmanSection && (
-        <section className="py-16 bg-gradient-to-r from-slate-900 via-primary-dark to-slate-950 text-white relative overflow-hidden border-y border-white/10">
-          <div className="mx-auto max-w-5xl px-4 text-center space-y-6 relative z-10">
-            <div className="text-4xl text-gold font-serif">“</div>
-            <blockquote className="text-xl sm:text-2xl font-semibold leading-relaxed text-slate-100 max-w-4xl mx-auto italic">
-              {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) || t('quotes.chairman', 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.')}
-            </blockquote>
-            <div className="pt-2">
-              <span className="text-sm font-bold text-gold tracking-wide uppercase">
-                {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) || t('app.name')}
+        <section className="py-20 bg-gradient-to-br from-slate-950 via-primary-dark to-slate-900 text-white relative overflow-hidden border-y border-white/10">
+          {/* Subtle radial glow behind the content */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(212,175,55,0.08) 0%, transparent 70%)',
+            }}
+          />
+
+          <div className="mx-auto max-w-4xl px-4 relative z-10 space-y-8">
+            {/* Header Badge */}
+            <div className="flex items-center justify-center gap-3">
+              <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold/60" />
+              <span className="px-4 py-1.5 rounded-full text-xs font-bold bg-gold/10 text-gold border border-gold/30 tracking-wider uppercase flex items-center gap-2 shadow-xs backdrop-blur-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                {t('quotes.directorMessage', lang === 'ar' ? 'رسالة إدارة المدرسة' : "School Director's Message")}
               </span>
-              <p className="text-xs text-slate-400 mt-0.5">{t('nav.about')}</p>
+              <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold/60" />
             </div>
+
+            {/* Letter / Message Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="relative bg-slate-900/70 border border-gold/20 rounded-3xl p-8 sm:p-12 shadow-2xl backdrop-blur-md space-y-8"
+            >
+              {/* Decorative top quote mark */}
+              <div className="flex items-center justify-start text-gold/30">
+                <Quote className="w-10 h-10 rotate-180" />
+              </div>
+
+              {/* Message Content */}
+              <blockquote className="text-xl sm:text-2xl md:text-3xl font-semibold leading-relaxed text-slate-100 italic">
+                {(lang === 'ar' ? chairmanSection.contentAr : chairmanSection.content) ||
+                  t(
+                    'quotes.chairman',
+                    lang === 'ar'
+                      ? 'هدفنا هو ربط النقاط لتنمية العقول، والتي تتيح لكل طفل أن ينمو ليصبح بالغاً فخوراً بذاته وقادراً على اتخاذ القرار.'
+                      : 'Our goal is to connect the dots to nurture minds, allowing every child to grow into a proud, confident adult.',
+                  )}
+              </blockquote>
+
+              {/* End of Message Divider & Signature Block */}
+              <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
+                {/* School Name Label */}
+                <div className="text-start space-y-1">
+                  <span className="text-xs font-bold text-gold/90 tracking-widest uppercase block">
+                    {(lang === 'ar' ? chairmanSection.titleAr : chairmanSection.title) ||
+                      t('app.name')}
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    {t('quotes.schoolSubName', lang === 'ar' ? 'مدرسة منهاتن للغات' : 'Manhattan Language School')}
+                  </p>
+                </div>
+
+                {/* Signature */}
+                <div className="text-center sm:text-end space-y-0.5">
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {t('quotes.regards', lang === 'ar' ? 'مع خالص التحية والتقدير،' : 'With warm regards,')}
+                  </div>
+
+                  <p className="text-base sm:text-lg font-semibold text-gold">
+                    {t('quotes.directorName', lang === 'ar' ? 'إبراهيم عزوز' : 'Ibrahim Azzouz')}
+                  </p>
+
+                  <p className="text-[11px] font-medium text-slate-300 tracking-wide">
+                    {t('quotes.directorRole', lang === 'ar' ? 'رئيس مجلس الإدارة ومدير المدرسة' : 'Chairman & School Director')}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
       )}
@@ -434,11 +499,17 @@ export function HomePage() {
                   {item.date && (
                     <div className="mb-3 flex items-center gap-2 text-xs text-neutral-medium dark:text-slate-400">
                       <Calendar className="h-4 w-4 text-primary" />
-                      <span>{new Date(item.date).toLocaleDateString()}</span>
+                      <span>{new Date(item.date).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}</span>
                     </div>
                   )}
-                  <h3 className="text-lg font-bold text-primary-dark dark:text-slate-100">{item.title}</h3>
-                  {item.body && <p className="mt-2 text-sm text-neutral-medium dark:text-slate-300 leading-relaxed">{item.body}</p>}
+                  <h3 className="text-lg font-bold text-primary-dark dark:text-slate-100">
+                    {getBilingualText(item, 'title', lang)}
+                  </h3>
+                  {getBilingualText(item, 'body', lang) && (
+                    <p className="mt-2 text-sm text-neutral-medium dark:text-slate-300 leading-relaxed">
+                      {getBilingualText(item, 'body', lang)}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
@@ -510,9 +581,9 @@ export function HomePage() {
                   onChange={(e) => setSelectedGrade(e.target.value)}
                 >
                   <option value="">{t('requirementsWidget.choosePlaceholder', '-- Choose Grade Level --')}</option>
-                  {requirements.map((r: { id: string; gradeLevel: string; title: string }) => (
+                  {requirements.map((r: { id: string; gradeLevel: string; title: string; titleAr?: string }) => (
                     <option key={r.id} value={r.gradeLevel}>
-                      {r.gradeLevel} — {r.title}
+                      {String(t(`grades.${r.gradeLevel}`, r.gradeLevel))} — {getBilingualText(r, 'title', lang)}
                     </option>
                   ))}
                 </select>
@@ -520,8 +591,14 @@ export function HomePage() {
 
               {currentReq ? (
                 <div className="p-4 bg-primary-light/40 dark:bg-slate-800/80 rounded-xl space-y-3 border border-primary/20 animate-fade-in">
-                  <h4 className="font-bold text-primary-dark dark:text-blue-400">{currentReq.title}</h4>
-                  {currentReq.description && <p className="text-xs text-neutral-medium dark:text-slate-400">{currentReq.description}</p>}
+                  <h4 className="font-bold text-primary-dark dark:text-blue-400">
+                    {getBilingualText(currentReq, 'title', lang)}
+                  </h4>
+                  {(getBilingualText(currentReq, 'description', lang)) && (
+                    <p className="text-xs text-neutral-medium dark:text-slate-400">
+                      {getBilingualText(currentReq, 'description', lang)}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-4 text-xs font-semibold text-neutral-dark dark:text-slate-200">
                     {currentReq.minAge && <div>{t('requirementsWidget.minAge', 'Min Age:')} <span className="text-primary dark:text-blue-400">{currentReq.minAge} {t('requirementsWidget.years', 'yrs')}</span></div>}
                     {currentReq.maxAge && <div>{t('requirementsWidget.maxAge', 'Max Age:')} <span className="text-primary dark:text-blue-400">{currentReq.maxAge} {t('requirementsWidget.years', 'yrs')}</span></div>}
@@ -531,7 +608,7 @@ export function HomePage() {
                       <p className="text-xs font-bold text-neutral-dark dark:text-slate-200 mb-1">{t('requirementsWidget.requiredDocs', 'Required Documents:')}</p>
                       <div className="flex flex-wrap gap-1">
                         {currentReq.requiredDocumentTypes.map((doc: string) => (
-                          <span key={doc} className="text-[11px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-neutral-dark dark:text-slate-300 px-2 py-0.5 rounded shadow-xs font-mono">
+                          <span key={doc} className="text-[11px] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-neutral-dark dark:text-slate-300 px-2 py-0.5 rounded shadow-xs font-semibold">
                             📄 {doc.replace('_', ' ')}
                           </span>
                         ))}
@@ -717,11 +794,12 @@ export function HomePage() {
                     )}
                   </div>
                 </div>
-                <div className="min-h-80 bg-white/10">
-                  <img
-                    src={mediaUrl(config.school_flyer_url || hero?.imageUrl || '') || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&q=80'}
-                    alt="Manhattan Languages School students"
-                    className="h-full w-full object-cover"
+                <div className="min-h-[380px] h-full w-full relative">
+                  <SchoolMap
+                    googleMapsUrl={config.google_maps_url}
+                    embedUrl={config.google_maps_embed_url}
+                    address={config.contact_address_ar || config.contact_address || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد، محافظة الجيزة، مصر'}
+                    className="h-full w-full min-h-[380px]"
                   />
                 </div>
               </div>

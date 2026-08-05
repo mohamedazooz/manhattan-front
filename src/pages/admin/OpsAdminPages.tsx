@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { educationApi, galleryApi, blogApi, careersApi, contactApi, admissionsApi, requirementsApi, usersApi, rolesApi, emailApi, storageApi } from '../../api';
@@ -7,13 +7,15 @@ import { Button } from '../../components/ui/Button';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { StatusBadge, PageHeader } from '../../components/ui/Badge';
+import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { mediaUrl, formatDate } from '../../lib/utils';
 import { getApiErrorMessage, omitKeys } from '../../lib/formData';
 import { AdmissionStatusSelect } from '../../components/admin/AdmissionStatusSelect';
 import { useAppLanguage } from '../../i18n';
 import { Upload, Eye, Mail, Send, Phone, User, Clock, Search, MessageSquare, ExternalLink, CheckCircle } from 'lucide-react';
-
-
+import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
+import { getAdmissionDocumentMeta } from '../portal/parent/admissionWizardConstants';
+import { LOCAL_PHOTOS, PERMISSION_GROUPS, ROLE_ARABIC_NAMES } from './ops/opsAdminShared';
 export function AdminEducationPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -101,6 +103,7 @@ export function AdminEducationPage() {
 
   return (
     <div className="space-y-6">
+      <AdminPageGuide guideKey="education" />
       <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <PageHeader title={t('admin.education.title', 'Education Programs')} />
@@ -259,6 +262,7 @@ export function AdminGalleryPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('admin.gallery.title', 'Photo Gallery Management')} subtitle={t('admin.gallery.subtitle', 'Upload and manage photos of campus, events, and student activities.')} />
+      <AdminPageGuide guideKey="gallery" />
       <form className="grid md:grid-cols-4 gap-3 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs" onSubmit={(e) => { e.preventDefault(); upload.mutate(); }}>
         <Input label={t('admin.gallery.photoTitle', 'Photo Title')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         <Input label={t('admin.gallery.caption', 'Caption / Description')} value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} />
@@ -280,23 +284,6 @@ export function AdminGalleryPage() {
   );
 }
 
-const LOCAL_PHOTOS = [
-  '/photos/photo1.jpeg',
-  '/photos/photo2.jpeg',
-  '/photos/photo3.jpeg',
-  '/photos/photo4.jpeg',
-  '/photos/photo5.jpeg',
-  '/photos/photo6.jpeg',
-  '/photos/photo7.jpeg',
-  '/photos/photo8.jpeg',
-  '/photos/photo9.jpeg',
-  '/photos/photo10.jpeg',
-  '/photos/hero1.jpeg',
-  '/photos/hero2.jpeg',
-  '/photos/hero3.jpeg',
-  '/photos/hero4.jpeg',
-];
-
 export function AdminBlogPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -314,6 +301,8 @@ export function AdminBlogPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'categories'>('posts');
+  const [categoryForm, setCategoryForm] = useState({ name: '', nameAr: '', slug: '' });
 
   const { data: posts = [] } = useQuery({
     queryKey: ['posts-admin'],
@@ -322,6 +311,11 @@ export function AdminBlogPage() {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => blogApi.categories('en').then((r) => r.data),
+  });
+  const { data: comments = [] } = useQuery({
+    queryKey: ['blog-comments-admin'],
+    queryFn: () => blogApi.comments().then((r) => r.data),
+    enabled: activeTab === 'comments',
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,6 +396,7 @@ export function AdminBlogPage() {
 
   return (
     <div className="space-y-6">
+      <AdminPageGuide guideKey="blog" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <PageHeader title={t('admin.blogCrud.title', 'Articles & News Management')} />
@@ -409,9 +404,126 @@ export function AdminBlogPage() {
             {t('admin.blogCrud.subtitle', 'Publish school announcements, news articles, and manage comments.')}
           </p>
         </div>
-        <Button onClick={openNewModal} className="shadow-sm">{t('admin.blogCrud.addNew', '+ Write New Article')}</Button>
+        {activeTab === 'posts' && (
+          <Button onClick={openNewModal} className="shadow-sm">{t('admin.blogCrud.addNew', '+ Write New Article')}</Button>
+        )}
       </div>
 
+      <div className="flex gap-2 border-b border-slate-200 pb-2">
+        {(['posts', 'comments', 'categories'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === tab
+                ? 'bg-primary text-white'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {tab === 'posts'
+              ? t('admin.blogPosts', 'Articles')
+              : tab === 'comments'
+                ? t('admin.blogComments', 'Comments')
+                : t('admin.blogCategories', 'Categories')}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'comments' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+          <DataTable data={comments} columns={[
+            { key: 'content', header: t('admin.comment', 'Comment'), render: (r: { content: string }) => <span className="line-clamp-2">{r.content}</span> },
+            { key: 'author', header: t('admin.author', 'Author'), render: (r: { author?: { fullName: string } }) => r.author?.fullName || '—' },
+            { key: 'status', header: t('common.status', 'Status'), render: (r: { status: string }) => <StatusBadge status={r.status} /> },
+            {
+              key: 'actions',
+              header: t('common.actions', 'Actions'),
+              render: (r: { id: string; status: string }) => (
+                <div className="flex gap-2">
+                  {r.status !== 'APPROVED' && (
+                    <Button
+                      variant="secondary"
+                      className="py-1 px-2.5 text-xs"
+                      onClick={() =>
+                        blogApi.moderateComment(r.id, 'APPROVED').then(() => {
+                          qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
+                          qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                        })
+                      }
+                    >
+                      {t('admin.approve', 'Approve')}
+                    </Button>
+                  )}
+                  {r.status !== 'SPAM' && (
+                    <Button
+                      variant="danger"
+                      className="py-1 px-2.5 text-xs"
+                      onClick={() =>
+                        blogApi.moderateComment(r.id, 'SPAM').then(() => {
+                          qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
+                        })
+                      }
+                    >
+                      {t('admin.spam', 'Spam')}
+                    </Button>
+                  )}
+                </div>
+              ),
+            },
+          ]} />
+        </div>
+      )}
+
+      {activeTab === 'categories' && (
+        <div className="space-y-4">
+          <form
+            className="grid md:grid-cols-4 gap-3 bg-white p-5 rounded-xl border border-slate-200"
+            onSubmit={(e) => {
+              e.preventDefault();
+              blogApi
+                .createCategory({
+                  name: categoryForm.name,
+                  nameAr: categoryForm.nameAr || undefined,
+                  slug: categoryForm.slug || categoryForm.name.toLowerCase().replace(/\s+/g, '-'),
+                })
+                .then(() => {
+                  setCategoryForm({ name: '', nameAr: '', slug: '' });
+                  qc.invalidateQueries({ queryKey: ['categories'] });
+                });
+            }}
+          >
+            <Input label={t('admin.categoryName', 'Name')} value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} required />
+            <Input label={t('admin.categoryNameAr', 'Name (AR)')} value={categoryForm.nameAr} onChange={(e) => setCategoryForm({ ...categoryForm, nameAr: e.target.value })} />
+            <Input label={t('admin.slug', 'Slug')} value={categoryForm.slug} onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })} />
+            <Button type="submit" className="self-end">{t('admin.addCategory', 'Add Category')}</Button>
+          </form>
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <DataTable data={categories} columns={[
+              { key: 'name', header: t('admin.categoryName', 'Name'), render: (r: { name: string; nameAr?: string }) => r.nameAr ? `${r.name} / ${r.nameAr}` : r.name },
+              { key: 'slug', header: t('admin.slug', 'Slug'), render: (r: { slug: string }) => r.slug },
+              {
+                key: 'actions',
+                header: t('common.actions', 'Actions'),
+                render: (r: { id: string }) => (
+                  <Button
+                    variant="danger"
+                    className="py-1 px-2.5 text-xs"
+                    onClick={() =>
+                      blogApi.deleteCategory(r.id).then(() => qc.invalidateQueries({ queryKey: ['categories'] }))
+                    }
+                  >
+                    {t('admin.delete', 'Delete')}
+                  </Button>
+                ),
+              },
+            ]} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'posts' && (
+      <>
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <DataTable data={posts} columns={[
           {
@@ -567,6 +679,8 @@ export function AdminBlogPage() {
           </div>
         </form>
       </Modal>
+      </>
+      )}
     </div>
   );
 }
@@ -576,7 +690,6 @@ export function AdminAdmissionsPage() {
   const qc = useQueryClient();
   const [status, setStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewAdmission, setViewAdmission] = useState<any | null>(null);
 
   const { data: admissions = [] } = useQuery({
     queryKey: ['admissions-admin', status],
@@ -586,20 +699,21 @@ export function AdminAdmissionsPage() {
   const filteredAdmissions = admissions.filter((a: any) => {
     const fullName = `${a.studentFirstName} ${a.studentLastName}`.toLowerCase();
     const search = searchTerm.toLowerCase();
-    return fullName.includes(search) || (a.gradeLevel && a.gradeLevel.toLowerCase().includes(search));
+    const parent = (a.parentName || a.parentEmail || '').toLowerCase();
+    return fullName.includes(search) || (a.gradeLevel && a.gradeLevel.toLowerCase().includes(search)) || parent.includes(search);
   });
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title={t('admin.admissionsTitle', 'طلبات القبول')}
-        subtitle={t('admin.admissionsSubtitle', 'إدارة طلبات الطلاب المتقدمين، مراجعة بيانات التواصل مع أولياء الأمور، وتحديث حالات القبول.')}
+        title={t('admin.admissionsTitle', 'طلبات القبول والتسجيل')}
+        subtitle={t('admin.admissionsSubtitle', 'إدارة ومراجعة كافة طلبات الطلاب المتقدمين، بيانات أولياء الأمور، وتحديث حالات القبول.')}
       />
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-xs">
-        <div className="w-full sm:w-72">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-xs">
+        <div className="w-full sm:w-80">
           <Input
-            placeholder={t('admin.searchStudentPlaceholder', '🔍 البحث باسم الطالب أو المرحلة...')}
+            placeholder={t('admin.searchStudentPlaceholder', '🔍 البحث باسم الطالب، ولي الأمر، أو المرحلة...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -608,7 +722,7 @@ export function AdminAdmissionsPage() {
           <span className="text-xs font-semibold text-neutral-medium dark:text-slate-400 whitespace-nowrap">
             {t('admin.filterStatusLabel', 'تصفية حسب الحالة:')}
           </span>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full sm:w-44 text-xs">
+          <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full sm:w-48 text-xs">
             <option value="">{t('admin.allStatuses', 'جميع الحالات')}</option>
             {['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'ACCEPTED', 'REJECTED'].map((s) => (
               <option key={s} value={s}>
@@ -622,13 +736,19 @@ export function AdminAdmissionsPage() {
       <DataTable data={filteredAdmissions} columns={[
         { key: 'student', header: t('admin.studentName', 'اسم الطالب') as string, render: (r) => (
           <div>
-            <div className="font-bold text-neutral-dark dark:text-slate-100">{r.studentFirstName} {r.studentLastName}</div>
+            <Link to={`/admin/admissions/${r.id}`} className="font-bold text-primary dark:text-blue-400 hover:underline">
+              {r.studentFirstName} {r.studentLastName}
+            </Link>
             <div className="text-xs text-neutral-medium dark:text-slate-400">
               {r.referenceNumber ? `${t('admin.ref', 'رقم مرجعي')}: ${r.referenceNumber}` : `${t('admin.appId', 'رقم الطلب')}: #${r.id.slice(0, 8)}`}
             </div>
           </div>
         )},
-        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r) => <span className="font-semibold text-xs px-2 py-1 bg-primary-light text-primary rounded">{t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}</span> },
+        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r) => (
+          <span className="font-semibold text-xs px-2.5 py-1 bg-primary-light text-primary rounded-lg border border-primary/20">
+            {t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}
+          </span>
+        )},
         { key: 'parent', header: t('admin.parentContact', 'بيانات التواصل مع ولي الأمر') as string, render: (r) => (
           <div className="text-xs">
             <div className="font-medium text-neutral-dark dark:text-slate-200">{r.parentName || r.parentEmail || (t('admin.na', 'غير محدد') as string)}</div>
@@ -637,67 +757,27 @@ export function AdminAdmissionsPage() {
         )},
         { key: 'status', header: t('admin.statusLabel', 'الحالة') as string, render: (r) => (
           <AdmissionStatusSelect
-            className="border rounded p-1 text-xs bg-white dark:bg-slate-800 text-neutral-dark dark:text-slate-100 font-medium"
+            className="border rounded-lg p-1.5 text-xs bg-white dark:bg-slate-800 text-neutral-dark dark:text-slate-100 font-semibold"
             value={r.status}
-            onChange={(status) => admissionsApi.updateStatus(r.id, status).then(() => qc.invalidateQueries({ queryKey: ['admissions-admin'] }))}
+            onChange={(status) => admissionsApi.updateStatus(r.id, status).then(() => {
+              qc.invalidateQueries({ queryKey: ['admissions-admin'] });
+              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+              qc.invalidateQueries({ queryKey: ['my-admissions'] });
+              qc.invalidateQueries({ queryKey: ['notifications'] });
+            })}
           />
         )},
         { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r) => (
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="py-1 px-2.5 text-xs font-semibold" onClick={() => setViewAdmission(r)}>
-              {t('admin.view', 'عرض')}
-            </Button>
             <Link to={`/admin/admissions/${r.id}`}>
-              <Button variant="secondary" className="py-1 px-2.5 text-xs font-semibold">
-                {t('admin.notes', 'الملاحظات')}
+              <Button variant="gold" className="py-1 px-3 text-xs font-semibold flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5" />
+                <span>{t('admin.viewFullDetails', 'عرض كافة التفاصيل')}</span>
               </Button>
             </Link>
           </div>
         )},
       ]} />
-
-      {/* View Admission Modal */}
-      {viewAdmission && (
-        <Modal open={!!viewAdmission} onClose={() => setViewAdmission(null)} title={`${t('admin.admissionDetailsTitle', 'طلب القبول')} — ${viewAdmission.studentFirstName} ${viewAdmission.studentLastName}`} wide>
-          <div className="space-y-4 text-sm text-neutral-dark dark:text-slate-100">
-            <div className="grid grid-cols-2 gap-4 bg-neutral-light dark:bg-slate-800 p-4 rounded-xl">
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.studentName', 'اسم الطالب')}:</strong> {viewAdmission.studentFirstName} {viewAdmission.studentLastName}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.ref', 'الرقم المرجعي')}:</strong> {viewAdmission.referenceNumber ?? '—'}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.gradeLevel', 'المرحلة الدراسية')}:</strong> {t(`grades.${viewAdmission.gradeLevel}`, viewAdmission.gradeLevel) as string}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.birthDate', 'تاريخ الميلاد')}:</strong> {viewAdmission.dateOfBirth ? new Date(viewAdmission.dateOfBirth).toLocaleDateString() : (t('admin.na', 'غير محدد') as string)}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.nationality', 'الجنسية')}:</strong> {viewAdmission.nationality || (t('admin.na', 'غير محدد') as string)}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.previousSchool', 'المدرسة السابقة')}:</strong> {viewAdmission.previousSchool || (t('admin.na', 'غير محدد') as string)}</div>
-              <div><strong className="block text-xs text-neutral-medium">{t('admin.currentStatus', 'الحالة الحالية')}:</strong> <StatusBadge status={viewAdmission.status} /></div>
-            </div>
-
-            <div className="bg-neutral-light dark:bg-slate-800 p-4 rounded-xl space-y-2">
-              <h4 className="font-bold text-xs uppercase text-primary tracking-wider">{t('admin.parentGuardianInfo', 'بيانات ولي الأمر / الوصي') as string}</h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div><strong>{t('admin.parentRelationship', 'صلة القرابة')}:</strong> {viewAdmission.parentRelationship || t('admin.na', 'غير محدد')}</div>
-                <div><strong>{t('admin.employer', 'جهة العمل')}:</strong> {viewAdmission.parentEmployer || t('admin.na', 'غير محدد')}</div>
-                <div><strong>{t('admin.emergencyPhone', 'هاتف الطوارئ')}:</strong> {viewAdmission.emergencyPhone || t('admin.na', 'غير محدد')}</div>
-              </div>
-            </div>
-
-            {viewAdmission.documents && viewAdmission.documents.length > 0 && (
-              <div className="bg-neutral-light dark:bg-slate-800 p-4 rounded-xl space-y-2">
-                <h4 className="font-bold text-xs uppercase text-primary tracking-wider">{t('admin.attachedDocuments', 'المستندات المرفقة')}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {viewAdmission.documents.map((doc: any) => (
-                    <a key={doc.id} href={doc.fileUrl} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-white dark:bg-slate-900 border rounded-lg text-xs font-mono text-primary flex items-center gap-1 hover:underline">
-                      📄 {doc.documentType.replace('_', ' ')}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button onClick={() => setViewAdmission(null)}>{t('admin.close', 'إغلاق')}</Button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
@@ -707,100 +787,424 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
   const qc = useQueryClient();
   const lang = useAppLanguage();
   const [note, setNote] = useState('');
+
   const { data: admission, isLoading } = useQuery({
     queryKey: ['admission-detail', id],
     queryFn: () => admissionsApi.get(id).then((r) => r.data),
   });
 
-  if (isLoading) return <p className="text-sm text-slate-500">{t('admin.loading', 'جاري التحميل...')}</p>;
-  if (!admission) return <p className="text-sm text-red-600">{t('admin.applicationNotFound', 'لم يتم العثور على الطلب.')}</p>;
+  const { data: requirements = [] } = useQuery({
+    queryKey: ['requirements'],
+    queryFn: () => requirementsApi.list(true).then((r) => r.data),
+  });
+
+  if (isLoading) return <p className="text-sm text-slate-500 p-6">{t('admin.loading', 'جاري تحميل تفاصيل الطلب...')}</p>;
+  if (!admission) return <p className="text-sm text-red-600 p-6">{t('admin.applicationNotFound', 'لم يتم العثور على الطلب.')}</p>;
+
+  const gradeReq = requirements.find((r: { gradeLevel: string }) => r.gradeLevel === admission.gradeLevel);
+  const requiredDocs: string[] = gradeReq?.requiredDocumentTypes ?? [];
+  const uploadedTypes = new Set((admission.documents || []).map((d: { documentType: string }) => d.documentType));
+  const missingDocs = requiredDocs.filter((type: string) => !uploadedTypes.has(type));
+
+  const healthConditionsList = [
+    { key: 'hearing', label: 'ضعف/مشاكل السمع', icon: '👂' },
+    { key: 'asthma', label: 'حساسية الصدر / الربو', icon: '🫁' },
+    { key: 'heart', label: 'أمراض أو مشاكل القلب', icon: '❤️' },
+    { key: 'adhd', label: 'فرط الحركة وتشتت الانتباه (ADHD)', icon: '⚡' },
+    { key: 'epilepsy', label: 'الصرع / الشحنات الكهربائية', icon: '🧠' },
+    { key: 'behavioral', label: 'تحديات سلوكية أو تواصلية', icon: '🤝' },
+    { key: 'anemia', label: 'أنيميا / فقر الدم', icon: '🩸' },
+    { key: 'dental', label: 'مشاكل بالأسنان', icon: '🦷' },
+    { key: 'speech', label: 'صعوبات النطق والكلام', icon: '🗣️' },
+    { key: 'diabetes', label: 'مرض السكري', icon: '💉' },
+    { key: 'vision', label: 'ضعف البصر / النظر', icon: '👁️' },
+    { key: 'headInjury', label: 'إصابات سابقة بالرأس', icon: '🤕' },
+    { key: 'other', label: 'حالات طبية أخرى', icon: '📋' },
+  ];
+
+  const parsedHealth: Record<string, boolean> = typeof admission.healthConditions === 'object' && admission.healthConditions ? admission.healthConditions : {};
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={`${admission.studentFirstName} ${admission.studentLastName}`}
-        subtitle={`${t(`grades.${admission.gradeLevel}`, admission.gradeLevel)} · ${admission.parentEmail}`}
-      />
+    <div className="space-y-6 pb-12 animate-fade-in">
+      {/* Top Navigation & Status Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Link to="/admin/admissions" className="text-xs text-primary dark:text-blue-400 font-semibold hover:underline flex items-center gap-1">
+              <span>← {t('admin.backToAdmissions', 'الرجوع لقائمة الطلبات')}</span>
+            </Link>
+            <span className="text-slate-300">|</span>
+            <span className="text-xs text-slate-500 font-mono">
+              {admission.referenceNumber ? `الرقم المرجعي: ${admission.referenceNumber}` : `معرف الطلب: #${admission.id.slice(0, 8)}`}
+            </span>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3 flex-wrap">
+            <span>{admission.studentFirstName} {admission.studentLastName}</span>
+            <StatusBadge status={admission.status} />
+            {missingDocs.length > 0 && ['SUBMITTED', 'UNDER_REVIEW'].includes(admission.status) && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/30">
+                مستندات ناقصة ({missingDocs.length})
+              </span>
+            )}
+            {admission.documentsCompletedAt && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/30">
+                تم استكمال المستندات
+              </span>
+            )}
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            تاريخ التقديم: {formatDate(String(admission.createdAt || ''), lang)} · المرحلة: <strong className="text-primary">{t(`grades.${admission.gradeLevel}`, admission.gradeLevel) as string}</strong>
+          </p>
+        </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <StatusBadge status={admission.status} />
-        <AdmissionStatusSelect
-          value={admission.status}
-          onChange={(status) =>
-            admissionsApi.updateStatus(id, status).then(() => {
-              qc.invalidateQueries({ queryKey: ['admission-detail', id] });
-              qc.invalidateQueries({ queryKey: ['admissions-admin'] });
-            })
-          }
-          className="w-48"
-        />
+        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="text-xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+            تغيير حالة الطلب:
+          </div>
+          <AdmissionStatusSelect
+            value={admission.status}
+            onChange={(status) =>
+              admissionsApi.updateStatus(id, status).then(() => {
+                qc.invalidateQueries({ queryKey: ['admission-detail', id] });
+                qc.invalidateQueries({ queryKey: ['admissions-admin'] });
+                qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                qc.invalidateQueries({ queryKey: ['my-admissions'] });
+                qc.invalidateQueries({ queryKey: ['notifications'] });
+              })
+            }
+            className="w-48 text-sm font-semibold"
+          />
+        </div>
       </div>
 
-      {admission.documents && admission.documents.length > 0 && (
-        <div className="rounded-xl border bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">{t('admin.documents', 'المستندات')}</h3>
-          <div className="flex flex-wrap gap-2">
-            {admission.documents.map((doc) => (
-              <a
-                key={doc.id}
-                href={mediaUrl(doc.fileUrl)}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border px-3 py-1.5 text-xs font-medium text-primary hover:underline"
-              >
-                {doc.documentType.replace(/_/g, ' ')}
-              </a>
-            ))}
+      {/* Grid sections for Application details */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Section 1: Student Information */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <User className="w-5 h-5" />
+            <span>بيانات الطالب المتقدم</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">الاسم الأول:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{admission.studentFirstName}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">اسم العائلة:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{admission.studentLastName}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">تاريخ الميلاد:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
+                {admission.dateOfBirth ? new Date(admission.dateOfBirth).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US') : 'غير محدد'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">المرحلة الدراسية:</span>
+              <span className="font-semibold text-primary">{t(`grades.${admission.gradeLevel}`, admission.gradeLevel) as string}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">العام الدراسي:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.academicYear || '2026-2027'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">الجنسية:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.nationality || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">النوع / الجنس:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.gender || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">المدرسة السابقة:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.previousSchool || 'لا يوجد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">اللغات المتحدثة:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.languagesSpoken || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">وجود إخوة بالمدرسة:</span>
+              <span className={`font-semibold px-2 py-0.5 rounded text-xs inline-block ${admission.siblingEnrolled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                {admission.siblingEnrolled ? 'نعم' : 'لا'}
+              </span>
+            </div>
           </div>
         </div>
-      )}
 
-      {admission.statusHistory && admission.statusHistory.length > 0 && (
-        <div className="rounded-xl border bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">{t('admin.statusHistory', 'سجل تغييرات الحالة')}</h3>
-          <div className="space-y-2">
-            {admission.statusHistory.map((entry) => (
-              <div key={entry.id} className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <StatusBadge status={entry.fromStatus} />
-                <span>→</span>
-                <StatusBadge status={entry.toStatus} />
-                <span className="text-xs text-slate-400">
-                  {entry.changedBy?.fullName || t('admin.system', 'النظام')} · {formatDate(entry.createdAt, lang)}
+        {/* Section 2: Father / Primary Guardian Information */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <Phone className="w-5 h-5" />
+            <span>بيانات ولي الأمر / الوصي</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">اسم ولي الأمر:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{admission.parentName || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">صلة القرابة:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.parentRelationship || 'الأب'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">البريد الإلكتروني:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.parentEmail || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">رقم الهاتف / الموبايل:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200" dir="ltr">{admission.parentPhone || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">الجنسية:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.parentNationality || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">جهة العمل / الوظيفة:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.parentEmployer || 'غير محدد'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Mother Information */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <User className="w-5 h-5" />
+            <span>بيانات الأم</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">اسم الأم:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{admission.motherName || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">هاتف الأم:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200" dir="ltr">{admission.motherPhone || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">جنسية الأم:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.motherNationality || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">مهنة الأم:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.motherOccupation || 'غير محدد'}</span>
+            </div>
+            <div className="col-span-2">
+              <span className="block text-xs font-semibold text-slate-400">جهة/عنوان عمل الأم:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.motherEmployerAddress || 'غير محدد'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Emergency Contact Information */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <Phone className="w-5 h-5 text-red-500" />
+            <span>بيانات الطوارئ</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">هاتف الطوارئ:</span>
+              <span className="font-bold text-red-600 dark:text-red-400" dir="ltr">{admission.emergencyContactPhone || 'غير محدد'}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-semibold text-slate-400">عنوان الطوارئ:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{admission.emergencyContactAddress || 'غير محدد'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Medical & Health Information */}
+        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <span className="text-xl">🏥</span>
+            <span>السجل الطبي والحالة الصحية للطالب</span>
+          </h3>
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ذوي الهمم / الاحتياجات الخاصة:</span>
+                <span className={`inline-block font-bold text-sm px-3 py-1 rounded-lg ${admission.specialNeeds ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}`}>
+                  {admission.specialNeeds ? 'نعم، توجد احتياجات خاصة' : 'لا توجد احتياجات خاصة'}
                 </span>
-                {entry.note && <span className="w-full text-xs italic text-slate-500">{entry.note}</span>}
+                {admission.specialNeedsDetails && (
+                  <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-2.5 rounded-lg border">
+                    <strong>تفاصيل الاحتياجات الخاصة:</strong> {admission.specialNeedsDetails}
+                  </p>
+                )}
               </div>
-            ))}
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ملاحظات ومشاكل صحية أخرى:</span>
+                <p className="text-xs text-slate-700 dark:text-slate-300">
+                  {admission.healthNotes || 'لا توجد ملاحظات صحية إضافية مدونة.'}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">الحالات والظروف الصحية المحددة:</span>
+              <div className="flex flex-wrap gap-2">
+                {healthConditionsList.map((item) => {
+                  const isChecked = !!parsedHealth[item.key];
+                  return (
+                    <div
+                      key={item.key}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border ${
+                        isChecked
+                          ? 'bg-red-50 text-red-700 border-red-200 font-bold dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'
+                          : 'bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 opacity-60'
+                      }`}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                      {isChecked && <span className="ms-1 text-red-600 dark:text-red-400 font-bold">✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
-      )}
 
-      {admission.notes && admission.notes.length > 0 && (
-        <div className="rounded-xl border bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">{t('admin.internalNotes', 'الملاحظات الداخلية')}</h3>
-          <div className="space-y-2">
-            {admission.notes.map((n) => (
-              <div key={n.id} className="rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800">
-                <div className="text-xs text-slate-400">{n.author?.fullName} · {formatDate(n.createdAt, lang)}</div>
-                <p className="mt-1">{n.noteContent}</p>
-              </div>
-            ))}
+        {/* Section 6: Terms & Declaration */}
+        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <CheckCircle className="w-5 h-5 text-emerald-500" />
+            <span>اللوائح والتوقيع الرقمي</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <span className="block text-xs font-semibold text-slate-400">اسم التوقيع / ولي الأمر:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{admission.signedByName || 'غير محدد'}</span>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <span className="block text-xs font-semibold text-slate-400">تاريخ التوقيع:</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
+                {admission.signedDate ? new Date(admission.signedDate).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US') : 'غير محدد'}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <span className="block text-xs font-semibold text-slate-400">الموافقة على الشروط واللوائح:</span>
+              <span className={`inline-block font-bold text-xs px-2.5 py-1 rounded-lg mt-0.5 ${admission.termsAccepted ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+                {admission.termsAccepted ? '✓ تم القبول والموافقة' : 'لم يتم القبول بعد'}
+              </span>
+            </div>
           </div>
         </div>
-      )}
 
-      <div className="rounded-xl border bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} label={t('admin.addInternalNote', 'إضافة ملاحظة داخلية')} />
-        <Button
-          className="mt-3"
-          onClick={() =>
-            admissionsApi.addNote(id, note).then(() => {
-              setNote('');
-              qc.invalidateQueries({ queryKey: ['admission-detail', id] });
-            })
-          }
-        >
-          {t('admin.addNote', 'إضافة ملاحظة')}
-        </Button>
+        {/* Section 7: Attached Documents */}
+        <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <span className="text-xl">📄</span>
+            <span>المستندات المرفقة بالطلب ({admission.documents?.length || 0})</span>
+          </h3>
+          {missingDocs.length > 0 && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200">
+              <strong>مستندات مطلوبة غير مرفوعة:</strong>
+              {missingDocs.map((code: string) => getAdmissionDocumentMeta(code).title).join('، ')}
+            </div>
+          )}
+          {admission.documentsCompletedAt && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-200">
+              تم استكمال جميع المستندات في: {formatDate(String(admission.documentsCompletedAt), lang)}
+            </div>
+          )}
+          {admission.documents && admission.documents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {admission.documents.map((doc: any) => (
+                <div key={doc.id} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="font-bold text-xs text-primary dark:text-blue-400 uppercase tracking-wider">
+                      {doc.documentType.replace(/_/g, ' ')}
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 font-mono truncate" title={doc.fileName}>
+                      {doc.fileName}
+                    </div>
+                  </div>
+                  <a
+                    href={mediaUrl(doc.fileUrl)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white dark:bg-slate-900 border border-primary/30 text-primary dark:text-blue-400 hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>عرض المستند</span>
+                  </a>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 italic">لا توجد مستندات مرفقة بهذا الطلب حتى الآن.</p>
+          )}
+        </div>
+
+        {/* Section 8: Status History Timeline */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <Clock className="w-5 h-5" />
+            <span>سجل تغييرات حالة الطلب</span>
+          </h3>
+          {admission.statusHistory && admission.statusHistory.length > 0 ? (
+            <div className="space-y-3">
+              {admission.statusHistory.map((entry: any) => (
+                <div key={entry.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 space-y-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    <StatusBadge status={entry.fromStatus} />
+                    <span>←</span>
+                    <StatusBadge status={entry.toStatus} />
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    بواسطة: <strong>{entry.changedBy?.fullName || 'النظام'}</strong> · {formatDate(String(entry.createdAt || ''), lang)}
+                  </div>
+                  {entry.note && <p className="text-xs italic text-slate-600 dark:text-slate-300">"{entry.note}"</p>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 italic">لا يوجد سجل سابق لتغييرات الحالة.</p>
+          )}
+        </div>
+
+        {/* Section 9: Internal Notes */}
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
+            <MessageSquare className="w-5 h-5" />
+            <span>الملاحظات الداخلية للفريق الإداري</span>
+          </h3>
+          {admission.notes && admission.notes.length > 0 ? (
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              {admission.notes.map((n: any) => (
+                <div key={n.id} className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 text-xs border border-slate-100 dark:border-slate-700">
+                  <div className="font-bold text-slate-700 dark:text-slate-200 flex justify-between">
+                    <span>{n.author?.fullName}</span>
+                    <span className="text-slate-400 font-normal">{formatDate(String(n.createdAt || ''), lang)}</span>
+                  </div>
+                  <p className="mt-1 text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{n.noteContent}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 italic">لا توجد ملاحظات داخلية مضافة.</p>
+          )}
+
+          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <Textarea value={note} onChange={(e) => setNote(e.target.value)} label="إضافة ملاحظة داخلية جديدة" rows={2} placeholder="اكتب ملاحظة للفريق الإداري هنا..." />
+            <Button
+              className="w-full text-xs font-semibold"
+              disabled={!note.trim()}
+              onClick={() =>
+                admissionsApi.addNote(id, note).then(() => {
+                  setNote('');
+                  qc.invalidateQueries({ queryKey: ['admission-detail', id] });
+                })
+              }
+            >
+              حفظ الملاحظة
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -808,21 +1212,26 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
 
 export function AdminRequirementsPage() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
+  const lang = useAppLanguage();
   const { data: items = [] } = useQuery({ queryKey: ['requirements'], queryFn: () => requirementsApi.list(true).then((r) => r.data) });
   const [form, setForm] = useState({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 });
   return (
     <div>
-      <PageHeader title="Admission Requirements" />
-      <form className="grid md:grid-cols-3 gap-3 mb-6" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => qc.invalidateQueries({ queryKey: ['requirements'] })); }}>
-        <Input label="Grade" value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} required />
-        <Input label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-        <Button type="submit">Add</Button>
+      <PageHeader
+        title={t('admin.admissionRequirementsTitle', 'شروط ومتطلبات القبول')}
+        subtitle={t('admin.admissionRequirementsSubtitle', 'إدارة المعايير وشروط السن والمستندات المطلوبة لكل مرحلة دراسية.')}
+      />
+      <form className="grid md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs items-end" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => { setForm({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 }); qc.invalidateQueries({ queryKey: ['requirements'] }); }); }}>
+        <Input label={t('admin.gradeLevel', 'المرحلة الدراسية')} value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} placeholder={t('admin.gradePlaceholder', 'مثال: Grade 1')} required />
+        <Input label={t('admin.title', 'العنوان')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('admin.titlePlaceholder', 'مثال: متطلبات قبول الصف الأول')} required />
+        <Button type="submit" className="w-full">{t('admin.addRequirement', 'إضافة شرط جديد')}</Button>
       </form>
       <DataTable data={items} columns={[
-        { key: 'grade', header: 'Grade', render: (r: { gradeLevel: string }) => r.gradeLevel },
-        { key: 'title', header: 'Title', render: (r: { title: string }) => r.title },
-        { key: 'actions', header: 'Actions', render: (r: { id: string }) => (
-          <Button variant="primary" className="py-1 px-2 text-xs" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>Delete</Button>
+        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r: { gradeLevel: string }) => <span className="font-semibold text-slate-900 dark:text-slate-100">{t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}</span> },
+        { key: 'title', header: t('admin.title', 'العنوان') as string, render: (r: { title: string; titleAr?: string }) => <span className="text-slate-800 dark:text-slate-200">{lang === 'ar' && r.titleAr ? r.titleAr : r.title}</span> },
+        { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r: { id: string }) => (
+          <Button variant="danger" className="py-1 px-3 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>{t('admin.delete', 'حذف')}</Button>
         )},
       ]} />
     </div>
@@ -831,6 +1240,7 @@ export function AdminRequirementsPage() {
 
 export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [viewApp, setViewApp] = useState<any | null>(null);
   const { data: apps = [] } = useQuery({
     queryKey: ['job-apps', jobId],
@@ -841,42 +1251,48 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
 
   return (
     <div>
-      <PageHeader title="Teacher & Job Applications" subtitle="Review candidate profiles, credentials, and update hiring statuses." />
+      <PageHeader title={t('admin.jobAppsTitle', 'طلبات التوظيف والتعيين')} subtitle={t('admin.jobAppsSubtitle', 'مراجعة ملفات المعلمين والمتقدمين، المستندات المرفقة، وتحديث حالات التعيين.')} />
       <DataTable data={apps} columns={[
-        { key: 'name', header: 'Candidate Name', render: (r: { fullName: string; phone: string }) => (
+        { key: 'name', header: t('admin.candidateName', 'اسم المتقدم') as string, render: (r: { fullName: string; phone: string }) => (
           <div>
-            <div className="font-semibold text-neutral-dark">{r.fullName}</div>
-            <div className="text-xs text-neutral-medium">{r.phone}</div>
+            <div className="font-semibold text-neutral-dark dark:text-slate-100">{r.fullName}</div>
+            <div className="text-xs text-neutral-medium dark:text-slate-400">{r.phone}</div>
           </div>
         )},
-        { key: 'email', header: 'Email', render: (r: { email: string }) => r.email },
-        { key: 'documents', header: 'Uploaded Credentials', render: (r: { documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }> }) => (
+        { key: 'email', header: t('admin.email', 'البريد الإلكتروني') as string, render: (r: { email: string }) => r.email },
+        { key: 'documents', header: t('admin.attachedDocuments', 'المستندات المرفقة') as string, render: (r: { documents?: Array<{ id: string; fileName: string; fileUrl: string; documentType: string }> }) => (
           <div className="flex flex-wrap gap-1">
             {r.documents && r.documents.length > 0 ? (
               r.documents.map((doc) => (
                 <a
                   key={doc.id}
-                  href={doc.fileUrl}
+                  href={mediaUrl(doc.fileUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs bg-primary-light text-primary hover:underline px-2 py-0.5 rounded font-mono flex items-center gap-1"
                 >
-                  📄 {doc.documentType.replace('_', ' ')}
+                  📄 {t(`documents.${doc.documentType}`, doc.documentType.replace(/_/g, ' '))}
                 </a>
               ))
             ) : (
-              <span className="text-xs text-neutral-medium italic">No files attached</span>
+              <span className="text-xs text-slate-400">{t('admin.noDocs', 'لا توجد مستندات')}</span>
             )}
           </div>
         )},
-        { key: 'status', header: 'Status', render: (r: { id: string; status: string }) => (
+        { key: 'status', header: t('admin.statusLabel', 'الحالة') as string, render: (r: { id: string; status: string }) => (
           <select
-            className="border rounded p-1 text-xs bg-white font-medium"
             value={r.status}
-            onChange={(e) => careersApi.updateApplicationStatus(r.id, e.target.value).then(() => qc.invalidateQueries({ queryKey: ['job-apps', jobId] }))}
+            onChange={(e) => careersApi.updateApplicationStatus(r.id, e.target.value).then(() => {
+              qc.invalidateQueries({ queryKey: ['job-apps', jobId] });
+              qc.invalidateQueries({ queryKey: ['job-apps-all'] });
+              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+              qc.invalidateQueries({ queryKey: ['my-job-applications'] });
+              qc.invalidateQueries({ queryKey: ['notifications'] });
+            })}
+            className="text-xs border rounded p-1 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium"
           >
-            {statuses.map((st) => (
-              <option key={st} value={st}>{st}</option>
+            {statuses.map((s) => (
+              <option key={s} value={s}>{String(t(`status.${s}`, s))}</option>
             ))}
           </select>
         )},
@@ -946,6 +1362,16 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
               </div>
             </div>
 
+            {/* Hiring Documents & Interview Pledge Details */}
+            <HiringDocumentsSection
+              pledged={!!viewApp.pledgeOriginalsAtInterview}
+              onPledgeChange={() => {}}
+              documentFiles={{}}
+              onFileChange={() => {}}
+              uploadedDocs={viewApp.documents || []}
+              readOnly={true}
+            />
+
             <div className="flex justify-between items-center pt-4 border-t mt-2">
                <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-600">تغيير حالة الطلب:</span>
@@ -955,6 +1381,10 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
                     onChange={(e) => {
                        careersApi.updateApplicationStatus(viewApp.id, e.target.value).then(() => {
                           qc.invalidateQueries({ queryKey: ['job-apps', jobId] });
+                          qc.invalidateQueries({ queryKey: ['job-apps-all'] });
+                          qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                          qc.invalidateQueries({ queryKey: ['my-job-applications'] });
+                          qc.invalidateQueries({ queryKey: ['notifications'] });
                           setViewApp({ ...viewApp, status: e.target.value });
                        });
                     }}
@@ -989,11 +1419,14 @@ export function AdminInquiriesPage() {
   const lang = useAppLanguage();
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInquiry, setSelectedInquiry] = useState<ContactInquiry | null>(null);
   const [replyInquiry, setReplyInquiry] = useState<ContactInquiry | null>(null);
+  const deepLinkInquiryId = searchParams.get('inquiryId');
+  const handledInquiryDeepLink = useRef<string | null>(null);
 
   const [replyForm, setReplyForm] = useState({ subject: '', message: '' });
   const [replyLoading, setReplyLoading] = useState(false);
@@ -1007,6 +1440,33 @@ export function AdminInquiriesPage() {
         .admin(statusFilter === 'ALL' ? undefined : statusFilter)
         .then((r) => r.data),
   });
+
+  useEffect(() => {
+    if (!deepLinkInquiryId) {
+      handledInquiryDeepLink.current = null;
+      return;
+    }
+    if (handledInquiryDeepLink.current === deepLinkInquiryId) return;
+
+    const inquiry = inquiries.find((item) => item.id === deepLinkInquiryId);
+    if (!inquiry) return;
+
+    handledInquiryDeepLink.current = deepLinkInquiryId;
+    setSelectedInquiry(inquiry);
+    if (inquiry.status === 'NEW') {
+      contactApi.updateStatus(inquiry.id, 'READ').then(() => {
+        qc.invalidateQueries({ queryKey: ['inquiries'] });
+      });
+    }
+  }, [deepLinkInquiryId, inquiries, qc]);
+
+  const clearInquiryDeepLink = () => {
+    if (!searchParams.get('inquiryId')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('inquiryId');
+    setSearchParams(next, { replace: true });
+    handledInquiryDeepLink.current = null;
+  };
 
   const handleOpenView = (inquiry: ContactInquiry) => {
     setSelectedInquiry(inquiry);
@@ -1173,7 +1633,10 @@ export function AdminInquiriesPage() {
       {selectedInquiry && (
         <Modal
           open={!!selectedInquiry}
-          onClose={() => setSelectedInquiry(null)}
+          onClose={() => {
+            setSelectedInquiry(null);
+            clearInquiryDeepLink();
+          }}
           title={t('admin.inquiryDetails') || 'Inquiry Details'}
         >
           <div className="space-y-5">
@@ -1405,7 +1868,6 @@ export function AdminInquiriesPage() {
     </div>
   );
 }
-
 
 export function AdminUsersPage() {
   const { t } = useTranslation();
@@ -1682,38 +2144,6 @@ export function AdminUsersPage() {
   );
 }
 
-const PERMISSION_GROUPS: Record<string, { label: string; permissions: string[] }> = {
-  content: {
-    label: 'إدارة المحتوى والمقالات والميديا',
-    permissions: ['CREATE_BLOG', 'UPDATE_BLOG', 'APPROVE_COMMENTS', 'MANAGE_EDUCATION', 'MANAGE_GALLERY', 'MANAGE_LANDING', 'MANAGE_ABOUT_US'],
-  },
-  admissions: {
-    label: 'طلبات القبول والتسجيل والطلاب',
-    permissions: ['VIEW_ALL_ADMISSIONS', 'UPDATE_ADMISSION_STATUS', 'ADD_ADMISSION_NOTE', 'CREATE_ADMISSION', 'VIEW_OWN_ADMISSION', 'MANAGE_ADMISSION_REQUIREMENTS'],
-  },
-  users: {
-    label: 'إدارة المستخدمين والأدوار والأمان',
-    permissions: ['MANAGE_USERS', 'MANAGE_ROLES'],
-  },
-  careers: {
-    label: 'الوظائف والتوظيف والتقديمات',
-    permissions: ['MANAGE_JOBS', 'VIEW_APPLICATIONS', 'CREATE_JOB_APPLICATION', 'VIEW_OWN_JOB_APPLICATION'],
-  },
-  system: {
-    label: 'إعدادات النظام والرسائل والتنبيهات',
-    permissions: ['UPDATE_SYSTEM_CONFIG', 'VIEW_DASHBOARD', 'MANAGE_EMAIL_TEMPLATES', 'MANAGE_NOTIFICATIONS'],
-  },
-};
-
-const ROLE_ARABIC_NAMES: Record<string, { ar: string; badge: string }> = {
-  ADMIN: { ar: 'مدير النظام الرئيسي', badge: 'bg-purple-100 text-purple-800 border-purple-200' },
-  TEACHER: { ar: 'معلم / طاقم تدريس', badge: 'bg-blue-100 text-blue-800 border-blue-200' },
-  PARENT: { ar: 'ولي أمر', badge: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  APPLICANT: { ar: 'متقدم لوظيفة', badge: 'bg-amber-100 text-amber-800 border-amber-200' },
-  STUDENT: { ar: 'طالب', badge: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  GUEST: { ar: 'زائر', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
-};
-
 export function AdminRolesPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
@@ -1929,7 +2359,7 @@ export function AdminRolesPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border font-semibold">
-                          👥 {role._count?.users ?? 0} {t('admin.users', 'Users')}
+                          👥 {role._count?.users ?? 0} {t('admin.navUsers', 'Users')}
                         </span>
                         {!isCoreRole && (
                           <button
@@ -2228,7 +2658,6 @@ export function AdminRolesPage() {
   );
 }
 
-
 export function AdminEmailPage() {
   const qc = useQueryClient();
   const { data: templates = [] } = useQuery({ queryKey: ['email-templates'], queryFn: () => emailApi.templates().then((r) => r.data) });
@@ -2252,7 +2681,17 @@ export function AdminEmailPage() {
         { key: 'recipient', header: 'To', render: (r: { recipient: string }) => r.recipient },
         { key: 'subject', header: 'Subject', render: (r: { subject: string }) => r.subject },
         { key: 'status', header: 'Status', render: (r: { status: string }) => <StatusBadge status={r.status} /> },
+        {
+          key: 'errorMessage',
+          header: 'Details',
+          render: (r: { errorMessage?: string | null; createdAt?: string }) => (
+            <span className="text-xs text-slate-600">
+              {r.errorMessage || (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—')}
+            </span>
+          ),
+        },
       ]} />
     </div>
   );
 }
+

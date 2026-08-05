@@ -38,7 +38,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'admission-requirements',
-    labelKey: 'admin.requirements',
+    labelKey: 'admin.navRequirements',
     adminRoute: '/admin/admission-requirements',
     permission: 'MANAGE_ADMISSION_REQUIREMENTS',
     statsKey: 'admissionRequirements',
@@ -65,7 +65,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'gallery',
-    labelKey: 'admin.gallery',
+    labelKey: 'admin.navGallery',
     adminRoute: '/admin/gallery',
     permission: 'MANAGE_GALLERY',
     statsKey: 'gallery',
@@ -74,7 +74,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'education',
-    labelKey: 'admin.education',
+    labelKey: 'admin.navEducation',
     adminRoute: '/admin/education',
     permission: 'MANAGE_EDUCATION',
     statsKey: 'education',
@@ -146,7 +146,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'email',
-    labelKey: 'admin.email',
+    labelKey: 'admin.navEmail',
     adminRoute: '/admin/email',
     permission: 'MANAGE_EMAIL_TEMPLATES',
     statsKey: 'email',
@@ -155,7 +155,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'users',
-    labelKey: 'admin.users',
+    labelKey: 'admin.navUsers',
     adminRoute: '/admin/users',
     permission: 'MANAGE_USERS',
     statsKey: 'users',
@@ -164,7 +164,7 @@ export const DASHBOARD_MODULE_CONFIG: DashboardModuleConfig[] = [
   },
   {
     moduleKey: 'roles',
-    labelKey: 'admin.roles',
+    labelKey: 'admin.navRoles',
     adminRoute: '/admin/roles',
     permission: 'MANAGE_ROLES',
     statsKey: 'roles',

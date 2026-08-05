@@ -6,8 +6,9 @@ import { cmsApi, contactApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Input';
 import { PageHeader } from '../../components/ui/Badge';
-import { MapPin, Phone, Mail, Clock, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, CheckCircle2, ExternalLink } from 'lucide-react';
 import { SeoHead } from '../../components/common/SeoHead';
+import { SchoolMap } from '../../components/common/SchoolMap';
 
 export function ContactPage() {
   const { t } = useTranslation();
@@ -58,9 +59,20 @@ export function ContactPage() {
                   <div className="font-semibold text-sm text-neutral-dark dark:text-slate-100">
                     {t('contact.address')}
                   </div>
-                  <div className="text-sm text-neutral-medium dark:text-slate-400 mt-0.5">
-                    {config.contact_address_ar || config.contact_address || 'القاهرة، مصر (Cairo, Egypt)'}
-                  </div>
+                  <a
+                    href={config.google_maps_url || 'https://maps.app.goo.gl/aCF8oV9RvreCyaXu9'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm text-neutral-medium dark:text-slate-400 hover:text-primary dark:hover:text-gold transition-colors mt-0.5 inline-block group"
+                    title="فتح الموقع على خرائط جوجل"
+                  >
+                    <span>
+                      {config.contact_address_ar || config.contact_address || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد، محافظة الجيزة، مصر'}
+                    </span>
+                    <span className="ms-1.5 text-[10px] bg-primary-light dark:bg-slate-800 text-primary dark:text-gold px-1.5 py-0.5 rounded font-bold group-hover:bg-primary group-hover:text-white transition-all">
+                      📍 Map
+                    </span>
+                  </a>
                 </div>
               </div>
 
@@ -126,7 +138,7 @@ export function ContactPage() {
                         </a>
                       </div>
                     )}
-                    {!config.contact_email && <div>info@manhattanschool.edu.eg</div>}
+                    {!config.contact_email && <div>info@manhattanschool.net</div>}
                   </div>
                 </div>
               </div>
@@ -224,25 +236,6 @@ export function ContactPage() {
               </div>
             </div>
           </div>
-
-          <div className="rounded-2xl overflow-hidden min-h-[220px] bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center border border-slate-800 shadow-md relative">
-            <MapPin className="h-8 w-8 text-amber-400 mx-auto mb-2 animate-bounce" />
-            <p className="font-bold text-base">{t('contact.campusTitle')}</p>
-            <p className="text-xs text-slate-400 mt-1">
-              {config.contact_address_ar || config.contact_address || 'Sheikh Zayed, Giza, Egypt'}
-            </p>
-            {config.google_maps_url && (
-              <a
-                href={config.google_maps_url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md inline-flex items-center gap-1.5"
-              >
-                <MapPin className="h-4 w-4" />
-                <span>{t('contact.openMaps')}</span>
-              </a>
-            )}
-          </div>
         </motion.div>
 
         {/* Form Column */}
@@ -284,6 +277,42 @@ export function ContactPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Full Width Location Map Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="mt-12 space-y-4"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-neutral-dark dark:text-slate-100 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-amber-500" />
+              <span>موقع المدرسة على الخريطة</span>
+            </h3>
+            <p className="text-xs text-neutral-medium dark:text-slate-400 mt-1">
+              تفضل بزيارتنا في مقر المدرسة بمدينة الشيخ زايد - محافظة الجيزة
+            </p>
+          </div>
+          <a
+            href={config.google_maps_url || 'https://maps.app.goo.gl/aCF8oV9RvreCyaXu9'}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all shadow-sm"
+          >
+            <span>فتح في تطبيق الخرائط</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+
+        <SchoolMap
+          googleMapsUrl={config.google_maps_url}
+          embedUrl={config.google_maps_embed_url}
+          address={config.contact_address_ar || config.contact_address || 'مدرسة مانهاتن للغات، مدينة الشيخ زايد، محافظة الجيزة، مصر'}
+          className="rounded-3xl border border-gray-100 dark:border-slate-800 shadow-lg min-h-[380px] h-[440px]"
+        />
+      </motion.div>
     </div>
   );
 }

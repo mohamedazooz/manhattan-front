@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Input';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { PageHeader } from '../../components/ui/Badge';
+import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { RichTextEditor } from '../../components/ui/RichTextEditor';
 import { slugify } from '../../lib/slug';
 import { getApiErrorMessage, omitKeys, buildFormData } from '../../lib/formData';
@@ -96,6 +97,7 @@ function AboutCrud() {
 
   return (
     <div className="w-full space-y-6">
+      <AdminPageGuide guideKey="about" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <PageHeader title={t('admin.aboutCrud.title', 'About Us Sections')} />
@@ -287,6 +289,7 @@ function PagesCrud() {
 
   return (
     <div className="w-full space-y-6">
+      <AdminPageGuide guideKey="pages" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <PageHeader title={t('admin.pagesCrud.title', 'Custom Static Pages')} />
@@ -568,6 +571,13 @@ const SETTINGS_CONFIG: Record<
     category: 'contact',
     type: 'text',
   },
+  google_maps_embed_url: {
+    labelAr: 'رابط تضمين الخريطة (Google Maps Embed Iframe SRC)',
+    labelEn: 'Google Maps Embed URL',
+    desc: 'رابط تضمين الخريطة التفاعلية (Embed URL) لإظهار الخريطة المباشرة.',
+    category: 'contact',
+    type: 'text',
+  },
   social_facebook: {
     labelAr: 'فيسبوك (Facebook)',
     labelEn: 'Facebook Page URL',
@@ -684,11 +694,11 @@ export function AdminSettingsPage() {
     );
 
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-6 space-y-6">
-        <div className="flex items-center gap-3 border-b pb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs p-6 space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="p-2.5 bg-primary/10 text-primary rounded-lg">{icon}</div>
           <div>
-            <h3 className="text-base font-bold text-slate-800">{title}</h3>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white">{title}</h3>
           </div>
         </div>
 
@@ -702,14 +712,14 @@ export function AdminSettingsPage() {
             return (
               <div
                 key={key}
-                className={`flex flex-col gap-3 p-5 rounded-xl bg-slate-50/70 border border-slate-200/80 shadow-2xs ${
+                className={`flex flex-col gap-3 p-5 rounded-xl bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs ${
                   isFullWidth ? 'md:col-span-2' : ''
                 }`}
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <label className="font-bold text-base text-slate-800">{meta.labelAr}</label>
-                    <p className="text-xs text-slate-500 mt-0.5">{meta.desc}</p>
+                    <label className="font-bold text-base text-slate-800 dark:text-white">{meta.labelAr}</label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{meta.desc}</p>
                   </div>
                   {isSaved && (
                     <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">
@@ -823,10 +833,10 @@ export function AdminSettingsPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <PageHeader title="إعدادات الموقع ومعلومات التواصل (Site & Contact Settings)" />
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             التحكم الكامل في أرقام المدرسة، الإيميلات، مواعيد العمل، وسائل التواصل، وروابط الصفحات لكي تتحدث تلقائياً في كل مكان بالموقع.
           </p>
         </div>

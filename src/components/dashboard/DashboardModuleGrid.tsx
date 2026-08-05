@@ -15,7 +15,7 @@ export function DashboardModuleGrid({ stats }: Props) {
   const { hasPermission, role } = useAuth();
 
   const modules = DASHBOARD_MODULE_CONFIG.filter((mod) => {
-    if (role === 'ADMIN') return true;
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return true;
     return hasPermission(mod.permission);
   });
 

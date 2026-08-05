@@ -1,5 +1,5 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3001';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://www.manhattanschool.net/api';
+export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'https://www.manhattanschool.net';
 
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';
@@ -40,6 +40,29 @@ export function formatDate(value: string, lang: string): string {
     month: 'long',
     day: 'numeric',
   });
+}
+
+export function formatRelativeTime(value: string, lang: string): string {
+  const date = new Date(value);
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+
+  if (lang === 'ar') {
+    if (diffMinutes < 1) return 'الآن';
+    if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+    if (diffDays < 7) return `منذ ${diffDays} يوم`;
+    return formatDate(value, lang);
+  }
+
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return formatDate(value, lang);
 }
 
 export function getBilingualText(item: any, fieldName: string, lang: string): string {
