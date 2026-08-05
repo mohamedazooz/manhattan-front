@@ -56,9 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applyToken = useCallback((token: string, u: User) => {
     setAccessToken(token);
     const decoded = decodeToken(token);
+    const apiPermissions = u.permissions ?? [];
+    const jwtPermissions = decoded.permissions ?? [];
     setUser(u);
-    setPermissions(decoded.permissions);
-    setRole(decoded.role);
+    setPermissions(apiPermissions.length > 0 ? apiPermissions : jwtPermissions);
+    setRole(decoded.role || u.role || null);
   }, []);
 
   useEffect(() => {
@@ -124,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
-      hasPermission: (perm: string) => permissions.includes(perm),
+      hasPermission: (perm: string) => {
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN') return true;
+        return permissions.includes(perm);
+      },
       isAdmin:
         role === 'ADMIN' ||
         role === 'SUPER_ADMIN' ||

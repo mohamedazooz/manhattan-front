@@ -3,6 +3,7 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  permissions?: string[];
 }
 
 export interface JwtPayload {

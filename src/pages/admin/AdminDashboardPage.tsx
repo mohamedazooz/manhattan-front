@@ -6,6 +6,7 @@ import { DashboardOverviewCards } from '../../components/dashboard/DashboardOver
 import { DashboardActionQueue } from '../../components/dashboard/DashboardActionQueue';
 import { DashboardCharts } from '../../components/dashboard/DashboardCharts';
 import { DashboardActivityFeed } from '../../components/dashboard/DashboardActivityFeed';
+import { DashboardModuleGrid } from '../../components/dashboard/DashboardModuleGrid';
 import { useAuth } from '../../lib/auth';
 import { useAppLanguage } from '../../i18n';
 
@@ -36,6 +37,8 @@ export function AdminDashboardPage() {
       {stats && <DashboardCharts stats={stats} />}
 
       {stats && <DashboardOverviewCards stats={stats} />}
+
+      {stats && <DashboardModuleGrid stats={stats} />}
 
       {stats && <DashboardActionQueue stats={stats} />}
 

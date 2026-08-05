@@ -10,8 +10,13 @@
     RewriteCond %{HTTPS} off
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Handle React Client-Side SPA Routing
+    # Never rewrite static assets to SPA fallback
+    RewriteRule ^assets/ - [L]
+
+    # Handle React Client-Side SPA Routing (exclude API and deploy hooks)
     RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_URI} !^/api
+    RewriteCond %{REQUEST_URI} !^/deploy
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-l

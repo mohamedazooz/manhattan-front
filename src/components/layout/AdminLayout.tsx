@@ -30,7 +30,7 @@ import {
   Moon,
   Compass,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavItem {
@@ -99,11 +99,22 @@ const allNavItems = navSections.flatMap((section) => section.items);
 
 export function AdminLayout() {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const visibleSections = useMemo(
+    () =>
+      navSections
+        .map((section) => ({
+          ...section,
+          items: section.items.filter((item) => hasPermission(item.perm)),
+        }))
+        .filter((section) => section.items.length > 0),
+    [hasPermission],
+  );
 
   const activeNav = allNavItems.find((item) => item.to === location.pathname);
 
@@ -143,31 +154,30 @@ export function AdminLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
-          {navSections.map((section) => (
+          {visibleSections.map((section) => (
             <div key={section.titleKey}>
               <div className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-widest text-white/50">
                 {t(section.titleKey)}
               </div>
               <div className="space-y-1">
                 {section.items.map((item) => (
-                  <PermissionGuard key={item.to} permission={item.perm}>
-                    <NavLink
-                      to={item.to}
-                      end={item.to === '/admin'}
-                      onClick={() => setMobileOpen(false)}
-                      className={({ isActive }) =>
-                        cn(
-                          'flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all',
-                          isActive
-                            ? 'bg-white/20 text-white shadow-xs font-semibold'
-                            : 'text-white/75 hover:bg-white/10 hover:text-white',
-                        )
-                      }
-                    >
-                      <item.icon className="h-[1.125rem] w-[1.125rem] shrink-0" />
-                      <span>{t(item.labelKey)}</span>
-                    </NavLink>
-                  </PermissionGuard>
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/admin'}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all',
+                        isActive
+                          ? 'bg-white/20 text-white shadow-xs font-semibold'
+                          : 'text-white/75 hover:bg-white/10 hover:text-white',
+                      )
+                    }
+                  >
+                    <item.icon className="h-[1.125rem] w-[1.125rem] shrink-0" />
+                    <span>{t(item.labelKey)}</span>
+                  </NavLink>
                 ))}
               </div>
             </div>
