@@ -23,7 +23,7 @@ Backend API: http://localhost:3000/api
 ## Admin Login
 
 - URL: `/admin/login`
-- Email: `admin@manhattenschool.com`
+- Email: `admin@manhattanschool.net`
 - Password: `Admin123!`
 
 ## Routes (42 total)

@@ -241,7 +241,7 @@ export function AdminCareersPage() {
       openAppDetailsModal(app);
     };
 
-    const fromList = allApplications.find((app) => app.id === deepLinkApplicationId);
+    const fromList = allApplications.find((app: JobApplication) => app.id === deepLinkApplicationId);
     if (fromList) {
       openFromApplication(fromList);
       return;
@@ -305,12 +305,12 @@ export function AdminCareersPage() {
 
   const newApplications = allApplications
     .filter(isNewApplication)
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    .sort((a: JobApplication, b: JobApplication) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const newApplicationsCount = newApplications.length;
 
   const countNewApplicationsForJob = (jobId: string) =>
-    allApplications.filter((app) => isNewApplication(app) && getJobIdForApp(app) === jobId).length;
+    allApplications.filter((app: JobApplication) => isNewApplication(app) && getJobIdForApp(app) === jobId).length;
 
   const NewCountBadge = ({ count, className = '' }: { count: number; className?: string }) => {
     if (count <= 0) return null;
@@ -574,7 +574,7 @@ export function AdminCareersPage() {
                   key: 'applicantsCount',
                   header: isAr ? 'المتقدمون' : 'Applicants',
                   render: (r: Job) => {
-                    const count = (r as Job & { _count?: { applications?: number } })._count?.applications ?? allApplications.filter((a) => getJobIdForApp(a) === r.id).length;
+                    const count = (r as Job & { _count?: { applications?: number } })._count?.applications ?? allApplications.filter((a: JobApplication) => getJobIdForApp(a) === r.id).length;
                     const newCount = countNewApplicationsForJob(r.id);
                     return (
                       <button

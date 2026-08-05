@@ -221,7 +221,7 @@ export function Footer() {
             <li className="flex items-center gap-2">
               <Mail className="h-3.5 w-3.5 text-amber-400 shrink-0" />
               <span className="text-slate-300">
-                {config.contact_email || 'info@manhattanschool.edu.eg'}
+                {config.contact_email || 'info@manhattanschool.net'}
               </span>
             </li>
             <li className="flex items-center gap-2">

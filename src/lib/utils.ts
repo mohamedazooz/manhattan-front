@@ -1,5 +1,5 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'http://localhost:3001';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://www.manhattanschool.net/api';
+export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'https://www.manhattanschool.net';
 
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';

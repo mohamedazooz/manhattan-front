@@ -110,7 +110,7 @@ export function AdminLivePreview({ guideKey }: Props) {
     if (!sections.length) return empty;
     return (
       <ul className="space-y-1.5 max-h-40 overflow-y-auto">
-        {sections.slice(0, 8).map((s: { id: string; key: string; title: string; titleAr?: string; status: string }) => (
+        {sections.slice(0, 8).map((s: { id: string; key: string; title: string; titleAr?: string; status?: string }) => (
           <li
             key={s.id}
             className="flex items-center justify-between gap-2 text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700"

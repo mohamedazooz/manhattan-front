@@ -137,6 +137,7 @@ export function ParentAdmissionDetailPage() {
 
   async function handleSubmit() {
     setSubmitError(null);
+    if (!admission) return;
 
     if (!isDraft) {
       setSubmitError('تم إرسال هذا الطلب مسبقاً. يمكنك استكمال المستندات الناقصة من نفس الصفحة.');

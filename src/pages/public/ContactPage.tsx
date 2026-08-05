@@ -138,7 +138,7 @@ export function ContactPage() {
                         </a>
                       </div>
                     )}
-                    {!config.contact_email && <div>info@manhattanschool.edu.eg</div>}
+                    {!config.contact_email && <div>info@manhattanschool.net</div>}
                   </div>
                 </div>
               </div>
