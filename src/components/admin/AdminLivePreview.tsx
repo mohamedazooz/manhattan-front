@@ -179,7 +179,7 @@ export function AdminLivePreview({ guideKey }: Props) {
     return (
       <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1">
         <p className="text-sm font-semibold">{isAr && page.titleAr ? page.titleAr : page.title}</p>
-        <p className="text-xs font-mono text-primary">/pages/{page.slug}</p>
+        <p className="text-xs font-mono text-primary">/page/{page.slug}</p>
       </div>
     );
   }

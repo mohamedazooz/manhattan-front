@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Briefcase,
@@ -9,7 +10,6 @@ import {
   Users,
   MapPin,
   CheckCircle,
-  XCircle,
   X,
   Search,
   Download,
@@ -24,22 +24,27 @@ import {
   Bell,
 } from 'lucide-react';
 import { careersApi } from '../../api';
+import { getApiErrorMessage } from '../../lib/formData';
 import { Button } from '../../components/ui/Button';
 import { StatusBadge, LoadingSpinner, PageHeader } from '../../components/ui/Badge';
-import { DataTable } from '../../components/ui/DataTable';
+import { AdminDataTable } from '../../components/admin/AdminDataTable';
+import { AdminOpsCounters } from '../../components/admin/AdminOpsCounters';
 import { useAppLanguage } from '../../i18n';
 import type { Job, JobApplication } from '../../types';
 import { mediaUrl } from '../../lib/utils';
 import { JobApplicationAdminDetails } from '../../components/careers/JobApplicationAdminDetails';
 
 export function AdminCareersPage() {
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const isAr = lang === 'ar';
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const deepLinkApplicationId = searchParams.get('applicationId');
+  const deepLinkJobId = searchParams.get('jobId');
   const handledApplicationDeepLink = useRef<string | null>(null);
   const allApplicationsSectionRef = useRef<HTMLDivElement>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Job Search & Filters
   const [jobSearchTerm, setJobSearchTerm] = useState('');
@@ -48,7 +53,7 @@ export function AdminCareersPage() {
   // Applicants Search & Filters
   const [appSearchTerm, setAppSearchTerm] = useState('');
   const [appStatusFilter, setAppStatusFilter] = useState<string>('ALL');
-  const [appJobFilter, setAppJobFilter] = useState<string>('ALL');
+  const [appJobFilter, setAppJobFilter] = useState<string>(deepLinkJobId || 'ALL');
 
   // Create / Edit Job Modal State
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
@@ -95,6 +100,13 @@ export function AdminCareersPage() {
   const openJobs = jobs.filter((job: Job) => job.status === 'OPEN').length;
   const closedJobs = jobs.filter((job: Job) => job.status === 'CLOSED').length;
   const totalApps = allApplications.length;
+
+  useEffect(() => {
+    if (deepLinkJobId) {
+      setAppJobFilter(deepLinkJobId);
+      allApplicationsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [deepLinkJobId]);
 
   // Handlers for Jobs
   const openCreateJobModal = () => {
@@ -144,8 +156,7 @@ export function AdminCareersPage() {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       setIsJobModalOpen(false);
     } catch (err) {
-      console.error('Failed to save job', err);
-      alert(isAr ? 'حدث خطأ أثناء حفظ الوظيفة' : 'Failed to save job position');
+      setActionError(getApiErrorMessage(err, t('admin.careersCrud.saveJobError', 'Failed to save job position')));
     } finally {
       setSavingJob(false);
     }
@@ -158,8 +169,7 @@ export function AdminCareersPage() {
       queryClient.invalidateQueries({ queryKey: ['jobs-admin'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
     } catch (err) {
-      console.error(err);
-      alert(isAr ? 'فشل تغيير حالة الوظيفة' : 'Failed to update job status');
+      setActionError(getApiErrorMessage(err, t('admin.careersCrud.statusError', 'Failed to update job status')));
     }
   };
 
@@ -181,11 +191,10 @@ export function AdminCareersPage() {
       if (selectedApp && selectedApp.id === appId) {
         setSelectedApp({ ...selectedApp, status: newStatus });
       }
-    } catch (err: any) {
-      console.error(err);
-      const serverMsg = err?.response?.data?.message;
-      const errorText = Array.isArray(serverMsg) ? serverMsg.join(', ') : serverMsg;
-      alert(errorText || (isAr ? 'فشل تحديث حالة الطلب' : 'Failed to update application status'));
+    } catch (err) {
+      setActionError(
+        getApiErrorMessage(err, t('admin.careersCrud.appStatusError', 'Failed to update application status')),
+      );
     } finally {
       setUpdatingAppStatus(false);
     }
@@ -267,8 +276,7 @@ export function AdminCareersPage() {
       link.click();
       document.body.removeChild(link);
     } catch (err) {
-      console.error('Failed to export CSV', err);
-      alert(isAr ? 'فشل تصدير البيانات' : 'Failed to export data');
+      setActionError(getApiErrorMessage(err, t('admin.careersCrud.exportError', 'Failed to export data')));
     }
   };
 
@@ -286,8 +294,7 @@ export function AdminCareersPage() {
       setEvalComment('');
       queryClient.invalidateQueries({ queryKey: ['job-apps-all'] });
     } catch (err) {
-      console.error(err);
-      alert(isAr ? 'فشل حفظ التقييم والملاحظات' : 'Failed to save evaluation');
+      setActionError(getApiErrorMessage(err, t('admin.careersCrud.evalError', 'Failed to save evaluation')));
     } finally {
       setSubmittingEval(false);
     }
@@ -355,70 +362,45 @@ export function AdminCareersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <PageHeader
-          title={isAr ? 'إدارة التوظيف والوظائف' : 'Careers & Job Management'}
-          subtitle={
-            isAr
-              ? 'إدارة وظائف المدرسة الشاغرة، تعديل المسميات والشروط، ومراجعة سير المتقدمين ومستنداتهم.'
-              : 'Post vacancies, edit details, review applications, and manage uploaded resumes.'
-          }
-        />
+        title={t('admin.careersCrud.title', 'Job postings & hiring')}
+        subtitle={t(
+          'admin.careersCrud.subtitle',
+          'Post open teaching positions and review incoming job applications.',
+        )}
+      />
         <Button onClick={openCreateJobModal} showArrow className="shadow-lg py-2.5 px-6">
           <Plus className="w-5 h-5 mr-1" />
-          {isAr ? 'إضافة وظيفة جديدة' : 'Post New Job'}
+          {t('admin.careersCrud.addNew', 'Create job posting')}
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-          <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-            <Briefcase className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{totalJobs}</div>
-            <div className="text-xs text-slate-500 font-medium">{isAr ? 'إجمالي الوظائف' : 'Total Job Positions'}</div>
-          </div>
+      {actionError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm">
+          {actionError}
+          <button type="button" className="ml-3 underline" onClick={() => setActionError(null)}>
+            {t('common.close', 'Close')}
+          </button>
         </div>
+      )}
 
-        <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-          <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{openJobs}</div>
-            <div className="text-xs text-slate-500 font-medium">{isAr ? 'الوظائف المتاحة حالياً' : 'Open Positions'}</div>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-            <XCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{closedJobs}</div>
-            <div className="text-xs text-slate-500 font-medium">{isAr ? 'الوظائف المغلقة' : 'Closed Vacancies'}</div>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4">
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 relative">
-            <Users className="w-6 h-6" />
-            {newApplicationsCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
-                {newApplicationsCount}
-              </span>
-            )}
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">{totalApps}</div>
-            <div className="text-xs text-slate-500 font-medium">
-              {isAr
-                ? `إجمالي المتقدمين (${newApplicationsCount} طلب جديد)`
-                : `Total Applicants (${newApplicationsCount} new)`}
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdminOpsCounters
+        items={[
+          { id: 'jobs', label: t('admin.careersCrud.totalJobs', 'Total positions'), value: totalJobs },
+          { id: 'open', label: t('admin.openJobs', 'Open positions'), value: openJobs, highlight: openJobs > 0 },
+          { id: 'closed', label: t('admin.careersCrud.closedJobs', 'Closed vacancies'), value: closedJobs },
+          {
+            id: 'apps',
+            label: t('admin.careersCrud.newApps', 'New applications'),
+            value: newApplicationsCount,
+            highlight: newApplicationsCount > 0,
+            onClick: () => {
+              setAppStatusFilter('SUBMITTED');
+              allApplicationsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            },
+          },
+          { id: 'total-apps', label: t('admin.totalApplications', 'Total applicants'), value: totalApps },
+        ]}
+      />
 
       {/* New Applications */}
       <section className="space-y-4">
@@ -437,8 +419,9 @@ export function AdminCareersPage() {
 
         <div className="glass-card rounded-2xl overflow-hidden border border-amber-200/80 dark:border-amber-900/50 bg-white dark:bg-slate-900">
           {newApplications.length > 0 ? (
-            <DataTable
+            <AdminDataTable
               data={newApplications}
+              emptyTitle={t('admin.careersCrud.noNewApps', 'No new applications')}
               columns={[
                 {
                   key: 'applicant',
@@ -539,8 +522,9 @@ export function AdminCareersPage() {
 
           {/* Jobs Table */}
           <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-            <DataTable
+            <AdminDataTable
               data={filteredJobs}
+              emptyTitle={t('admin.careersCrud.noJobs', 'No job positions')}
               columns={[
                 {
                   key: 'title',
@@ -711,8 +695,9 @@ export function AdminCareersPage() {
           {/* Applicants Table */}
           <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
             {filteredApplications.length > 0 ? (
-              <DataTable
+              <AdminDataTable
                 data={filteredApplications}
+                emptyTitle={t('admin.careersCrud.noApps', 'No applications match filters')}
                 columns={[
                   {
                     key: 'applicant',

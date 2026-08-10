@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cmsApi } from '../../api';
 import { Button } from '../../components/ui/Button';
@@ -73,72 +74,127 @@ export const DEFAULT_STUDENT_LIFE_CONFIG: StudentLifeFullConfig = {
       id: 'robotics',
       category: 'stem',
       titleAr: 'نادي الروبوتات والذكاء الاصطناعي',
-      titleEn: 'Robotics & AI Club',
-      descAr: 'تصميم وبرمجة الروبوتات الذكية والمشاركة في المسابقات التكنولوجية المحلية والإقليمية.',
-      descEn: 'Design and program smart robots, competing in national and regional tech challenges.',
+      titleEn: 'Robotics & AI Lab',
+      descAr: 'تصميم وبرمجة الروبوتات الذكية والانظمة المدمجة والمشاركة في المسابقات التكنولوجية الأولمبية.',
+      descEn: 'Design and program smart robots, embedded systems, and compete in national tech olympiads.',
       scheduleAr: 'الأحد والأربعاء - 02:30 م',
       scheduleEn: 'Sun & Wed - 02:30 PM',
-      locationAr: 'معمل التكنولوجيا المتقدم',
-      locationEn: 'Advanced Tech Lab',
+      locationAr: 'معمل التكنولوجيا والابتكار المتقدم',
+      locationEn: 'Advanced Tech & Innovation Lab',
     },
     {
       id: 'football',
       category: 'sports',
       titleAr: 'أكاديمية كرة القدم والرياضات الميدانية',
-      titleEn: 'Football & Field Sports Academy',
-      descAr: 'تدريبات للياقة البدنية والمهارات التكتيكية تحت إشراف كادر مدربين معتمدين.',
-      descEn: 'Fitness training and tactical skills led by certified professional sports coaches.',
+      titleEn: 'Football & Athletics Academy',
+      descAr: 'تدريبات اللياقة البدنية والمهارات التكتيكية وتحضير فرق المدرسة للبطولات المحلية والإقليمية.',
+      descEn: 'Fitness training, tactical skills, and preparing school teams for regional leagues.',
       scheduleAr: 'الاثنين والخميس - 03:00 م',
       scheduleEn: 'Mon & Thu - 03:00 PM',
-      locationAr: 'الملعب الرياضي الرئيسي',
-      locationEn: 'Main Sports Turf',
+      locationAr: 'الملعب الرياضي الرئيسي والمجمع الأولمبي',
+      locationEn: 'Main Sports Complex & Turf',
+    },
+    {
+      id: 'theatre',
+      category: 'arts',
+      titleAr: 'استوديو المسرح المدرسي والدراما',
+      titleEn: 'School Theatre & Performing Arts',
+      descAr: 'تطوير مهارات الإلقاء والتعبير الجسدي والتمثيل المسرحي وتقديم العروض السنوية باللغتين العربية والإنجليزية.',
+      descEn: 'Developing public speaking, acting, and theatrical expression through annual bilingual plays.',
+      scheduleAr: 'الثلاثاء والسبت - 02:30 م',
+      scheduleEn: 'Tue & Sat - 02:30 PM',
+      locationAr: 'المسرح الرئيسي المجهز بأحدث أجهزة الصوت',
+      locationEn: 'Grand Auditorium & Stage',
     },
     {
       id: 'fine-arts',
       category: 'arts',
-      titleAr: 'مرسم الفنون التشكيلية والتصميم',
-      titleEn: 'Fine Arts & Design Studio',
-      descAr: 'تنمية مهارات الرسم والترميم والتصميم الرقمي وإقامة المعارض السنوية للطلاب.',
-      descEn: 'Developing painting, sculpture, and digital art skills with annual student gallery exhibitions.',
+      titleAr: 'مرسم الفنون التشكيلية والتصميم الرقمي',
+      titleEn: 'Fine Arts & Digital Design Studio',
+      descAr: 'تنمية مهارات الرسم والترميم والتصميم الجرافيكي وإقامة المعارض الفنية السنوية للطلاب.',
+      descEn: 'Developing painting, sculpture, and graphic design skills with annual gallery exhibitions.',
       scheduleAr: 'الثلاثاء - 02:30 م',
       scheduleEn: 'Tuesday - 02:30 PM',
-      locationAr: 'استوديو الفنون الجميل',
-      locationEn: 'Arts & Crafts Studio',
+      locationAr: 'مرسم مانهاتن للفنون الجملية',
+      locationEn: 'Manhattan Fine Arts Studio',
     },
     {
       id: 'mun',
       category: 'leadership',
-      titleAr: 'نموذج الأمم المتحدة والقيادة الشابة (MUN)',
-      titleEn: 'Model United Nations (MUN)',
-      descAr: 'تدريب الطلاب على التناظر والدبلوماسية وحل القضايا العالمية وصقل مهارات الخطابة.',
-      descEn: 'Training students in debate, diplomacy, resolving global issues, and public speaking.',
+      titleAr: 'نموذج الأمم المتحدة والقيادة الدبلوماسية (MUN)',
+      titleEn: 'Model United Nations & Leadership',
+      descAr: 'تدريب الطلاب على التناظر والدبلوماسية وحل القضايا الدولية والخطابة والتفاوض القيادي.',
+      descEn: 'Training students in debate, global diplomacy, international relations, and negotiation skills.',
       scheduleAr: 'الأربعاء - 03:00 م',
       scheduleEn: 'Wednesday - 03:00 PM',
-      locationAr: 'قاعة المؤتمرات الرئيسية',
-      locationEn: 'Main Conference Hall',
+      locationAr: 'قاعة المؤتمرات الدولية والمحاكاة',
+      locationEn: 'International Conference Hall',
+    },
+    {
+      id: 'astronomy',
+      category: 'stem',
+      titleAr: 'نادي الفلك والأبحاث الفضائية',
+      titleEn: 'Astronomy & Space Science Club',
+      descAr: 'استكشاف الأجرام السماوية باستخدام التلسكوبات الحديثة، ودراسة علوم الفضاء وتجارب الفيزياء التطبيقية.',
+      descEn: 'Observing celestial bodies using modern telescopes and exploring space physics experiments.',
+      scheduleAr: 'الخميس - 03:30 م',
+      scheduleEn: 'Thursday - 03:30 PM',
+      locationAr: 'المرصد الفلكي وقبة العلوم بالمدرسة',
+      locationEn: 'School Planetarium & Observatory',
+    },
+    {
+      id: 'chess',
+      category: 'leadership',
+      titleAr: 'نادي الشطرنج والتفكير الاستراتيجي',
+      titleEn: 'Chess & Strategic Mind Club',
+      descAr: 'صقل مهارات التخطيط والتحليل المنطقي والتركيز الذهني من خلال دوريات الشطرنج والتحديات الفكرية.',
+      descEn: 'Sharpening strategic planning, logical thinking, and focus through school chess leagues.',
+      scheduleAr: 'الاثنين - 02:30 م',
+      scheduleEn: 'Monday - 02:30 PM',
+      locationAr: 'قاعة الأنشطة الذهنية والذكاء',
+      locationEn: 'Mind Sports & Strategy Lounge',
+    },
+    {
+      id: 'music',
+      category: 'arts',
+      titleAr: 'أكاديمية الموسيقى والكورال المدرسي',
+      titleEn: 'Music & School Choir Academy',
+      descAr: 'تعلم العزف على الآلات الموسيقية المتنوعة، وتنمية الحس الموسيقي للمشاركة في الحفلات القومية.',
+      descEn: 'Instrumental training and vocal harmony preparing students for national music showcases.',
+      scheduleAr: 'الأحد - 03:00 م',
+      scheduleEn: 'Sunday - 03:00 PM',
+      locationAr: 'استوديو الصوتيات والموسيقى المجهزة',
+      locationEn: 'Sound & Music Recording Studio',
     },
   ],
   pillars: [
     {
       id: 'p-1',
-      titleAr: 'الأنشطة الميدانية والبطولات الرياضية',
-      titleEn: 'Athletics & Sports Championships',
-      descAr: 'برامج رياضية متكاملة تشمل الملاعب المكشوفة والصالات المغطاة لبناء الجسم والتفكير السليم.',
-      descEn: 'Comprehensive physical education and competitive leagues developing health and teamwork.',
+      titleAr: 'التميز الرياضي والصحة البدنية',
+      titleEn: 'Athletics & Physical Fitness',
+      descAr: 'مجمعات رياضية متكاملة وملاعب أولمبية تشجع الطالب على ممارسة النشاط وصقل الروح الرياضية.',
+      descEn: 'Olympic-grade athletic facilities fostering teamwork, stamina, and healthy habits.',
     },
     {
       id: 'p-2',
-      titleAr: 'الابتكار العلمي والبرمجة',
-      titleEn: 'STEM Innovation & Coding',
-      descAr: 'معامل روبوتات وذكاء اصطناعي تفاعلية تتيح لكل طالب ابتكار المشاريع وحل المشكلات.',
-      descEn: 'Hands-on robotics and coding labs sparking curiosity and scientific exploration.',
+      titleAr: 'الابتكار العلمي والعلوم الحديثة',
+      titleEn: 'STEM Innovation & Technology',
+      descAr: 'معامل تفاعلية متطورة للروبوتات والتطبيقات الذكية تمنح الطالب الشغف بالاكتشاف وتطوير الحلول.',
+      descEn: 'Hands-on tech labs empowering students to create software, robotics, and scientific models.',
     },
     {
       id: 'p-3',
-      titleAr: 'الفنون والإبداع البصري',
-      titleEn: 'Arts & Creative Expression',
-      descAr: 'مرسم فني ومسرح مجهز لاستكشاف المواهب التمثيلية والموسيقية والتشكيلية.',
-      descEn: 'Dedicated studios and auditoriums celebrating student theatrical, musical, and visual arts.',
+      titleAr: 'التعبير الفني والدراما التفاعلية',
+      titleEn: 'Arts & Creative Performing',
+      descAr: 'مساحات إبداعية ومسارح حديثة تسمح للطلاب بالتعبير عن الذات واكتشاف المواهب الموسيقية والفنية.',
+      descEn: 'Inspiring spaces for music, theatrical performance, fine arts, and visual storytelling.',
+    },
+    {
+      id: 'p-4',
+      titleAr: 'القيادة الشابة والمواطنة الفاعلة',
+      titleEn: 'Leadership & Global Citizenship',
+      descAr: 'نماذج محاكاة دولية، مجالس طلابية، ومبادرات مجتمعية تصنع شخصية قادرة على إحداث الفارق.',
+      descEn: 'Student councils, MUN conferences, and community projects building responsible future leaders.',
     },
   ],
 };
@@ -157,6 +213,7 @@ const emptyClub: StudentLifeClubConfig = {
 };
 
 export function AdminStudentLifePage() {
+  const { t } = useTranslation();
   const lang = useAppLanguage();
   const isAr = lang === 'ar';
   const qc = useQueryClient();
@@ -244,12 +301,11 @@ export function AdminStudentLifePage() {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       <PageHeader
-        title={isAr ? 'إدارة صفحة حياة الطالب (Student Life)' : 'Student Life Page Management'}
-        subtitle={
-          isAr
-            ? 'التحكم في أنشطة الطلاب، النوادي الرياضية والتكنولوجية، الإحصائيات، والركائز الأساسية للحياة الطلابية بمدرسة مانهاتن.'
-            : 'Manage student clubs, sports academies, STEM activities, stats, and campus life pillars.'
-        }
+        title={t('admin.studentLifeCrud.title', 'Student Life Page Management')}
+        subtitle={t(
+          'admin.studentLifeCrud.subtitle',
+          'Manage student clubs, sports academies, STEM activities, stats, and campus life pillars.',
+        )}
       />
 
       <AdminPageGuide guideKey="studentLife" />

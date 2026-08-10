@@ -12,10 +12,10 @@ export function DashboardActivityFeed({ activity }: Props) {
   const { t } = useTranslation();
 
   return (
-    <div>
+    <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-neutral-dark dark:text-white">
-          {t('admin.recentActivity', 'Recent Activity')}
+        <h2 className="font-semibold text-neutral-dark dark:text-slate-100">
+          {t('admin.recentActivity', 'Recent activity')}
         </h2>
         <PermissionGuard permission="MANAGE_ROLES">
           <Link to="/admin/audit" className="text-sm text-primary hover:underline flex items-center gap-1">
@@ -32,6 +32,6 @@ export function DashboardActivityFeed({ activity }: Props) {
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 }

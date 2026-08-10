@@ -63,6 +63,7 @@ export function HomePage() {
   const { data: landingData, isLoading: isLandingLoading } = useQuery({
     queryKey: ['landing', lang],
     queryFn: () => landingApi.get(lang).then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: latestPosts = [] } = useQuery({
@@ -112,14 +113,15 @@ export function HomePage() {
   const hero = landingData?.hero;
   const sections = landingData?.sections || [];
 
-  const isSectionPublished = (key: string) => sections.some((s) => s.key === key);
+  const isSectionPublished = (key: string) =>
+    sections.length === 0 || sections.some((s) => s.key === key);
 
   const trustBarSection = isSectionPublished('trust-bar');
   const pathwaysSection = isSectionPublished('pathways-hub');
-  const chairmanSection = sections.find((s) => s.key === 'quote-chairman');
-  const philosophySection = sections.find((s) => s.key === 'educational-philosophy' || s.key === 'about-preview');
-  const visionSection = sections.find((s) => s.key === 'vision');
-  const missionSection = sections.find((s) => s.key === 'mission');
+  const chairmanSection = sections.find((s) => s.key === 'quote-chairman') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const philosophySection = sections.find((s) => s.key === 'educational-philosophy' || s.key === 'about-preview') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const visionSection = sections.find((s) => s.key === 'vision') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const missionSection = sections.find((s) => s.key === 'mission') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
   const coreValuesSection = isSectionPublished('core-values');
   const academicsSection = isSectionPublished('academics-card');
   const requirementsSection = isSectionPublished('requirements-widget');
@@ -138,7 +140,7 @@ export function HomePage() {
       />
 
       {/* Hero Section with Dynamic Slideshow */}
-      {hero && <HeroSlideshow cmsHero={hero} />}
+      <HeroSlideshow cmsHero={hero || undefined} cmsHeroes={landingData?.heroes} />
 
       {/* Interactive Trust Bar */}
       {trustBarSection && (
@@ -547,11 +549,11 @@ export function HomePage() {
                     <p className="text-sm text-neutral-medium dark:text-slate-400 line-clamp-3 mt-2">{prog.summary || prog.content}</p>
                   </div>
                   <Link
-                    to={`/academics/${prog.slug}`}
+                    to={`/academics/${prog.slug || prog.id}`}
                     className="inline-flex items-center gap-1 text-sm font-semibold text-primary dark:text-blue-400 hover:text-primary-dark group"
                   >
-                    <span>{t('hero.discover', 'DISCOVER MORE')}</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <span>{t('academics.exploreProgram', 'Explore Program')}</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
                   </Link>
                 </motion.div>
               ))}

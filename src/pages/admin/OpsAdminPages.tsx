@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { educationApi, galleryApi, blogApi, careersApi, contactApi, admissionsApi, requirementsApi, usersApi, rolesApi, emailApi, storageApi } from '../../api';
@@ -8,18 +8,24 @@ import { Input, Select, Textarea } from '../../components/ui/Input';
 import { DataTable, Modal } from '../../components/ui/DataTable';
 import { StatusBadge, PageHeader } from '../../components/ui/Badge';
 import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
+import { AdminListToolbar, AdminStatusChip } from '../../components/admin/AdminListToolbar';
+import { AdminDataTable } from '../../components/admin/AdminDataTable';
+import { AdminOpsCounters } from '../../components/admin/AdminOpsCounters';
 import { mediaUrl, formatDate } from '../../lib/utils';
 import { getApiErrorMessage, omitKeys } from '../../lib/formData';
 import { AdmissionStatusSelect } from '../../components/admin/AdmissionStatusSelect';
 import { useAppLanguage } from '../../i18n';
-import { Upload, Eye, Mail, Send, Phone, User, Clock, Search, MessageSquare, ExternalLink, CheckCircle } from 'lucide-react';
+import { Upload, Eye, Mail, Send, Phone, User, Clock, MessageSquare, ExternalLink, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
-import { getAdmissionDocumentMeta } from '../portal/parent/admissionWizardConstants';
-import { LOCAL_PHOTOS, PERMISSION_GROUPS, ROLE_ARABIC_NAMES } from './ops/opsAdminShared';
+import { getAdmissionDocumentMeta, REQUIRED_DOCUMENTS_LIST } from '../portal/parent/admissionWizardConstants';
+import { ROLE_ARABIC_NAMES } from './ops/opsAdminShared';
 export function AdminEducationPage() {
   const { t } = useTranslation();
+  const { id: routeProgramId } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const handledRouteId = useRef<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -82,7 +88,16 @@ export function AdminEducationPage() {
     setOpen(true);
   };
 
-  const openEdit = (r: any) => {
+  const openEdit = (r: {
+    id: string;
+    title?: string;
+    slug?: string;
+    summary?: string;
+    content?: string;
+    level?: string;
+    sortOrder?: number;
+    coverImageUrl?: string;
+  }) => {
     setEditId(r.id);
     setForm({
       title: r.title || '',
@@ -97,6 +112,37 @@ export function AdminEducationPage() {
     setPreviewUrl(null);
     setSaveError(null);
     setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!routeProgramId) {
+      handledRouteId.current = null;
+      return;
+    }
+    if (handledRouteId.current === routeProgramId) return;
+
+    const fromList = programs.find((p: { id: string }) => p.id === routeProgramId);
+    if (fromList) {
+      handledRouteId.current = routeProgramId;
+      openEdit(fromList);
+      return;
+    }
+
+    educationApi
+      .getById(routeProgramId)
+      .then((res) => {
+        handledRouteId.current = routeProgramId;
+        openEdit(res.data);
+      })
+      .catch(() => navigate('/admin/education', { replace: true }));
+  }, [routeProgramId, programs, navigate]);
+
+  const closeModal = () => {
+    setOpen(false);
+    if (routeProgramId) {
+      handledRouteId.current = null;
+      navigate('/admin/education', { replace: true });
+    }
   };
 
   const currentCoverDisplay = previewUrl || (form.coverImageUrl ? mediaUrl(form.coverImageUrl) : null);
@@ -158,7 +204,7 @@ export function AdminEducationPage() {
         />
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={editId ? t('admin.education.editTitle', 'Edit Academic Program') : t('admin.education.createTitle', 'Add New Academic Program')} wide>
+      <Modal open={open} onClose={closeModal} title={editId ? t('admin.education.editTitle', 'Edit Academic Program') : t('admin.education.createTitle', 'Add New Academic Program')} wide>
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -227,7 +273,7 @@ export function AdminEducationPage() {
           {saveError && <p className="text-sm text-red-600 font-medium">{saveError}</p>}
 
           <div className="flex justify-end gap-3 pt-3 border-t">
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button variant="outline" type="button" onClick={closeModal}>
               {t('common.cancel', 'Cancel')}
             </Button>
             <Button type="submit" disabled={save.isPending || isUploading}>
@@ -244,8 +290,33 @@ export function AdminGalleryPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ title: '', caption: '', category: 'OTHER' });
-  const { data: images = [] } = useQuery({ queryKey: ['gallery-admin'], queryFn: () => galleryApi.admin().then((r) => r.data) });
+  const [form, setForm] = useState({ title: '', caption: '', category: 'OTHER', status: 'PUBLISHED' });
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'>('ALL');
+
+  const [previewImage, setPreviewImage] = useState<any | null>(null);
+  const [editImage, setEditImage] = useState<any | null>(null);
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', caption: '', category: 'OTHER', status: 'PUBLISHED' });
+
+  const { data: images = [], isLoading } = useQuery({
+    queryKey: ['gallery-admin'],
+    queryFn: () => galleryApi.admin().then((r) => r.data),
+  });
+
+  const counts = useMemo(() => {
+    const tally = { total: images.length, published: 0, draft: 0, archived: 0 };
+    for (const img of images as Array<{ status: string }>) {
+      if (img.status === 'PUBLISHED') tally.published += 1;
+      else if (img.status === 'DRAFT') tally.draft += 1;
+      else if (img.status === 'ARCHIVED') tally.archived += 1;
+    }
+    return tally;
+  }, [images]);
+
+  const filteredImages = useMemo(() => {
+    if (statusFilter === 'ALL') return images;
+    return (images as Array<{ status: string }>).filter((img) => img.status === statusFilter);
+  }, [images, statusFilter]);
 
   const upload = useMutation({
     mutationFn: async () => {
@@ -253,39 +324,315 @@ export function AdminGalleryPage() {
       fd.append('title', form.title);
       fd.append('caption', form.caption);
       fd.append('category', form.category);
+      fd.append('status', form.status);
       if (file) fd.append('image', file);
       return galleryApi.create(fd);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['gallery-admin'] }); setFile(null); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gallery-admin'] });
+      qc.invalidateQueries({ queryKey: ['public-gallery'] });
+      setFile(null);
+      setForm({ title: '', caption: '', category: 'OTHER', status: 'PUBLISHED' });
+    },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editImage) return;
+      const fd = new FormData();
+      fd.append('title', editForm.title);
+      fd.append('caption', editForm.caption);
+      fd.append('category', editForm.category);
+      fd.append('status', editForm.status);
+      if (editFile) fd.append('image', editFile);
+      return galleryApi.update(editImage.id, fd);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gallery-admin'] });
+      qc.invalidateQueries({ queryKey: ['public-gallery'] });
+      setEditImage(null);
+      setEditFile(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => galleryApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gallery-admin'] });
+      qc.invalidateQueries({ queryKey: ['public-gallery'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+  });
+
+  const setImageStatus = (id: string, status: string) =>
+    galleryApi.updateStatus(id, status).then(() => {
+      qc.invalidateQueries({ queryKey: ['gallery-admin'] });
+      qc.invalidateQueries({ queryKey: ['public-gallery'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    });
+
+  const openEdit = (img: any) => {
+    setEditImage(img);
+    setEditFile(null);
+    setEditForm({
+      title: img.title || '',
+      caption: img.caption || '',
+      category: img.category || 'OTHER',
+      status: img.status || 'PUBLISHED',
+    });
+  };
+
+  const handleDelete = (id: string, title: string) => {
+    if (window.confirm(`هل أنت تأكد من إزالة وصور النواحي نهائياً (${title})؟`)) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('admin.gallery.title', 'Photo Gallery Management')} subtitle={t('admin.gallery.subtitle', 'Upload and manage photos of campus, events, and student activities.')} />
+      <PageHeader
+        title={t('admin.gallery.title', 'Photo Gallery Management')}
+        subtitle={t('admin.gallery.subtitle', 'Upload and manage photos of campus, events, and student activities.')}
+      />
       <AdminPageGuide guideKey="gallery" />
-      <form className="grid md:grid-cols-4 gap-3 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs" onSubmit={(e) => { e.preventDefault(); upload.mutate(); }}>
-        <Input label={t('admin.gallery.photoTitle', 'Photo Title')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-        <Input label={t('admin.gallery.caption', 'Caption / Description')} value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} />
-        <Input label={t('admin.gallery.uploadFromPc', 'Image File')} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required />
-        <div className="flex items-end"><Button type="submit">{t('admin.gallery.uploadBtn', 'Upload Photo')}</Button></div>
+
+      <AdminOpsCounters
+        items={[
+          { id: 'published', label: t('common.published', 'Published'), value: counts.published, onClick: () => setStatusFilter('PUBLISHED') },
+          { id: 'draft', label: t('common.draft', 'Draft'), value: counts.draft, onClick: () => setStatusFilter('DRAFT') },
+          { id: 'archived', label: t('admin.statusArchived', 'Archived'), value: counts.archived, onClick: () => setStatusFilter('ARCHIVED') },
+          { id: 'total', label: t('admin.allStatuses', 'All'), value: counts.total, onClick: () => setStatusFilter('ALL') },
+        ]}
+      />
+
+      <form
+        className="grid md:grid-cols-6 gap-3 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs"
+        onSubmit={(e) => {
+          e.preventDefault();
+          upload.mutate();
+        }}
+      >
+        <Input label={t('admin.gallery.photoTitle', 'عنوان الصورة')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        <Input label={t('admin.gallery.caption', 'الوصف / التفاصيل')} value={form.caption} onChange={(e) => setForm({ ...form, caption: e.target.value })} />
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {t('admin.gallery.categoryLabel', 'التصنيف / الفئة')}
+          </label>
+          <select
+            className="w-full border rounded-xl p-2.5 text-sm bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 font-medium focus:ring-2 focus:ring-primary dark:text-slate-100"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          >
+            <option value="ACADEMICS">{t('gallery.cat.academics', 'الأكاديميات والأنشطة')}</option>
+            <option value="EVENTS">{t('gallery.cat.events', 'الفعاليات والمناسبات')}</option>
+            <option value="CAMPUS">{t('gallery.cat.campus', 'الحرم والمرافق')}</option>
+            <option value="SPORTS">{t('gallery.cat.sports', 'الأنشطة الرياضية')}</option>
+            <option value="OTHER">{t('gallery.cat.other', 'عام / أخرى')}</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            حالة الصورة
+          </label>
+          <select
+            className="w-full border rounded-xl p-2.5 text-sm bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 font-medium focus:ring-2 focus:ring-primary dark:text-slate-100"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+          >
+            <option value="PUBLISHED">منشور (Published)</option>
+            <option value="DRAFT">مسودة (Draft)</option>
+          </select>
+        </div>
+
+        <Input label={t('admin.gallery.uploadFromPc', 'ملف الصورة')} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required />
+        
+        <div className="flex items-end">
+          <Button type="submit" disabled={upload.isPending} className="w-full justify-center">
+            {upload.isPending ? t('admin.gallery.uploading', 'جاري الرفع...') : t('admin.gallery.uploadBtn', 'رفع الصورة')}
+          </Button>
+        </div>
       </form>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {images.map((img: { id: string; title: string; imageUrl: string; status: string }) => (
-          <div key={img.id} className="relative group bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-            <img src={mediaUrl(img.imageUrl)} alt={img.title} className="w-full h-36 object-cover rounded-lg" />
-            <div className="text-sm font-semibold mt-2 text-slate-800 truncate">{img.title}</div>
-            <Button variant="secondary" className="py-1 px-2.5 text-xs mt-2 w-full" onClick={() => galleryApi.updateStatus(img.id, img.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED').then(() => { qc.invalidateQueries({ queryKey: ['gallery-admin'] }); qc.invalidateQueries({ queryKey: ['public-gallery'] }); })}>
-              {img.status === 'PUBLISHED' ? t('common.draft', 'Draft') : t('common.published', 'Publish')}
-            </Button>
+
+      <AdminDataTable
+        isLoading={isLoading}
+        data={filteredImages}
+        emptyTitle={t('admin.gallery.empty', 'لا توجد صور في المعرض')}
+        emptyDescription={t('admin.gallery.emptyHint', 'قم برفع صور لعرض أنشطة ومرافق المدرسة.')}
+        columns={[
+          {
+            key: 'preview',
+            header: t('admin.gallery.cover', 'المعاينة'),
+            align: 'center',
+            render: (img: any) => (
+              <img
+                src={mediaUrl(img.imageUrl)}
+                alt={img.title}
+                className="h-14 w-20 object-cover rounded-lg border mx-auto cursor-pointer hover:opacity-85 transition-opacity"
+                onClick={() => setPreviewImage(img)}
+              />
+            ),
+          },
+          { key: 'title', header: t('admin.title', 'العنوان'), align: 'start', render: (img: { title: string }) => <span className="font-semibold">{img.title}</span> },
+          {
+            key: 'category',
+            header: t('admin.gallery.category', 'التصنيف'),
+            align: 'start',
+            render: (img: { category: string }) => {
+              const catMap: Record<string, string> = {
+                ACADEMICS: t('gallery.cat.academics', 'الأكاديميات والأنشطة'),
+                EVENTS: t('gallery.cat.events', 'الفعاليات والمناسبات'),
+                CAMPUS: t('gallery.cat.campus', 'الحرم والمرافق'),
+                SPORTS: t('gallery.cat.sports', 'الأنشطة الرياضية'),
+                OTHER: t('gallery.cat.other', 'عام / أخرى'),
+              };
+              return catMap[img.category] || img.category;
+            },
+          },
+          {
+            key: 'status',
+            header: t('common.status', 'الحالة'),
+            align: 'center',
+            render: (img: { status: string }) => <StatusBadge status={img.status} />,
+          },
+          {
+            key: 'actions',
+            header: t('common.actions', 'الإجراءات'),
+            align: 'start',
+            render: (img: any) => (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => setPreviewImage(img)} title="معاينة">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>معاينة</span>
+                </Button>
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => openEdit(img)} title="تعديل">
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>تعديل</span>
+                </Button>
+
+                {img.status !== 'PUBLISHED' && (
+                  <Button variant="secondary" className="py-1 px-2 text-xs" onClick={() => setImageStatus(img.id, 'PUBLISHED')}>
+                    {t('common.published', 'نشر')}
+                  </Button>
+                )}
+                {img.status !== 'DRAFT' && (
+                  <Button variant="outline" className="py-1 px-2 text-xs" onClick={() => setImageStatus(img.id, 'DRAFT')}>
+                    {t('common.draft', 'مسودة')}
+                  </Button>
+                )}
+                {img.status !== 'ARCHIVED' && (
+                  <Button variant="outline" className="py-1 px-2 text-xs text-slate-500" onClick={() => setImageStatus(img.id, 'ARCHIVED')}>
+                    أرشفة
+                  </Button>
+                )}
+
+                <Button variant="danger" className="py-1 px-2 text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(img.id, img.title)} title="حذف">
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>حذف</span>
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      />
+
+      {/* Modal: Image Preview Lightbox */}
+      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title || 'معاينة الصورة'} wide>
+        {previewImage && (
+          <div className="space-y-4">
+            <div className="bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center p-2 border border-slate-800">
+              <img src={mediaUrl(previewImage.imageUrl)} alt={previewImage.title} className="max-h-[70vh] w-auto object-contain rounded-lg" />
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm">
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-slate-100">{previewImage.title}</h4>
+                {previewImage.caption && <p className="text-slate-600 dark:text-slate-400 mt-1">{previewImage.caption}</p>}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <StatusBadge status={previewImage.status} />
+                <a
+                  href={mediaUrl(previewImage.imageUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition-colors inline-flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>فتح الرابط الأصل</span>
+                </a>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        )}
+      </Modal>
+
+      {/* Modal: Edit Image Details */}
+      <Modal open={!!editImage} onClose={() => setEditImage(null)} title="تعديل بيانات الصورة في المعرض" wide>
+        {editImage && (
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateMutation.mutate();
+            }}
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input label="عنوان الصورة" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} required />
+              <Input label="الوصف / التفاصيل" value={editForm.caption} onChange={(e) => setEditForm({ ...editForm, caption: e.target.value })} />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  التصنيف / الفئة
+                </label>
+                <select
+                  className="w-full border rounded-xl p-2.5 text-sm bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 font-medium focus:ring-2 focus:ring-primary dark:text-slate-100"
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                >
+                  <option value="ACADEMICS">{t('gallery.cat.academics', 'الأكاديميات والأنشطة')}</option>
+                  <option value="EVENTS">{t('gallery.cat.events', 'الفعاليات والمناسبات')}</option>
+                  <option value="CAMPUS">{t('gallery.cat.campus', 'الحرم والمرافق')}</option>
+                  <option value="SPORTS">{t('gallery.cat.sports', 'الأنشطة الرياضية')}</option>
+                  <option value="OTHER">{t('gallery.cat.other', 'عام / أخرى')}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  الحالة
+                </label>
+                <select
+                  className="w-full border rounded-xl p-2.5 text-sm bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 font-medium focus:ring-2 focus:ring-primary dark:text-slate-100"
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                >
+                  <option value="PUBLISHED">منشور (Published)</option>
+                  <option value="DRAFT">مسودة (Draft)</option>
+                  <option value="ARCHIVED">مؤرشف (Archived)</option>
+                </select>
+              </div>
+            </div>
+
+            <Input label="استبدال ملَف الصورة (اختياري)" type="file" accept="image/*" onChange={(e) => setEditFile(e.target.files?.[0] || null)} />
+
+            <div className="flex justify-end gap-3 pt-3 border-t">
+              <Button variant="outline" type="button" onClick={() => setEditImage(null)}>إلغاء</Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }
 
 export function AdminBlogPage() {
   const { t } = useTranslation();
+  const { id: routePostId } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -296,27 +643,54 @@ export function AdminBlogPage() {
     content: '',
     contentAr: '',
     categoryId: '',
-    coverImageUrl: '/photos/photo1.jpeg',
+    coverImageUrl: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'categories'>('posts');
   const [categoryForm, setCategoryForm] = useState({ name: '', nameAr: '', slug: '' });
+  const [commentStatusFilter, setCommentStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'SPAM'>('ALL');
+  const [commentSearch, setCommentSearch] = useState('');
 
   const { data: posts = [] } = useQuery({
     queryKey: ['posts-admin'],
-    queryFn: () => blogApi.admin().then((r) => r.data),
+    queryFn: () =>
+      blogApi.admin().then((r) => {
+        const body = r.data;
+        return Array.isArray(body) ? body : body.data ?? [];
+      }),
   });
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => blogApi.categories('en').then((r) => r.data),
   });
-  const { data: comments = [] } = useQuery({
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['blog-comments-admin'],
     queryFn: () => blogApi.comments().then((r) => r.data),
     enabled: activeTab === 'comments',
   });
+
+  const commentCounts = useMemo(() => {
+    const tally = { total: comments.length, pending: 0, approved: 0, spam: 0 };
+    for (const c of comments) {
+      if (c.status === 'PENDING') tally.pending += 1;
+      else if (c.status === 'APPROVED') tally.approved += 1;
+      else if (c.status === 'SPAM') tally.spam += 1;
+    }
+    return tally;
+  }, [comments]);
+
+  const filteredComments = useMemo(() => {
+    const search = commentSearch.trim().toLowerCase();
+    return comments.filter((c: { status: string; content?: string; author?: { fullName?: string } }) => {
+      if (commentStatusFilter !== 'ALL' && c.status !== commentStatusFilter) return false;
+      if (!search) return true;
+      const content = (c.content || '').toLowerCase();
+      const author = (c.author?.fullName || '').toLowerCase();
+      return content.includes(search) || author.includes(search);
+    });
+  }, [comments, commentStatusFilter, commentSearch]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -368,7 +742,7 @@ export function AdminBlogPage() {
       content: '',
       contentAr: '',
       categoryId: categories[0]?.id || '',
-      coverImageUrl: '/photos/photo1.jpeg',
+      coverImageUrl: '',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -384,7 +758,7 @@ export function AdminBlogPage() {
       content: r.content || '',
       contentAr: r.contentAr || '',
       categoryId: r.category?.id || categories[0]?.id || '',
-      coverImageUrl: r.coverImageUrl || '/photos/photo1.jpeg',
+      coverImageUrl: r.coverImageUrl || '',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -392,7 +766,40 @@ export function AdminBlogPage() {
     setOpen(true);
   };
 
-  const currentCoverDisplay = previewUrl || (form.coverImageUrl ? mediaUrl(form.coverImageUrl) : '/photos/photo1.jpeg');
+  const currentCoverDisplay = previewUrl || (form.coverImageUrl ? mediaUrl(form.coverImageUrl) : null);
+
+  const handledRoutePostId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!routePostId) {
+      handledRoutePostId.current = null;
+      return;
+    }
+    if (handledRoutePostId.current === routePostId) return;
+
+    const fromList = posts.find((p: { id: string }) => p.id === routePostId);
+    if (fromList) {
+      handledRoutePostId.current = routePostId;
+      openEditModal(fromList);
+      return;
+    }
+
+    blogApi
+      .getById(routePostId)
+      .then((res) => {
+        handledRoutePostId.current = routePostId;
+        openEditModal(res.data);
+      })
+      .catch(() => navigate('/admin/blog', { replace: true }));
+  }, [routePostId, posts, navigate]);
+
+  const closeBlogModal = () => {
+    setOpen(false);
+    if (routePostId) {
+      handledRoutePostId.current = null;
+      navigate('/admin/blog', { replace: true });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -431,47 +838,150 @@ export function AdminBlogPage() {
       </div>
 
       {activeTab === 'comments' && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-          <DataTable data={comments} columns={[
-            { key: 'content', header: t('admin.comment', 'Comment'), render: (r: { content: string }) => <span className="line-clamp-2">{r.content}</span> },
-            { key: 'author', header: t('admin.author', 'Author'), render: (r: { author?: { fullName: string } }) => r.author?.fullName || '—' },
-            { key: 'status', header: t('common.status', 'Status'), render: (r: { status: string }) => <StatusBadge status={r.status} /> },
-            {
-              key: 'actions',
-              header: t('common.actions', 'Actions'),
-              render: (r: { id: string; status: string }) => (
-                <div className="flex gap-2">
-                  {r.status !== 'APPROVED' && (
-                    <Button
-                      variant="secondary"
-                      className="py-1 px-2.5 text-xs"
-                      onClick={() =>
-                        blogApi.moderateComment(r.id, 'APPROVED').then(() => {
-                          qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
-                          qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
-                        })
-                      }
-                    >
-                      {t('admin.approve', 'Approve')}
-                    </Button>
-                  )}
-                  {r.status !== 'SPAM' && (
-                    <Button
-                      variant="danger"
-                      className="py-1 px-2.5 text-xs"
-                      onClick={() =>
-                        blogApi.moderateComment(r.id, 'SPAM').then(() => {
-                          qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
-                        })
-                      }
-                    >
-                      {t('admin.spam', 'Spam')}
-                    </Button>
-                  )}
-                </div>
-              ),
-            },
-          ]} />
+        <div className="space-y-6">
+          <AdminOpsCounters
+            items={[
+              {
+                id: 'pending',
+                label: t('admin.ops.pendingReview', 'Pending review'),
+                value: commentCounts.pending,
+                highlight: commentCounts.pending > 0,
+                onClick: () => setCommentStatusFilter('PENDING'),
+              },
+              {
+                id: 'approved',
+                label: t('status.APPROVED'),
+                value: commentCounts.approved,
+                onClick: () => setCommentStatusFilter('APPROVED'),
+              },
+              {
+                id: 'spam',
+                label: t('status.SPAM'),
+                value: commentCounts.spam,
+                onClick: () => setCommentStatusFilter('SPAM'),
+              },
+              {
+                id: 'total',
+                label: t('admin.blogComments', 'Comments'),
+                value: commentCounts.total,
+                onClick: () => setCommentStatusFilter('ALL'),
+              },
+            ]}
+          />
+
+          <AdminListToolbar
+            searchValue={commentSearch}
+            onSearchChange={setCommentSearch}
+            searchPlaceholder={t('admin.ops.searchComments', 'Search comments or authors…')}
+            resultCount={filteredComments.length}
+            totalCount={comments.length}
+            filters={
+              <>
+                <AdminStatusChip
+                  label={t('admin.allStatuses', 'All')}
+                  active={commentStatusFilter === 'ALL'}
+                  onClick={() => setCommentStatusFilter('ALL')}
+                  count={commentCounts.total}
+                />
+                <AdminStatusChip
+                  label={t('admin.ops.pendingReview', 'Pending review')}
+                  active={commentStatusFilter === 'PENDING'}
+                  onClick={() => setCommentStatusFilter('PENDING')}
+                  count={commentCounts.pending}
+                  variant="warning"
+                />
+                <AdminStatusChip
+                  label={t('status.APPROVED')}
+                  active={commentStatusFilter === 'APPROVED'}
+                  onClick={() => setCommentStatusFilter('APPROVED')}
+                  count={commentCounts.approved}
+                />
+                <AdminStatusChip
+                  label={t('status.SPAM')}
+                  active={commentStatusFilter === 'SPAM'}
+                  onClick={() => setCommentStatusFilter('SPAM')}
+                  count={commentCounts.spam}
+                  variant="critical"
+                />
+              </>
+            }
+          />
+
+          <AdminDataTable
+            isLoading={commentsLoading}
+            data={filteredComments}
+            emptyTitle={t('admin.ops.noComments', 'No blog comments')}
+            emptyDescription={
+              comments.length === 0
+                ? t('admin.ops.noCommentsHint', 'Comments from readers will appear here for moderation.')
+                : t('admin.ops.noFilterResults', 'No items match your search or filter.')
+            }
+            emptyActionLabel={
+              comments.length > 0 ? t('admin.ops.clearFilters', 'Clear filters') : undefined
+            }
+            onEmptyAction={
+              comments.length > 0
+                ? () => {
+                    setCommentSearch('');
+                    setCommentStatusFilter('ALL');
+                  }
+                : undefined
+            }
+            columns={[
+              {
+                key: 'content',
+                header: t('admin.comment', 'Comment'),
+                render: (r: { content: string }) => (
+                  <span className="line-clamp-2 text-sm text-slate-700">{r.content}</span>
+                ),
+              },
+              {
+                key: 'author',
+                header: t('admin.author', 'Author'),
+                render: (r: { author?: { fullName: string } }) => r.author?.fullName || '—',
+              },
+              {
+                key: 'status',
+                header: t('common.status', 'Status'),
+                render: (r: { status: string }) => <StatusBadge status={r.status} />,
+              },
+              {
+                key: 'actions',
+                header: t('common.actions', 'Actions'),
+                render: (r: { id: string; status: string }) => (
+                  <div className="flex gap-2">
+                    {r.status !== 'APPROVED' && (
+                      <Button
+                        variant="secondary"
+                        className="py-1 px-2.5 text-xs"
+                        onClick={() =>
+                          blogApi.moderateComment(r.id, 'APPROVED').then(() => {
+                            qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
+                            qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                          })
+                        }
+                      >
+                        {t('admin.approve', 'Approve')}
+                      </Button>
+                    )}
+                    {r.status !== 'SPAM' && (
+                      <Button
+                        variant="danger"
+                        className="py-1 px-2.5 text-xs"
+                        onClick={() =>
+                          blogApi.moderateComment(r.id, 'SPAM').then(() => {
+                            qc.invalidateQueries({ queryKey: ['blog-comments-admin'] });
+                          })
+                        }
+                      >
+                        {t('admin.spam', 'Spam')}
+                      </Button>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
 
@@ -536,9 +1046,6 @@ export function AdminBlogPage() {
                     src={mediaUrl(r.coverImageUrl)}
                     alt={r.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
-                    }}
                   />
                 ) : (
                   <span className="text-[10px] text-slate-400">—</span>
@@ -585,35 +1092,37 @@ export function AdminBlogPage() {
         ]} />
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title={editId ? t('common.edit', 'Edit') : t('admin.blogCrud.addNew', '+ Write New Article')} wide>
+      <Modal open={open} onClose={closeBlogModal} title={editId ? t('common.edit', 'Edit') : t('admin.blogCrud.addNew', '+ Write New Article')} wide>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input label="العنوان (بالإنجليزية)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required minLength={5} />
-            <Input label="العنوان (بالعربية)" value={form.titleAr} onChange={(e) => setForm({ ...form, titleAr: e.target.value })} />
+            <Input label={t('admin.titleEn', 'Title (English)')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required minLength={5} />
+            <Input label={t('admin.titleAr', 'Title (Arabic)')} value={form.titleAr} onChange={(e) => setForm({ ...form, titleAr: e.target.value })} />
           </div>
 
-          <Select label="القسم الأكاديمي" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-            <option value="">اختر القسم...</option>
+          <Select label={t('admin.category', 'Category')} value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+            <option value="">{t('admin.selectCategory', 'Select category…')}</option>
             {categories.map((c: { id: string; name: string }) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </Select>
 
           <div className="space-y-2 border p-4 rounded-xl bg-slate-50/50">
-            <label className="block text-sm font-semibold text-slate-800">صورة غلاف المقال</label>
+            <label className="block text-sm font-semibold text-slate-800">{t('admin.blogCrud.coverImage', 'Cover image')}</label>
             
-            {/* Live Preview Box */}
             <div className="flex items-center gap-4">
               <div className="relative w-32 h-20 rounded-lg border overflow-hidden bg-slate-200 flex-shrink-0 shadow-2xs">
-                <img
-                  src={currentCoverDisplay}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
-                  }}
-                />
+                {currentCoverDisplay ? (
+                  <img
+                    src={currentCoverDisplay}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
+                    {t('admin.blogCrud.noCover', 'No cover')}
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-slate-500">اختر صورة من جهازك أو حدد صورة جاهزة</p>
+                <p className="text-xs text-slate-500">{t('admin.blogCrud.coverHint', 'Upload an image from your computer')}</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -628,42 +1137,22 @@ export function AdminBlogPage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  رفع صورة جديدة من الكمبيوتر
+                  {t('admin.education.uploadFromPc', 'Upload from computer')}
                 </Button>
               </div>
             </div>
 
-            <div className="pt-2">
-              <span className="text-xs text-slate-500 block mb-1.5 font-medium">أو اختر من الصور المعرفة مسبقاً:</span>
-              <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
-                {LOCAL_PHOTOS.map((photo) => (
-                  <button
-                    type="button"
-                    key={photo}
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setPreviewUrl(null);
-                      setForm({ ...form, coverImageUrl: photo });
-                    }}
-                    className={`relative rounded-md border-2 overflow-hidden h-12 transition-all ${!selectedFile && form.coverImageUrl === photo ? 'border-primary ring-2 ring-primary/40 scale-95' : 'border-transparent opacity-75 hover:opacity-100'}`}
-                  >
-                    <img src={mediaUrl(photo)} alt="Select" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <Input
-              label="أو رابط الصورة المباشر (Custom Image URL)"
+              label={t('admin.blogCrud.coverUrl', 'Cover image URL')}
               value={selectedFile ? selectedFile.name : form.coverImageUrl}
               disabled={!!selectedFile}
               onChange={(e) => setForm({ ...form, coverImageUrl: e.target.value })}
-              placeholder="/photos/photo1.jpeg"
+              placeholder="https://..."
             />
           </div>
 
-          <Textarea label="المحتوى (بالإنجليزية)" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} required />
-          <Textarea label="المحتوى (بالعربية)" value={form.contentAr} onChange={(e) => setForm({ ...form, contentAr: e.target.value })} rows={4} />
+          <Textarea label={t('admin.contentEn', 'Content (English)')} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} required />
+          <Textarea label={t('admin.contentAr', 'Content (Arabic)')} value={form.contentAr} onChange={(e) => setForm({ ...form, contentAr: e.target.value })} rows={4} />
 
           {saveError && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
@@ -672,9 +1161,9 @@ export function AdminBlogPage() {
           )}
 
           <div className="flex justify-end gap-2 pt-3 border-t">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
+            <Button type="button" variant="outline" onClick={closeBlogModal}>{t('common.cancel', 'Cancel')}</Button>
             <Button type="submit" disabled={save.isPending}>
-              {save.isPending ? 'جاري الحفظ والرفع...' : 'حفظ المقال'}
+              {save.isPending ? t('admin.blogCrud.saving', 'Saving…') : t('admin.blogCrud.savePost', 'Save article')}
             </Button>
           </div>
         </form>
@@ -685,102 +1174,6 @@ export function AdminBlogPage() {
   );
 }
 
-export function AdminAdmissionsPage() {
-  const { t } = useTranslation();
-  const qc = useQueryClient();
-  const [status, setStatus] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const { data: admissions = [] } = useQuery({
-    queryKey: ['admissions-admin', status],
-    queryFn: () => admissionsApi.list(status || undefined).then((r) => r.data),
-  });
-
-  const filteredAdmissions = admissions.filter((a: any) => {
-    const fullName = `${a.studentFirstName} ${a.studentLastName}`.toLowerCase();
-    const search = searchTerm.toLowerCase();
-    const parent = (a.parentName || a.parentEmail || '').toLowerCase();
-    return fullName.includes(search) || (a.gradeLevel && a.gradeLevel.toLowerCase().includes(search)) || parent.includes(search);
-  });
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t('admin.admissionsTitle', 'طلبات القبول والتسجيل')}
-        subtitle={t('admin.admissionsSubtitle', 'إدارة ومراجعة كافة طلبات الطلاب المتقدمين، بيانات أولياء الأمور، وتحديث حالات القبول.')}
-      />
-
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-xs">
-        <div className="w-full sm:w-80">
-          <Input
-            placeholder={t('admin.searchStudentPlaceholder', '🔍 البحث باسم الطالب، ولي الأمر، أو المرحلة...')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-semibold text-neutral-medium dark:text-slate-400 whitespace-nowrap">
-            {t('admin.filterStatusLabel', 'تصفية حسب الحالة:')}
-          </span>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full sm:w-48 text-xs">
-            <option value="">{t('admin.allStatuses', 'جميع الحالات')}</option>
-            {['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'ACCEPTED', 'REJECTED'].map((s) => (
-              <option key={s} value={s}>
-                {String(t(`status.${s}`, s))}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </div>
-
-      <DataTable data={filteredAdmissions} columns={[
-        { key: 'student', header: t('admin.studentName', 'اسم الطالب') as string, render: (r) => (
-          <div>
-            <Link to={`/admin/admissions/${r.id}`} className="font-bold text-primary dark:text-blue-400 hover:underline">
-              {r.studentFirstName} {r.studentLastName}
-            </Link>
-            <div className="text-xs text-neutral-medium dark:text-slate-400">
-              {r.referenceNumber ? `${t('admin.ref', 'رقم مرجعي')}: ${r.referenceNumber}` : `${t('admin.appId', 'رقم الطلب')}: #${r.id.slice(0, 8)}`}
-            </div>
-          </div>
-        )},
-        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r) => (
-          <span className="font-semibold text-xs px-2.5 py-1 bg-primary-light text-primary rounded-lg border border-primary/20">
-            {t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}
-          </span>
-        )},
-        { key: 'parent', header: t('admin.parentContact', 'بيانات التواصل مع ولي الأمر') as string, render: (r) => (
-          <div className="text-xs">
-            <div className="font-medium text-neutral-dark dark:text-slate-200">{r.parentName || r.parentEmail || (t('admin.na', 'غير محدد') as string)}</div>
-            <div className="text-neutral-medium dark:text-slate-400">{r.parentPhone || r.parentEmail || ''}</div>
-          </div>
-        )},
-        { key: 'status', header: t('admin.statusLabel', 'الحالة') as string, render: (r) => (
-          <AdmissionStatusSelect
-            className="border rounded-lg p-1.5 text-xs bg-white dark:bg-slate-800 text-neutral-dark dark:text-slate-100 font-semibold"
-            value={r.status}
-            onChange={(status) => admissionsApi.updateStatus(r.id, status).then(() => {
-              qc.invalidateQueries({ queryKey: ['admissions-admin'] });
-              qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
-              qc.invalidateQueries({ queryKey: ['my-admissions'] });
-              qc.invalidateQueries({ queryKey: ['notifications'] });
-            })}
-          />
-        )},
-        { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r) => (
-          <div className="flex items-center gap-2">
-            <Link to={`/admin/admissions/${r.id}`}>
-              <Button variant="gold" className="py-1 px-3 text-xs font-semibold flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5" />
-                <span>{t('admin.viewFullDetails', 'عرض كافة التفاصيل')}</span>
-              </Button>
-            </Link>
-          </div>
-        )},
-      ]} />
-    </div>
-  );
-}
 
 export function AdminAdmissionDetailPage({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -1214,26 +1607,317 @@ export function AdminRequirementsPage() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   const lang = useAppLanguage();
-  const { data: items = [] } = useQuery({ queryKey: ['requirements'], queryFn: () => requirementsApi.list(true).then((r) => r.data) });
-  const [form, setForm] = useState({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [form, setForm] = useState({
+    gradeLevel: '',
+    title: '',
+    titleAr: '',
+    description: '',
+    descriptionAr: '',
+    imageUrl: '',
+    minAge: 0,
+    maxAge: 0,
+    requiredDocumentTypes: [] as string[],
+    sortOrder: 0,
+  });
+  const [editId, setEditId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['requirements'],
+    queryFn: () => requirementsApi.list(true).then((r) => r.data),
+  });
+
+  const resetForm = () => {
+    setEditId(null);
+    setSelectedFile(null);
+    setForm({
+      gradeLevel: '',
+      title: '',
+      titleAr: '',
+      description: '',
+      descriptionAr: '',
+      imageUrl: '',
+      minAge: 0,
+      maxAge: 0,
+      requiredDocumentTypes: [],
+      sortOrder: 0,
+    });
+    setSaveError(null);
+  };
+
+  const toggleDocumentType = (docType: string) => {
+    setForm((prev) => ({
+      ...prev,
+      requiredDocumentTypes: prev.requiredDocumentTypes.includes(docType)
+        ? prev.requiredDocumentTypes.filter((d) => d !== docType)
+        : [...prev.requiredDocumentTypes, docType],
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError(null);
+    try {
+      let imageUrl = form.imageUrl;
+      if (selectedFile) {
+        const uploadRes = await storageApi.upload(selectedFile, 'requirements');
+        imageUrl = uploadRes.data.url;
+      }
+      const payload = { ...form, imageUrl };
+      if (editId) {
+        await requirementsApi.update(editId, payload);
+      } else {
+        await requirementsApi.create(payload);
+      }
+      resetForm();
+      qc.invalidateQueries({ queryKey: ['requirements'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    } catch (err) {
+      setSaveError(getApiErrorMessage(err, t('common.errorSave', 'Failed to save requirement')));
+    }
+  };
+
+  const startEdit = (row: {
+    id: string;
+    gradeLevel: string;
+    title: string;
+    titleAr?: string;
+    description?: string;
+    descriptionAr?: string;
+    imageUrl?: string;
+    minAge?: number;
+    maxAge?: number;
+    requiredDocumentTypes?: string[];
+    sortOrder?: number;
+  }) => {
+    setEditId(row.id);
+    setSelectedFile(null);
+    setForm({
+      gradeLevel: row.gradeLevel,
+      title: row.title,
+      titleAr: row.titleAr || '',
+      description: row.description || '',
+      descriptionAr: row.descriptionAr || '',
+      imageUrl: row.imageUrl || '',
+      minAge: row.minAge ?? 0,
+      maxAge: row.maxAge ?? 0,
+      requiredDocumentTypes: row.requiredDocumentTypes ?? [],
+      sortOrder: row.sortOrder ?? 0,
+    });
+    setSaveError(null);
+  };
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title={t('admin.admissionRequirementsTitle', 'شروط ومتطلبات القبول')}
-        subtitle={t('admin.admissionRequirementsSubtitle', 'إدارة المعايير وشروط السن والمستندات المطلوبة لكل مرحلة دراسية.')}
+        title={t('admin.requirements.title', 'Admission Requirements by Grade')}
+        subtitle={t('admin.requirements.subtitle', 'Define age limits and required documents for each grade level.')}
       />
-      <form className="grid md:grid-cols-3 gap-4 mb-6 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs items-end" onSubmit={(e) => { e.preventDefault(); requirementsApi.create(form).then(() => { setForm({ gradeLevel: '', title: '', description: '', minAge: 0, maxAge: 0 }); qc.invalidateQueries({ queryKey: ['requirements'] }); }); }}>
-        <Input label={t('admin.gradeLevel', 'المرحلة الدراسية')} value={form.gradeLevel} onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })} placeholder={t('admin.gradePlaceholder', 'مثال: Grade 1')} required />
-        <Input label={t('admin.title', 'العنوان')} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('admin.titlePlaceholder', 'مثال: متطلبات قبول الصف الأول')} required />
-        <Button type="submit" className="w-full">{t('admin.addRequirement', 'إضافة شرط جديد')}</Button>
+
+      <form
+        className="grid md:grid-cols-2 gap-4 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs"
+        onSubmit={handleSubmit}
+      >
+        <Input
+          label={t('admin.gradeLevel', 'Grade level')}
+          value={form.gradeLevel}
+          onChange={(e) => setForm({ ...form, gradeLevel: e.target.value })}
+          placeholder={t('admin.gradePlaceholder', 'e.g. Grade 1')}
+          required
+        />
+        <Input
+          label={t('admin.title', 'Title')}
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder={t('admin.titlePlaceholder', 'e.g. Grade 1 admission requirements')}
+          required
+        />
+        <Input
+          label={t('admin.titleAr', 'Title (Arabic)')}
+          value={form.titleAr}
+          onChange={(e) => setForm({ ...form, titleAr: e.target.value })}
+        />
+        <Input
+          label={t('admin.sortOrder', 'Sort order')}
+          type="number"
+          value={form.sortOrder}
+          onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
+        />
+        <Input
+          label={t('admin.requirements.minAge', 'Min age (years)')}
+          type="number"
+          min={0}
+          value={form.minAge}
+          onChange={(e) => setForm({ ...form, minAge: Number(e.target.value) })}
+        />
+        <Input
+          label={t('admin.requirements.maxAge', 'Max age (years)')}
+          type="number"
+          min={0}
+          value={form.maxAge}
+          onChange={(e) => setForm({ ...form, maxAge: Number(e.target.value) })}
+        />
+        <Textarea
+          label={t('admin.descEn', 'Description (English)')}
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          rows={2}
+        />
+        <Textarea
+          label={t('admin.descAr', 'Description (Arabic)')}
+          value={form.descriptionAr}
+          onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
+          rows={2}
+        />
+
+        <div className="md:col-span-2 space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            🖼️ {t('admin.requirements.imageLabel', 'صورة التوضيحية / البانر للشرط (اختياري)')}
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              className="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+            />
+            {form.imageUrl && (
+              <div className="relative group">
+                <img src={mediaUrl(form.imageUrl)} alt="Preview" className="h-10 w-14 object-cover rounded-lg border" />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, imageUrl: '' })}
+                  className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full h-4 w-4 text-[10px] flex items-center justify-center shadow-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="md:col-span-2 space-y-2">
+          <label className="block text-sm font-medium text-slate-800 dark:text-slate-200">
+            {t('admin.requirements.documentsList', 'Required documents')}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {REQUIRED_DOCUMENTS_LIST.map((doc) => {
+              const selected = form.requiredDocumentTypes.includes(doc.code);
+              return (
+                <button
+                  key={doc.code}
+                  type="button"
+                  onClick={() => toggleDocumentType(doc.code)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                    selected
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {lang === 'ar' ? doc.title : doc.titleEn}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {saveError && <p className="md:col-span-2 text-sm text-red-600">{saveError}</p>}
+        <div className="md:col-span-2 flex gap-2">
+          <Button type="submit">
+            {editId ? t('common.save', 'Save') : t('admin.requirements.saveReq', 'Save requirements')}
+          </Button>
+          {editId && (
+            <Button type="button" variant="outline" onClick={resetForm}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+          )}
+        </div>
       </form>
-      <DataTable data={items} columns={[
-        { key: 'grade', header: t('admin.gradeLevel', 'المرحلة الدراسية') as string, render: (r: { gradeLevel: string }) => <span className="font-semibold text-slate-900 dark:text-slate-100">{t(`grades.${r.gradeLevel}`, r.gradeLevel) as string}</span> },
-        { key: 'title', header: t('admin.title', 'العنوان') as string, render: (r: { title: string; titleAr?: string }) => <span className="text-slate-800 dark:text-slate-200">{lang === 'ar' && r.titleAr ? r.titleAr : r.title}</span> },
-        { key: 'actions', header: t('admin.actions', 'الإجراءات') as string, render: (r: { id: string }) => (
-          <Button variant="danger" className="py-1 px-3 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => requirementsApi.remove(r.id).then(() => qc.invalidateQueries({ queryKey: ['requirements'] }))}>{t('admin.delete', 'حذف')}</Button>
-        )},
-      ]} />
+
+      <AdminDataTable
+        isLoading={isLoading}
+        data={items}
+        emptyTitle={t('admin.requirements.empty', 'No admission requirements')}
+        emptyDescription={t('admin.requirements.emptyHint', 'Add grade-level requirements above.')}
+        columns={[
+          {
+            key: 'preview',
+            header: t('admin.gallery.cover', 'الصورة'),
+            align: 'center',
+            render: (r: { imageUrl?: string }) =>
+              r.imageUrl ? (
+                <img src={mediaUrl(r.imageUrl)} alt="Requirement" className="h-10 w-14 object-cover rounded-lg border mx-auto" />
+              ) : (
+                <span className="text-xs text-slate-400">—</span>
+              ),
+          },
+          {
+            key: 'grade',
+            header: t('admin.gradeLevel', 'Grade level'),
+            render: (r: { gradeLevel: string }) => (
+              <span className="font-semibold">{t(`grades.${r.gradeLevel}`, r.gradeLevel)}</span>
+            ),
+          },
+          {
+            key: 'title',
+            header: t('admin.title', 'Title'),
+            render: (r: { title: string; titleAr?: string }) =>
+              lang === 'ar' && r.titleAr ? r.titleAr : r.title,
+          },
+          {
+            key: 'age',
+            header: t('admin.requirements.ageRange', 'Age range'),
+            render: (r: { minAge?: number; maxAge?: number }) =>
+              `${r.minAge ?? 0}–${r.maxAge ?? 0} ${t('admissionsPage.years', 'years')}`,
+          },
+          {
+            key: 'docs',
+            header: t('admin.requirements.documentsList', 'Required documents'),
+            render: (r: { requiredDocumentTypes?: string[] }) => (
+              <span className="text-xs text-slate-600">
+                {(r.requiredDocumentTypes ?? [])
+                  .map((code) => getAdmissionDocumentMeta(code).titleEn)
+                  .join(', ') || '—'}
+              </span>
+            ),
+          },
+          {
+            key: 'actions',
+            header: t('common.actions', 'Actions'),
+            render: (r: {
+              id: string;
+              gradeLevel: string;
+              title: string;
+              titleAr?: string;
+              description?: string;
+              descriptionAr?: string;
+              imageUrl?: string;
+              minAge?: number;
+              maxAge?: number;
+              requiredDocumentTypes?: string[];
+              sortOrder?: number;
+            }) => (
+              <div className="flex gap-2">
+                <Button variant="outline" className="py-1 px-2.5 text-xs" onClick={() => startEdit(r)}>
+                  {t('common.edit', 'Edit')}
+                </Button>
+                <Button
+                  variant="danger"
+                  className="py-1 px-2.5 text-xs"
+                  onClick={() =>
+                    requirementsApi.remove(r.id).then(() => {
+                      qc.invalidateQueries({ queryKey: ['requirements'] });
+                      qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+                    })
+                  }
+                >
+                  {t('admin.delete', 'Delete')}
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -1433,7 +2117,7 @@ export function AdminInquiriesPage() {
   const [replyError, setReplyError] = useState<string | null>(null);
   const [replySuccess, setReplySuccess] = useState<string | null>(null);
 
-  const { data: inquiries = [] } = useQuery<ContactInquiry[]>({
+  const { data: inquiries = [], isLoading: inquiriesLoading } = useQuery<ContactInquiry[]>({
     queryKey: ['inquiries', statusFilter],
     queryFn: () =>
       contactApi
@@ -1520,6 +2204,17 @@ export function AdminInquiriesPage() {
     }
   };
 
+  const inquiryCounts = useMemo(() => {
+    const tally = { total: inquiries.length, new: 0, read: 0, replied: 0, archived: 0 };
+    for (const item of inquiries) {
+      if (item.status === 'NEW') tally.new += 1;
+      else if (item.status === 'READ') tally.read += 1;
+      else if (item.status === 'REPLIED') tally.replied += 1;
+      else if (item.status === 'ARCHIVED') tally.archived += 1;
+    }
+    return tally;
+  }, [inquiries]);
+
   const filteredInquiries = inquiries.filter((item) => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
@@ -1533,42 +2228,97 @@ export function AdminInquiriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <PageHeader title={t('admin.inquiries') || 'Contact Inquiries'} />
+      <PageHeader
+        title={t('admin.inquiries') || 'Contact Inquiries'}
+        subtitle={t('admin.inquiriesSubtitle', 'Review visitor messages and reply from the admin panel.')}
+      />
 
-        <div className="flex flex-wrap items-center gap-2">
-          {['ALL', 'NEW', 'READ', 'REPLIED', 'ARCHIVED'].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                statusFilter === st
-                  ? 'bg-navy-900 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {st === 'ALL'
-                ? t('admin.allStatuses') || 'All'
-                : t(`admin.status${st.charAt(0) + st.slice(1).toLowerCase()}`) || st}
-            </button>
-          ))}
-        </div>
-      </div>
+      <AdminOpsCounters
+        items={[
+          {
+            id: 'new',
+            label: t('admin.ops.needsResponse', 'Needs response'),
+            value: inquiryCounts.new,
+            highlight: inquiryCounts.new > 0,
+            onClick: () => setStatusFilter('NEW'),
+          },
+          {
+            id: 'read',
+            label: t('status.READ'),
+            value: inquiryCounts.read,
+            onClick: () => setStatusFilter('READ'),
+          },
+          {
+            id: 'replied',
+            label: t('status.REPLIED'),
+            value: inquiryCounts.replied,
+            onClick: () => setStatusFilter('REPLIED'),
+          },
+          {
+            id: 'total',
+            label: t('admin.inquiries') || 'Inquiries',
+            value: inquiryCounts.total,
+            onClick: () => setStatusFilter('ALL'),
+          },
+        ]}
+      />
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400 rtl:right-auto rtl:left-3" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder={t('admin.searchInquiries') || 'Search inquiries...'}
-          className="w-full pl-9 pr-9 py-2 text-sm border rounded-lg bg-white border-slate-200 focus:outline-none focus:ring-2 focus:ring-navy-500"
-        />
-      </div>
+      <AdminListToolbar
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder={t('admin.searchInquiries') || 'Search inquiries…'}
+        resultCount={filteredInquiries.length}
+        totalCount={inquiries.length}
+        filters={
+          <>
+            {(['ALL', 'NEW', 'READ', 'REPLIED', 'ARCHIVED'] as const).map((st) => (
+              <AdminStatusChip
+                key={st}
+                label={
+                  st === 'ALL'
+                    ? t('admin.allStatuses') || 'All'
+                    : t(`status.${st}`) || st
+                }
+                active={statusFilter === st}
+                onClick={() => setStatusFilter(st)}
+                count={
+                  st === 'ALL'
+                    ? inquiryCounts.total
+                    : st === 'NEW'
+                      ? inquiryCounts.new
+                      : st === 'READ'
+                        ? inquiryCounts.read
+                        : st === 'REPLIED'
+                          ? inquiryCounts.replied
+                          : inquiryCounts.archived
+                }
+                variant={st === 'NEW' ? 'warning' : 'default'}
+              />
+            ))}
+          </>
+        }
+      />
 
-      <DataTable
+      <AdminDataTable
+        isLoading={inquiriesLoading}
         data={filteredInquiries}
+        emptyTitle={t('admin.ops.noInquiries', 'No contact inquiries')}
+        emptyDescription={
+          inquiries.length === 0
+            ? t('admin.ops.noInquiriesHint', 'When visitors submit the contact form, inquiries will appear here.')
+            : t('admin.ops.noFilterResults', 'No items match your search or filter.')
+        }
+        emptyActionLabel={
+          inquiries.length > 0 ? t('admin.ops.clearFilters', 'Clear filters') : undefined
+        }
+        onEmptyAction={
+          inquiries.length > 0
+            ? () => {
+                setSearchTerm('');
+                setStatusFilter('ALL');
+              }
+            : undefined
+        }
         columns={[
           {
             key: 'name',
@@ -2147,6 +2897,7 @@ export function AdminUsersPage() {
 export function AdminRolesPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: roles = [] } = useQuery({ queryKey: ['roles'], queryFn: () => rolesApi.list().then((r) => r.data) });
   const { data: permissions = [] } = useQuery({ queryKey: ['all-permissions'], queryFn: () => rolesApi.permissions().then((r) => r.data) });
@@ -2156,69 +2907,11 @@ export function AdminRolesPage() {
   const [selectedRoleForMembers, setSelectedRoleForMembers] = useState<string>('all');
   const [searchMember, setSearchMember] = useState('');
 
-  // Modals state
-  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
-  const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
-  const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
-  const [newRoleForm, setNewRoleForm] = useState({ name: '', description: '' });
-  const [newRolePerms, setNewRolePerms] = useState<string[]>([]);
-  const [createRoleError, setCreateRoleError] = useState<string | null>(null);
-  const [savingPerms, setSavingPerms] = useState(false);
-
   // Quick User Creation Modal inside Roles Page
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [targetRoleIdForUser, setTargetRoleIdForUser] = useState<string>('');
   const [userForm, setUserForm] = useState({ fullName: '', email: '', password: '' });
   const [addUserError, setAddUserError] = useState<string | null>(null);
-
-  const startEdit = (role: { id: string; rolePermissions: Array<{ permission: { name: string } }> }) => {
-    setEditingRoleId(role.id);
-    setSelectedPerms(role.rolePermissions.map((rp) => rp.permission.name));
-  };
-
-  const togglePerm = (permName: string) => {
-    setSelectedPerms((prev) =>
-      prev.includes(permName) ? prev.filter((p) => p !== permName) : [...prev, permName]
-    );
-  };
-
-  const toggleNewRolePerm = (permName: string) => {
-    setNewRolePerms((prev) =>
-      prev.includes(permName) ? prev.filter((p) => p !== permName) : [...prev, permName]
-    );
-  };
-
-  const handleSavePerms = async (roleId: string) => {
-    setSavingPerms(true);
-    try {
-      await rolesApi.updatePermissions(roleId, selectedPerms);
-      setEditingRoleId(null);
-      qc.invalidateQueries({ queryKey: ['roles'] });
-    } catch (err: unknown) {
-      alert(getApiErrorMessage(err, t('common.errorSave', 'Failed to update permissions')));
-    } finally {
-      setSavingPerms(false);
-    }
-  };
-
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRoleForm.name) return;
-    setCreateRoleError(null);
-    try {
-      await rolesApi.create({
-        name: newRoleForm.name,
-        description: newRoleForm.description,
-        permissionNames: newRolePerms,
-      });
-      setShowCreateRoleModal(false);
-      setNewRoleForm({ name: '', description: '' });
-      setNewRolePerms([]);
-      qc.invalidateQueries({ queryKey: ['roles'] });
-    } catch (err: unknown) {
-      setCreateRoleError(getApiErrorMessage(err, t('common.errorSave', 'Failed to create role')));
-    }
-  };
 
   const handleDeleteRole = async (roleId: string, roleName: string) => {
     if (confirm(`${t('common.confirmDelete', 'Delete role')} "${roleName}"?`)) {
@@ -2266,15 +2959,15 @@ export function AdminRolesPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
         <div>
           <PageHeader title={t('admin.roles.title', 'Roles & Permissions')} />
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             {t('admin.roles.subtitle', 'Define custom roles and set fine-grained system permissions.')}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowCreateRoleModal(true)} variant="outline" className="shadow-2xs text-xs">
+          <Button onClick={() => navigate('/admin/roles/new')} className="shadow-sm text-xs">
             {t('admin.roles.addNew', '+ Add New Role')}
           </Button>
           <Button
@@ -2282,7 +2975,8 @@ export function AdminRolesPage() {
               setTargetRoleIdForUser(roles[0]?.id || '');
               setShowAddUserModal(true);
             }}
-            className="shadow-sm text-xs"
+            variant="outline"
+            className="shadow-2xs text-xs"
           >
             {t('admin.users.addNew', '+ Add New User')}
           </Button>
@@ -2291,34 +2985,34 @@ export function AdminRolesPage() {
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs text-slate-500 font-medium">{t('admin.roles.totalRoles', 'Total Roles')}</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{roles.length}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('admin.roles.totalRoles', 'Total Roles')}</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{roles.length}</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs text-slate-500 font-medium">{t('admin.users.activeUsers', 'Active Users')}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('admin.users.activeUsers', 'Active Users')}</div>
           <div className="text-2xl font-bold text-primary mt-1">{users.length}</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs text-slate-500 font-medium">{t('admin.roles.sysAdmins', 'System Administrators')}</div>
-          <div className="text-2xl font-bold text-purple-700 mt-1">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('admin.roles.sysAdmins', 'System Administrators')}</div>
+          <div className="text-2xl font-bold text-purple-700 dark:text-purple-400 mt-1">
             {users.filter((u: any) => u.role?.name === 'ADMIN').length}
           </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs text-slate-500 font-medium">{t('admin.roles.sysPerms', 'System Permissions')}</div>
-          <div className="text-2xl font-bold text-emerald-700 mt-1">{permissions.length}</div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('admin.roles.sysPerms', 'System Permissions')}</div>
+          <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">{permissions.length}</div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 bg-white px-4 pt-3 rounded-t-xl gap-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 rounded-t-xl gap-6">
         <button
           onClick={() => setActiveTab('matrix')}
           className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === 'matrix'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-primary text-primary dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400'
           }`}
         >
           🛡️ {t('admin.roles.title', 'Roles Matrix')}
@@ -2327,8 +3021,8 @@ export function AdminRolesPage() {
           onClick={() => setActiveTab('members')}
           className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === 'members'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-primary text-primary dark:text-blue-400'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400'
           }`}
         >
           👥 {t('admin.roles.usersAssigned', 'Users Assigned')} ({users.length})
@@ -2340,25 +3034,24 @@ export function AdminRolesPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {roles.map((role: any) => {
-              const isEditing = editingRoleId === role.id;
-              const roleMeta = ROLE_ARABIC_NAMES[role.name] || { ar: role.name, badge: 'bg-slate-100 text-slate-800 border-slate-200' };
+              const roleMeta = ROLE_ARABIC_NAMES[role.name] || { ar: role.name, badge: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700' };
               const isCoreRole = ['ADMIN', 'TEACHER', 'PARENT', 'APPLICANT', 'STUDENT', 'GUEST'].includes(role.name);
 
               return (
-                <div key={role.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs flex flex-col justify-between">
+                <div key={role.id} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-2xs flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg text-slate-900">{role.name}</h3>
+                          <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">{role.name}</h3>
                           <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${roleMeta.badge}`}>
                             {lang === 'ar' ? roleMeta.ar : role.name}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">{role.description || '—'}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{role.description || '—'}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border font-semibold">
+                        <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold">
                           👥 {role._count?.users ?? 0} {t('admin.navUsers', 'Users')}
                         </span>
                         {!isCoreRole && (
@@ -2375,57 +3068,31 @@ export function AdminRolesPage() {
                     </div>
 
                     {/* Permissions summary tag list */}
-                    {!isEditing ? (
-                      <div className="mt-3 pt-3 border-t border-slate-100">
-                        <div className="text-xs font-semibold text-slate-700 mb-2">
-                          {t('admin.roles.permissions', 'Permissions')} ({role.rolePermissions?.length || 0}):
-                        </div>
-                        <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto pr-1">
-                          {role.rolePermissions && role.rolePermissions.length > 0 ? (
-                            role.rolePermissions.map((rp: any) => (
-                              <span
-                                key={rp.permission?.name}
-                                className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded font-mono border border-primary/20"
-                              >
-                                {rp.permission?.name}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-slate-400 italic">بدون صلاحيات نظامية</span>
-                          )}
-                        </div>
+                    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        {t('admin.roles.permissions', 'Permissions')} ({role.rolePermissions?.length || 0}):
                       </div>
-                    ) : (
-                      /* Editing mode inside card */
-                      <div className="mt-3 pt-3 border-t border-slate-200 space-y-3 bg-slate-50 p-3 rounded-lg border">
-                        <div className="text-xs font-bold text-slate-800">اختر الصلاحيات لهذا الدور:</div>
-                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                          {permissions.map((p: any) => {
-                            const checked = selectedPerms.includes(p.name);
-                            return (
-                              <label key={p.name} className="flex items-start gap-2 text-xs cursor-pointer p-1.5 rounded hover:bg-white border border-transparent hover:border-slate-200">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => togglePerm(p.name)}
-                                  className="mt-0.5 rounded border-slate-300 text-primary focus:ring-primary"
-                                />
-                                <div>
-                                  <strong className="block text-slate-900">{p.name}</strong>
-                                  <span className="text-[10px] text-slate-500 block">{p.description}</span>
-                                </div>
-                              </label>
-                            );
-                          })}
-                        </div>
+                      <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto pr-1">
+                        {role.rolePermissions && role.rolePermissions.length > 0 ? (
+                          role.rolePermissions.map((rp: any) => (
+                            <span
+                              key={rp.permission?.name}
+                              className="text-[11px] bg-primary/10 dark:bg-blue-950/40 text-primary dark:text-blue-400 px-2 py-0.5 rounded font-mono border border-primary/20"
+                            >
+                              {rp.permission?.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">بدون صلاحيات نظامية</span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <div className="flex justify-between items-center pt-4 mt-4 border-t border-slate-100">
+                  <div className="flex justify-between items-center pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
                     <button
                       type="button"
-                      className="text-xs text-primary font-semibold hover:underline"
+                      className="text-xs text-primary dark:text-blue-400 font-semibold hover:underline"
                       onClick={() => {
                         setSelectedRoleForMembers(role.id);
                         setActiveTab('members');
@@ -2434,20 +3101,9 @@ export function AdminRolesPage() {
                       عرض الأعضاء ({role._count?.users ?? 0}) ➔
                     </button>
 
-                    {!isEditing ? (
-                      <Button variant="outline" className="py-1 px-3 text-xs" onClick={() => startEdit(role)}>
-                        تعديل الصلاحيات
-                      </Button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button variant="outline" className="py-1 px-3 text-xs" onClick={() => setEditingRoleId(null)}>
-                          إلغاء
-                        </Button>
-                        <Button className="py-1 px-3 text-xs" disabled={savingPerms} onClick={() => handleSavePerms(role.id)}>
-                          {savingPerms ? 'جاري الحفظ...' : 'حفظ الصلاحيات'}
-                        </Button>
-                      </div>
-                    )}
+                    <Button variant="outline" className="py-1 px-3 text-xs" onClick={() => navigate(`/admin/roles/${role.id}/edit`)}>
+                      {lang === 'ar' ? 'تعديل الصلاحيات والدور' : 'Edit Role & Permissions'}
+                    </Button>
                   </div>
                 </div>
               );
@@ -2569,62 +3225,6 @@ export function AdminRolesPage() {
         </div>
       )}
 
-      {/* Modal: Create New Role */}
-      <Modal open={showCreateRoleModal} onClose={() => setShowCreateRoleModal(false)} title="إضافة دور وظيفي جديد (Create New Role)" wide>
-        <form onSubmit={handleCreateRole} className="space-y-4">
-          <Input
-            label="اسم الدور الوظيفي (Role Name e.g. ASSISTANT_PRINCIPAL)"
-            value={newRoleForm.name}
-            onChange={(e) => setNewRoleForm({ ...newRoleForm, name: e.target.value })}
-            placeholder="مثال: CONTENT_MANAGER"
-            required
-          />
-          <Input
-            label="وصف الدور (Role Description)"
-            value={newRoleForm.description}
-            onChange={(e) => setNewRoleForm({ ...newRoleForm, description: e.target.value })}
-            placeholder="وصف مختصر لمسؤوليات هذا الدور"
-          />
-
-          <div className="space-y-3 border p-4 rounded-xl bg-slate-50/50">
-            <label className="block text-sm font-semibold text-slate-800">حدد صلاحيات الوصول المبدئية لهذا الدور:</label>
-
-            {Object.entries(PERMISSION_GROUPS).map(([key, group]) => (
-              <div key={key} className="space-y-2 border-t pt-2 first:border-t-0 first:pt-0">
-                <span className="text-xs font-bold text-primary block">{group.label}</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {group.permissions.map((permName) => {
-                    const checked = newRolePerms.includes(permName);
-                    return (
-                      <label key={permName} className="flex items-center gap-2 text-xs cursor-pointer p-1.5 rounded bg-white border border-slate-200 hover:border-primary">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleNewRolePerm(permName)}
-                          className="rounded border-slate-300 text-primary focus:ring-primary"
-                        />
-                        <span className="font-mono text-[11px] text-slate-800">{permName}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {createRoleError && (
-            <p className="text-sm text-red-600 bg-red-50 p-2.5 rounded border border-red-200">{createRoleError}</p>
-          )}
-
-          <div className="flex justify-end gap-2 pt-3 border-t">
-            <Button type="button" variant="outline" onClick={() => setShowCreateRoleModal(false)}>
-              إلغاء
-            </Button>
-            <Button type="submit">حفظ الدور الجديد</Button>
-          </div>
-        </form>
-      </Modal>
-
       {/* Modal: Add User to Role */}
       <Modal open={showAddUserModal} onClose={() => setShowAddUserModal(false)} title="إضافة مستخدم جديد وتعيين دوره الوظيفي">
         <form onSubmit={handleAddUserToRole} className="space-y-4">
@@ -2660,37 +3260,163 @@ export function AdminRolesPage() {
 
 export function AdminEmailPage() {
   const qc = useQueryClient();
-  const { data: templates = [] } = useQuery({ queryKey: ['email-templates'], queryFn: () => emailApi.templates().then((r) => r.data) });
-  const { data: logs = [] } = useQuery({ queryKey: ['email-logs'], queryFn: () => emailApi.logs().then((r) => r.data) });
+  const { t } = useTranslation();
+  const lang = useAppLanguage();
   const [form, setForm] = useState({ key: '', subject: '', body: '' });
+  const [editId, setEditId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'templates' | 'logs'>('templates');
+
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['email-templates'],
+    queryFn: () => emailApi.templates().then((r) => r.data),
+  });
+  const { data: logs = [], isLoading: logsLoading } = useQuery({
+    queryKey: ['email-logs'],
+    queryFn: () => emailApi.logs().then((r) => r.data),
+  });
+
+  const resetForm = () => {
+    setEditId(null);
+    setForm({ key: '', subject: '', body: '' });
+    setSaveError(null);
+  };
+
+  const handleSaveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError(null);
+    try {
+      if (editId) {
+        await emailApi.updateTemplate(editId, { subject: form.subject, body: form.body });
+      } else {
+        await emailApi.createTemplate(form);
+      }
+      resetForm();
+      qc.invalidateQueries({ queryKey: ['email-templates'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    } catch (err) {
+      setSaveError(getApiErrorMessage(err, t('common.errorSave', 'Failed to save template')));
+    }
+  };
+
+  const startEdit = (row: { id: string; key: string; subject: string; body: string }) => {
+    setEditId(row.id);
+    setForm({ key: row.key, subject: row.subject, body: row.body });
+    setSaveError(null);
+  };
+
   return (
-    <div>
-      <PageHeader title="Email Templates & Logs" />
-      <form className="space-y-3 mb-8 max-w-xl" onSubmit={(e) => { e.preventDefault(); emailApi.createTemplate(form).then(() => qc.invalidateQueries({ queryKey: ['email-templates'] })); }}>
-        <Input label="Key" value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} />
-        <Input label="Subject" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-        <Textarea label="Body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
-        <Button type="submit">Create Template</Button>
-      </form>
-      <DataTable data={templates} columns={[
-        { key: 'key', header: 'Key', render: (r: { key: string }) => r.key },
-        { key: 'subject', header: 'Subject', render: (r: { subject: string }) => r.subject },
-      ]} />
-      <h3 className="font-semibold mt-8 mb-4">Delivery Logs</h3>
-      <DataTable data={logs} columns={[
-        { key: 'recipient', header: 'To', render: (r: { recipient: string }) => r.recipient },
-        { key: 'subject', header: 'Subject', render: (r: { subject: string }) => r.subject },
-        { key: 'status', header: 'Status', render: (r: { status: string }) => <StatusBadge status={r.status} /> },
-        {
-          key: 'errorMessage',
-          header: 'Details',
-          render: (r: { errorMessage?: string | null; createdAt?: string }) => (
-            <span className="text-xs text-slate-600">
-              {r.errorMessage || (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—')}
-            </span>
-          ),
-        },
-      ]} />
+    <div className="space-y-6">
+      <PageHeader
+        title={t('admin.email.title', 'Email Templates & System Logs')}
+        subtitle={t('admin.email.subtitle', 'Manage notification templates and track email delivery status.')}
+      />
+
+      <div className="flex gap-2 border-b border-slate-200 pb-2">
+        {(['templates', 'logs'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm font-medium rounded-lg ${
+              activeTab === tab ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {tab === 'templates' ? t('admin.email.templates', 'Email templates') : t('admin.email.logs', 'Delivery logs')}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'templates' && (
+        <>
+          <form className="space-y-3 max-w-2xl bg-white p-5 rounded-xl border border-slate-200" onSubmit={handleSaveTemplate}>
+            <Input
+              label={t('admin.email.key', 'Template key')}
+              value={form.key}
+              onChange={(e) => setForm({ ...form, key: e.target.value })}
+              disabled={!!editId}
+              required={!editId}
+            />
+            <Input
+              label={t('admin.email.subject', 'Subject')}
+              value={form.subject}
+              onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              required
+            />
+            <Textarea
+              label={t('admin.email.body', 'Email body')}
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              rows={6}
+              required
+            />
+            {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+            <div className="flex gap-2">
+              <Button type="submit">{editId ? t('common.save', 'Save') : t('admin.email.createTemplate', 'Create template')}</Button>
+              {editId && (
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  {t('common.cancel', 'Cancel')}
+                </Button>
+              )}
+            </div>
+          </form>
+
+          <AdminDataTable
+            isLoading={templatesLoading}
+            data={templates}
+            emptyTitle={t('admin.email.noTemplates', 'No email templates')}
+            columns={[
+              { key: 'key', header: t('admin.email.key', 'Key'), render: (r: { key: string }) => <code className="text-xs">{r.key}</code> },
+              { key: 'subject', header: t('admin.email.subject', 'Subject'), render: (r: { subject: string }) => r.subject },
+              {
+                key: 'actions',
+                header: t('common.actions', 'Actions'),
+                render: (r: { id: string; key: string; subject: string; body: string }) => (
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="py-1 px-2.5 text-xs" onClick={() => startEdit(r)}>
+                      {t('common.edit', 'Edit')}
+                    </Button>
+                    <Button
+                      variant="danger"
+                      className="py-1 px-2.5 text-xs"
+                      onClick={() =>
+                        emailApi.deleteTemplate(r.id).then(() => {
+                          qc.invalidateQueries({ queryKey: ['email-templates'] });
+                          if (editId === r.id) resetForm();
+                        })
+                      }
+                    >
+                      {t('admin.delete', 'Delete')}
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </>
+      )}
+
+      {activeTab === 'logs' && (
+        <AdminDataTable
+          isLoading={logsLoading}
+          data={logs}
+          emptyTitle={t('admin.email.noLogs', 'No delivery logs')}
+          columns={[
+            { key: 'recipient', header: t('admin.email.recipient', 'To'), render: (r: { recipient: string }) => r.recipient },
+            { key: 'subject', header: t('admin.email.subject', 'Subject'), render: (r: { subject: string }) => r.subject },
+            { key: 'status', header: t('common.status', 'Status'), render: (r: { status: string }) => <StatusBadge status={r.status} /> },
+            {
+              key: 'errorMessage',
+              header: t('admin.email.details', 'Details'),
+              render: (r: { errorMessage?: string | null; createdAt?: string }) => (
+                <span className="text-xs text-slate-600">
+                  {r.errorMessage || (r.createdAt ? formatDate(r.createdAt, lang) : '—')}
+                </span>
+              ),
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }

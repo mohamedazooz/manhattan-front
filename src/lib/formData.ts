@@ -38,10 +38,18 @@ export function buildFormData(
 
 export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (error as { response?: { data?: { message?: string | string[] } } }).response;
+    const response = (error as {
+      response?: { data?: { message?: string | string[]; errors?: Record<string, string[]> } };
+    }).response;
     const message = response?.data?.message;
     if (Array.isArray(message)) return message.join(', ');
     if (typeof message === 'string' && message.length > 0) return message;
+
+    const errors = response?.data?.errors;
+    if (errors && typeof errors === 'object') {
+      const flat = Object.values(errors).flat().filter(Boolean);
+      if (flat.length > 0) return flat.join(', ');
+    }
   }
   return fallback;
 }

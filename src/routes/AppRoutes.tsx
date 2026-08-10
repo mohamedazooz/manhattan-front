@@ -56,11 +56,12 @@ const NotificationsAdminPage = lazy(() => import('../pages/admin/NotificationsAd
 const AdminEducationPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminEducationPage })));
 const AdminGalleryPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminGalleryPage })));
 const AdminBlogPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminBlogPage })));
-const AdminAdmissionsPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminAdmissionsPage })));
+const AdminAdmissionsPage = lazy(() => import('../pages/admin/AdminAdmissionsPage').then((m) => ({ default: m.AdminAdmissionsPage })));
 const AdminRequirementsPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminRequirementsPage })));
 const AdminInquiriesPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminInquiriesPage })));
 const AdminUsersPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminUsersPage })));
 const AdminRolesPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminRolesPage })));
+const AdminRoleFormPage = lazy(() => import('../pages/admin/AdminRoleFormPage').then((m) => ({ default: m.AdminRoleFormPage })));
 const AdminEmailPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminEmailPage })));
 
 const AdminCareersPage = lazy(() => import('../pages/admin/AdminCareersPage').then((m) => ({ default: m.AdminCareersPage })));
@@ -77,7 +78,7 @@ const PageSpinner = () => (
 );
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+  defaultOptions: { queries: { retry: 1, staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false } },
 });
 
 export function AppRoutes() {
@@ -105,6 +106,8 @@ export function AppRoutes() {
                 <Route path="contact" element={<ContactPage />} />
                 <Route path="parents/policies" element={<StaticParentPage />} />
                 <Route path="parents/forms" element={<FormsAndDocumentsPage />} />
+                <Route path="page/:slug" element={<StaticParentPage />} />
+                <Route path="pages/:slug" element={<StaticParentPage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="register" element={<Navigate to="/register/parent" replace />} />
@@ -167,6 +170,8 @@ export function AppRoutes() {
                   </Route>
                   <Route element={<ProtectedRoute permission="MANAGE_ROLES" />}>
                     <Route path="roles" element={<AdminRolesPage />} />
+                    <Route path="roles/new" element={<AdminRoleFormPage />} />
+                    <Route path="roles/:id/edit" element={<AdminRoleFormPage />} />
                     <Route path="audit" element={<AuditLogPage />} />
                   </Route>
                   <Route element={<ProtectedRoute permission="MANAGE_EMAIL_TEMPLATES" />}>

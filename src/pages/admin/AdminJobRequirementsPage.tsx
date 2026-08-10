@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { jobRequirementsApi } from '../../api';
+import { jobRequirementsApi, storageApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { DataTable } from '../../components/ui/DataTable';
@@ -10,6 +10,7 @@ import { useAppLanguage } from '../../i18n';
 import { HIRING_DOCUMENTS } from '../../constants/hiringDocuments';
 import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { JobRequirementsLivePreview } from '../../components/admin/JobRequirementsLivePreview';
+import { mediaUrl } from '../../lib/utils';
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'] as const;
 
@@ -47,11 +48,13 @@ export function AdminJobRequirementsPage() {
   const lang = useAppLanguage();
   const isAr = lang === 'ar';
   const qc = useQueryClient();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     title: '',
     titleAr: '',
     description: '',
     descriptionAr: '',
+    imageUrl: '',
     employmentType: 'FULL_TIME',
     requiredDocumentTypes: [] as string[],
     minYearsExperience: 0,
@@ -86,20 +89,30 @@ export function AdminJobRequirementsPage() {
       <div className="grid lg:grid-cols-2 gap-6 items-start">
         <form
           className="space-y-5 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             if (!canSubmit) return;
+
+            let imageUrl = form.imageUrl;
+            if (selectedFile) {
+              const res = await storageApi.upload(selectedFile, 'job-requirements');
+              imageUrl = res.data.url;
+            }
+
             jobRequirementsApi
               .create({
                 ...form,
+                imageUrl,
                 minYearsExperience: form.minYearsExperience || undefined,
               })
               .then(() => {
+                setSelectedFile(null);
                 setForm({
                   title: '',
                   titleAr: '',
                   description: '',
                   descriptionAr: '',
+                  imageUrl: '',
                   employmentType: 'FULL_TIME',
                   requiredDocumentTypes: [],
                   minYearsExperience: 0,
@@ -204,6 +217,32 @@ export function AdminJobRequirementsPage() {
             </div>
           </div>
 
+          <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              🖼️ {isAr ? 'صورة توضيحية للشرط (اختياري)' : 'Requirement Banner Image (Optional)'}
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                className="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              />
+              {form.imageUrl && (
+                <div className="relative group">
+                  <img src={mediaUrl(form.imageUrl)} alt="Preview" className="h-10 w-14 object-cover rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, imageUrl: '' })}
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full h-4 w-4 text-[10px] flex items-center justify-center shadow-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Button type="submit" disabled={!canSubmit}>
               {t('admin.addRequirement')}
@@ -227,6 +266,17 @@ export function AdminJobRequirementsPage() {
       <DataTable
         data={items}
         columns={[
+          {
+            key: 'preview',
+            header: isAr ? 'الصورة' : 'Image',
+            align: 'center',
+            render: (r: { imageUrl?: string }) =>
+              r.imageUrl ? (
+                <img src={mediaUrl(r.imageUrl)} alt="Requirement" className="h-10 w-14 object-cover rounded-lg border mx-auto" />
+              ) : (
+                <span className="text-xs text-slate-400">—</span>
+              ),
+          },
           {
             key: 'title',
             header: t('admin.title') as string,

@@ -2,8 +2,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-ARG VITE_API_URL=http://localhost:3001/api
+ARG VITE_API_URL=http://localhost:8000/api
+ARG VITE_UPLOAD_URL=http://localhost:8000
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_UPLOAD_URL=$VITE_UPLOAD_URL
 
 COPY package.json package-lock.json* ./
 RUN npm ci

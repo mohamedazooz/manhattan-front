@@ -9,6 +9,12 @@ export function mediaUrl(path?: string | null): string {
   if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
     return cleanPath;
   }
+
+  // Laravel local storage: /storage/uploads/... (served from APP_URL)
+  if (cleanPath.startsWith('/storage/') || cleanPath.startsWith('storage/')) {
+    const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    return `${UPLOAD_URL}${normalized}`;
+  }
   if (
     cleanPath.startsWith('/photos/') ||
     cleanPath.startsWith('photos/') ||

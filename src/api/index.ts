@@ -27,7 +27,7 @@ export const authApi = {
 
 export const landingApi = {
   get: (lang: string) =>
-    api.get<{ hero: LandingHero | null; sections: LandingSection[]; announcements: string }>(
+    api.get<{ hero: LandingHero | null; heroes?: LandingHero[]; sections: LandingSection[]; announcements: string }>(
       '/landing',
       { params: { lang: langParam(lang) } },
     ),
@@ -90,6 +90,7 @@ export const educationApi = {
     api.get<EducationProgram>(`/education/programs/${slug}`, {
       params: { lang: langParam(lang) },
     }),
+  getById: (id: string) => api.get<EducationProgram>(`/education/${id}`),
   admin: () => api.get<EducationProgram[]>('/education/admin'),
   create: (data: object) => api.post('/education', data),
   update: (id: string, data: object) => api.patch(`/education/${id}`, data),
@@ -105,6 +106,7 @@ export const galleryApi = {
   update: (id: string, form: FormData) => api.patch(`/gallery/${id}`, form),
   updateStatus: (id: string, status: string) =>
     api.patch(`/gallery/${id}/status`, { status }),
+  delete: (id: string) => api.delete(`/gallery/${id}`),
 };
 
 export const blogApi = {
@@ -112,7 +114,11 @@ export const blogApi = {
     api.get<BlogPost[]>('/posts', { params: { lang: langParam(lang), categoryId } }),
   get: (slug: string, lang: string) =>
     api.get<BlogPost>(`/posts/${slug}`, { params: { lang: langParam(lang) } }),
-  admin: () => api.get<BlogPost[]>('/posts/admin'),
+  admin: () => api.get<BlogPost[] | { data: BlogPost[] }>('/posts/admin'),
+  getById: (id: string) => api.get<BlogPost>(`/posts/${id}`),
+  getPost(id: string) {
+    return this.getById(id);
+  },
   create: (data: object) => api.post('/posts', data),
   update: (id: string, data: object) => api.patch(`/posts/${id}`, data),
   updateStatus: (id: string, status: string) => api.patch(`/posts/${id}/status`, { status }),
@@ -232,9 +238,12 @@ export const usersApi = {
 
 export const rolesApi = {
   list: () => api.get('/roles'),
+  get: (id: string) => api.get(`/roles/${id}`),
   permissions: () => api.get('/roles/permissions'),
   create: (data: { name: string; description?: string; permissionNames?: string[] }) =>
     api.post('/roles', data),
+  update: (id: string, data: { name?: string; description?: string; permissionNames?: string[] }) =>
+    api.patch(`/roles/${id}`, data),
   updatePermissions: (id: string, permissionNames: string[]) =>
     api.patch(`/roles/${id}/permissions`, { permissionNames }),
   updateDescription: (id: string, description: string) =>
@@ -248,6 +257,10 @@ export const emailApi = {
   updateTemplate: (id: string, data: object) => api.patch(`/email/templates/${id}`, data),
   deleteTemplate: (id: string) => api.delete(`/email/templates/${id}`),
   logs: () => api.get('/email/logs'),
+};
+
+export const healthApi = {
+  ping: () => api.get<{ status: string; service?: string }>('/health'),
 };
 
 export const dashboardApi = {

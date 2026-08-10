@@ -23,8 +23,7 @@ Backend API: http://localhost:3000/api
 ## Admin Login
 
 - URL: `/admin/login`
-- Email: `admin@manhattanschool.net`
-- Password: `Admin123456!`
+- Credentials: Set via `ADMIN_EMAIL` and `ADMIN_PASSWORD` environment variables in backend `.env` during seeding.
 
 ## Routes (42 total)
 

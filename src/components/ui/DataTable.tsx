@@ -11,6 +11,7 @@ export function DataTable({
   columns: Array<{
     key: string;
     header: string;
+    align?: 'start' | 'center' | 'end';
     render: (row: AnyRow) => React.ReactNode;
   }>;
   data: AnyRow[];
@@ -25,24 +26,49 @@ export function DataTable({
       <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-800 text-sm">
         <thead className="bg-neutral-light dark:bg-slate-800/90">
           <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className="px-4 py-3 text-left font-semibold text-neutral-dark dark:text-slate-100 whitespace-nowrap"
-              >
-                {col.header}
-              </th>
-            ))}
+            {columns.map((col) => {
+              const alignClass =
+                col.align === 'center'
+                  ? 'text-center'
+                  : col.align === 'end'
+                    ? 'text-end'
+                    : 'text-start';
+              return (
+                <th
+                  key={col.key}
+                  className={cn(
+                    'px-4 py-3 font-semibold text-neutral-dark dark:text-slate-100 whitespace-nowrap',
+                    alignClass,
+                  )}
+                >
+                  {col.header}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 text-neutral-dark dark:text-slate-200">
           {data.map((row: AnyRow) => (
             <tr key={row.id} className="hover:bg-neutral-light/50 dark:hover:bg-slate-800/50 transition-colors">
-              {columns.map((col) => (
-                <td key={col.key} className="px-4 py-3 align-middle text-neutral-dark dark:text-slate-200">
-                  {col.render(row)}
-                </td>
-              ))}
+              {columns.map((col) => {
+                const alignClass =
+                  col.align === 'center'
+                    ? 'text-center'
+                    : col.align === 'end'
+                      ? 'text-end'
+                      : 'text-start';
+                return (
+                  <td
+                    key={col.key}
+                    className={cn(
+                      'px-4 py-3 align-middle text-neutral-dark dark:text-slate-200',
+                      alignClass,
+                    )}
+                  >
+                    {col.render(row)}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

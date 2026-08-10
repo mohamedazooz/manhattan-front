@@ -41,7 +41,7 @@ export function AcademicsPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <Link to={`/academics/${p.slug}`}>
+              <Link to={`/academics/${p.slug || p.id}`}>
                 <Card className="h-full hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                   <div>
                     {p.coverImageUrl && (
@@ -65,8 +65,8 @@ export function AcademicsPage() {
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-primary dark:text-blue-400">
-                    <span>{t('academics.exploreProgram')}</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <span>{t('academics.exploreProgram', 'Explore Program')}</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
                   </div>
                 </Card>
               </Link>

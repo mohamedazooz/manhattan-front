@@ -20,27 +20,24 @@ export interface HeroData {
 
 interface HeroSlideshowProps {
   cmsHero?: HeroData;
+  cmsHeroes?: HeroData[];
 }
 
-export function HeroSlideshow({ cmsHero }: HeroSlideshowProps) {
+export function HeroSlideshow({ cmsHero, cmsHeroes }: HeroSlideshowProps) {
   const { t } = useTranslation();
   const lang = useAppLanguage();
   const isRtl = lang === 'ar';
 
-  const heroTitle = getBilingualText(cmsHero, 'title', lang);
-  const heroSubtitle = getBilingualText(cmsHero, 'subtitle', lang);
-  const heroCtaText = getBilingualText(cmsHero, 'ctaText', lang);
+  const activeHeroes = cmsHeroes && cmsHeroes.length > 0 ? cmsHeroes : cmsHero ? [cmsHero] : [];
 
   const defaultSlides = [
     {
       id: 'slide-1',
-      title: heroTitle || t('hero.slide1.title'),
-      subtitle: heroSubtitle || t('hero.slide1.subtitle'),
-      image: cmsHero?.imageUrl
-        ? mediaUrl(cmsHero.imageUrl)
-        : '/photos/hero1.jpeg',
-      ctaText: heroCtaText || t('nav.login'),
-      ctaLink: cmsHero?.ctaLink || '/login',
+      title: t('hero.slide1.title'),
+      subtitle: t('hero.slide1.subtitle'),
+      image: '/photos/hero1.jpeg',
+      ctaText: t('nav.login'),
+      ctaLink: '/login',
       secondaryCtaText: t('nav.careers'),
       secondaryCtaLink: '/careers',
     },
@@ -76,18 +73,36 @@ export function HeroSlideshow({ cmsHero }: HeroSlideshowProps) {
     },
   ];
 
+  const slides = activeHeroes.length > 0
+    ? activeHeroes.map((h, i) => {
+        const title = getBilingualText(h, 'title', lang);
+        const subtitle = getBilingualText(h, 'subtitle', lang);
+        const ctaText = getBilingualText(h, 'ctaText', lang);
+        return {
+          id: `cms-slide-${i}`,
+          title: title || t('hero.slide1.title'),
+          subtitle: subtitle || t('hero.slide1.subtitle'),
+          image: h.imageUrl ? mediaUrl(h.imageUrl) : `/photos/hero${(i % 4) + 1}.jpeg`,
+          ctaText: ctaText || t('nav.login'),
+          ctaLink: h.ctaLink || '/login',
+          secondaryCtaText: t('nav.careers'),
+          secondaryCtaLink: '/careers',
+        };
+      })
+    : defaultSlides;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<number>(1);
 
   const nextSlide = useCallback(() => {
     setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % defaultSlides.length);
-  }, [defaultSlides.length]);
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
+  }, [slides.length]);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + defaultSlides.length) % defaultSlides.length);
-  }, [defaultSlides.length]);
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -125,7 +140,7 @@ export function HeroSlideshow({ cmsHero }: HeroSlideshowProps) {
     }),
   };
 
-  const currentSlide = defaultSlides[currentIndex];
+  const currentSlide = slides[currentIndex];
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-slate-950 text-white overflow-hidden select-none">
@@ -216,7 +231,7 @@ export function HeroSlideshow({ cmsHero }: HeroSlideshowProps) {
 
       {/* Pagination Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-        {defaultSlides.map((slide, idx) => (
+        {slides.map((slide, idx) => (
           <button
             key={slide.id}
             onClick={() => {

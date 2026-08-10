@@ -21,7 +21,7 @@ const DOC_LABELS: Record<string, { en: string; ar: string }> = {
   PASSPORT: { en: 'Student Passport', ar: 'جواز سفر الطالب' },
 };
 
-import { getBilingualText } from '../../lib/utils';
+import { getBilingualText, mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 
 export function AdmissionsPage() {
@@ -58,7 +58,12 @@ export function AdmissionsPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
               >
-                <Card className="h-full space-y-4 hover:shadow-lg transition-shadow">
+                <Card className="h-full space-y-4 hover:shadow-lg transition-shadow overflow-hidden">
+                  {req.imageUrl && (
+                    <div className="-mx-6 -mt-6 mb-2 h-44 overflow-hidden border-b border-slate-100 dark:border-slate-800">
+                      <img src={mediaUrl(req.imageUrl)} alt={cardTitle} className="w-full h-full object-cover" />
+                    </div>
+                  )}
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-xs font-bold text-primary dark:text-blue-400 bg-primary-light dark:bg-slate-800 px-3 py-1 rounded-md">

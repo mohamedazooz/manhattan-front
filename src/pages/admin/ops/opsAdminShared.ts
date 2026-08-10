@@ -1,23 +1,10 @@
-export const LOCAL_PHOTOS = [
-  '/photos/photo1.jpeg',
-  '/photos/photo2.jpeg',
-  '/photos/photo3.jpeg',
-  '/photos/photo4.jpeg',
-  '/photos/photo5.jpeg',
-  '/photos/photo6.jpeg',
-  '/photos/photo7.jpeg',
-  '/photos/photo8.jpeg',
-  '/photos/photo9.jpeg',
-  '/photos/photo10.jpeg',
-  '/photos/hero1.jpeg',
-  '/photos/hero2.jpeg',
-  '/photos/hero3.jpeg',
-  '/photos/hero4.jpeg',
-];
-
-export const PERMISSION_GROUPS: Record<string, { label: string; permissions: string[] }> = {
+export const PERMISSION_GROUPS: Record<
+  string,
+  { labelEn: string; labelAr: string; permissions: string[] }
+> = {
   content: {
-    label: 'إدارة المحتوى والمقالات والميديا',
+    labelEn: 'Content, blog & media',
+    labelAr: 'إدارة المحتوى والمقالات والميديا',
     permissions: [
       'CREATE_BLOG',
       'UPDATE_BLOG',
@@ -29,7 +16,8 @@ export const PERMISSION_GROUPS: Record<string, { label: string; permissions: str
     ],
   },
   admissions: {
-    label: 'طلبات القبول والتسجيل والطلاب',
+    labelEn: 'Admissions & enrollment',
+    labelAr: 'طلبات القبول والتسجيل والطلاب',
     permissions: [
       'VIEW_ALL_ADMISSIONS',
       'UPDATE_ADMISSION_STATUS',
@@ -40,11 +28,13 @@ export const PERMISSION_GROUPS: Record<string, { label: string; permissions: str
     ],
   },
   users: {
-    label: 'إدارة المستخدمين والأدوار والأمان',
+    labelEn: 'Users, roles & security',
+    labelAr: 'إدارة المستخدمين والأدوار والأمان',
     permissions: ['MANAGE_USERS', 'MANAGE_ROLES'],
   },
   careers: {
-    label: 'الوظائف والتوظيف والتقديمات',
+    labelEn: 'Careers & hiring',
+    labelAr: 'الوظائف والتوظيف والتقديمات',
     permissions: [
       'MANAGE_JOBS',
       'VIEW_APPLICATIONS',
@@ -53,7 +43,8 @@ export const PERMISSION_GROUPS: Record<string, { label: string; permissions: str
     ],
   },
   system: {
-    label: 'إعدادات النظام والرسائل والتنبيهات',
+    labelEn: 'System settings & notifications',
+    labelAr: 'إعدادات النظام والرسائل والتنبيهات',
     permissions: [
       'UPDATE_SYSTEM_CONFIG',
       'VIEW_DASHBOARD',

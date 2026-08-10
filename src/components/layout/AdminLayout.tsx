@@ -5,6 +5,7 @@ import { useTheme } from '../../lib/theme';
 import { PermissionGuard } from '../auth/ProtectedRoute';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AdminNotificationBell } from './AdminNotificationBell';
+import { AdminApiStatusBanner } from '../admin/AdminApiStatusBanner';
 import { cn } from '../../lib/utils';
 import {
   LayoutDashboard,
@@ -263,6 +264,7 @@ export function AdminLayout() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 lg:p-8 w-full max-w-none overflow-x-hidden">
+          <AdminApiStatusBanner />
           <Outlet />
         </main>
       </div>

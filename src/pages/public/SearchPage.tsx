@@ -28,11 +28,15 @@ export function SearchPage() {
         ...programs
           .map((p) => ({ ...p, localizedTitle: getBilingualText(p, 'title', lang) }))
           .filter((p) => p.localizedTitle.toLowerCase().includes(query))
-          .map((p) => ({ type: t('search.typeProgram'), title: p.localizedTitle, link: `/academics/${p.slug}` })),
+          .map((p) => ({ type: t('search.typeProgram'), title: p.localizedTitle, link: `/academics/${p.slug || p.id}` })),
         ...pages
           .map((p) => ({ ...p, localizedTitle: getBilingualText(p, 'title', lang) }))
           .filter((p) => p.localizedTitle.toLowerCase().includes(query) && p.slug !== 'academic-calendar')
-          .map((p) => ({ type: t('search.typePage'), title: p.localizedTitle, link: `/parents/${p.slug === 'school-policies' ? 'policies' : 'forms'}` })),
+          .map((p) => ({
+            type: t('search.typePage'),
+            title: p.localizedTitle,
+            link: p.slug === 'school-policies' ? '/parents/policies' : p.slug === 'forms-documents' ? '/parents/forms' : `/page/${p.slug}`,
+          })),
       ]
     : [];
 

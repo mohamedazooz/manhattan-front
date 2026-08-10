@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom';
-import { AdminAdmissionDetailPage, AdminJobApplicationsPage } from './OpsAdminPages';
+import { Navigate, useParams } from 'react-router-dom';
+import { AdminAdmissionDetailPage } from './OpsAdminPages';
 
 export function AdminAdmissionDetailRoute() {
   const { id } = useParams<{ id: string }>();
@@ -10,5 +10,5 @@ export function AdminAdmissionDetailRoute() {
 export function AdminJobApplicationsRoute() {
   const { id } = useParams<{ id: string }>();
   if (!id) return null;
-  return <AdminJobApplicationsPage jobId={id} />;
+  return <Navigate to={`/admin/careers?jobId=${encodeURIComponent(id)}`} replace />;
 }

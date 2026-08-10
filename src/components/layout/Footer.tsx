@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { MapPin, Phone, Mail, Clock, Send, Check } from 'lucide-react';
-import { cmsApi, newsletterApi } from '../../api';
-import { mediaUrl } from '../../lib/utils';
+import { cmsApi, newsletterApi, pagesApi } from '../../api';
+import { mediaUrl, getBilingualText } from '../../lib/utils';
+import { useAppLanguage } from '../../i18n';
 
 export function Footer() {
   const { t } = useTranslation();
+  const lang = useAppLanguage();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [subscribeError, setSubscribeError] = useState<string | null>(null);
@@ -15,6 +17,11 @@ export function Footer() {
   const { data: config = {} } = useQuery({
     queryKey: ['cms-config'],
     queryFn: () => cmsApi.getConfig().then((r) => r.data),
+  });
+
+  const { data: staticPages = [] } = useQuery({
+    queryKey: ['public-pages', lang],
+    queryFn: () => pagesApi.list(lang).then((r) => r.data),
   });
 
   const subscribeMutation = useMutation({
@@ -186,6 +193,15 @@ export function Footer() {
                 {t('footer.policies')}
               </Link>
             </li>
+            {staticPages
+              .filter((p: any) => p.slug !== 'school-policies' && p.slug !== 'forms-documents')
+              .map((p: any) => (
+                <li key={p.id || p.slug}>
+                  <Link to={`/page/${p.slug}`} className="hover:text-white transition-colors duration-150">
+                    {getBilingualText(p, 'title', lang)}
+                  </Link>
+                </li>
+              ))}
             <li>
               <Link to="/careers" className="hover:text-white transition-colors duration-150">
                 {t('nav.careers', 'الوظائف المتاحة')}
