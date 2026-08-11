@@ -15,8 +15,7 @@ import { mediaUrl, formatDate } from '../../lib/utils';
 import { getApiErrorMessage, omitKeys } from '../../lib/formData';
 import { AdmissionStatusSelect } from '../../components/admin/AdmissionStatusSelect';
 import { useAppLanguage } from '../../i18n';
-import { Upload, Eye, Mail, Send, Phone, User, Clock, MessageSquare, ExternalLink, CheckCircle, Edit, Trash2, FolderOpen } from 'lucide-react';
-import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
+import { Upload, Eye, Mail, Send, Phone, User, Clock, MessageSquare, ExternalLink, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { HiringDocumentsSection } from '../../components/careers/HiringDocumentsSection';
 import { getAdmissionDocumentMeta, REQUIRED_DOCUMENTS_LIST } from '../portal/parent/admissionWizardConstants';
 import { ROLE_ARABIC_NAMES } from './ops/opsAdminShared';
@@ -41,7 +40,6 @@ export function AdminEducationPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [openPicker, setOpenPicker] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const { data: programs = [] } = useQuery({
@@ -251,37 +249,15 @@ export function AdminEducationPage() {
                     }
                   }}
                 />
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-white shadow-2xs"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{t('admin.education.uploadFromPc', 'Upload Image from Computer')}</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="gold"
-                    className="text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold shadow-2xs"
-                    onClick={() => setOpenPicker(true)}
-                  >
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    <span>مكتبة الصور (GCS)</span>
-                  </Button>
-                </div>
-
-                <MediaPickerModal
-                  open={openPicker}
-                  onClose={() => setOpenPicker(false)}
-                  defaultFolder="education"
-                  onSelect={(url) => {
-                    setForm((prev) => ({ ...prev, coverImageUrl: url }));
-                    setPreviewUrl(null);
-                    setSelectedFile(null);
-                  }}
-                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-xs py-1.5 px-3 flex items-center gap-1.5 bg-white shadow-2xs"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{t('admin.education.uploadFromPc', 'Upload Image from Computer')}</span>
+                </Button>
                 {selectedFile && <p className="text-xs text-emerald-600 font-medium">{t('admin.education.selectedFile', 'Selected file:')} {selectedFile.name}</p>}
               </div>
             </div>
@@ -320,7 +296,6 @@ export function AdminGalleryPage() {
   const [previewImage, setPreviewImage] = useState<any | null>(null);
   const [editImage, setEditImage] = useState<any | null>(null);
   const [editFile, setEditFile] = useState<File | null>(null);
-  const [openPicker, setOpenPicker] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', caption: '', category: 'OTHER', status: 'PUBLISHED' });
 
   const { data: images = [], isLoading } = useQuery({
@@ -470,43 +445,13 @@ export function AdminGalleryPage() {
           </select>
         </div>
 
-        <Input label={t('admin.gallery.uploadFromPc', 'ملف الصورة')} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-
-        <div className="flex items-end gap-2">
-          <Button type="submit" disabled={upload.isPending} className="flex-1 justify-center">
+        <Input label={t('admin.gallery.uploadFromPc', 'ملف الصورة')} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} required />
+        
+        <div className="flex items-end">
+          <Button type="submit" disabled={upload.isPending} className="w-full justify-center">
             {upload.isPending ? t('admin.gallery.uploading', 'جاري الرفع...') : t('admin.gallery.uploadBtn', 'رفع الصورة')}
           </Button>
-          <Button
-            type="button"
-            variant="gold"
-            className="text-xs py-2.5 px-3 flex items-center gap-1 font-bold shadow-2xs shrink-0"
-            onClick={() => setOpenPicker(true)}
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span>المكتبة (GCS)</span>
-          </Button>
         </div>
-
-        <MediaPickerModal
-          open={openPicker}
-          onClose={() => setOpenPicker(false)}
-          defaultFolder="gallery"
-          onSelect={async (url) => {
-            if (!form.title) {
-              alert(t('admin.gallery.titleRequired', 'يرجى كتابة عنوان الصورة أولاً قبل التحديد من المكتبة'));
-              return;
-            }
-            try {
-              const res = await fetch(url);
-              const blob = await res.blob();
-              const filename = url.split('/').pop() || 'gallery-image.jpg';
-              const fileObj = new File([blob], filename, { type: blob.type || 'image/jpeg' });
-              setFile(fileObj);
-            } catch {
-              alert(t('admin.gallery.fetchError', 'تعذر تحميل ملف الصورة، يرجى إعادة المحاولة'));
-            }
-          }}
-        />
       </form>
 
       <AdminDataTable
@@ -702,7 +647,6 @@ export function AdminBlogPage() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [openPicker, setOpenPicker] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'categories'>('posts');
   const [categoryForm, setCategoryForm] = useState({ name: '', nameAr: '', slug: '' });
@@ -1186,37 +1130,15 @@ export function AdminBlogPage() {
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="text-xs py-1 px-3 flex items-center gap-1.5"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    {t('admin.education.uploadFromPc', 'Upload from computer')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="gold"
-                    className="text-xs py-1 px-3 flex items-center gap-1.5 font-bold shadow-2xs"
-                    onClick={() => setOpenPicker(true)}
-                  >
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    <span>مكتبة الصور (GCS)</span>
-                  </Button>
-                </div>
-
-                <MediaPickerModal
-                  open={openPicker}
-                  onClose={() => setOpenPicker(false)}
-                  defaultFolder="blog"
-                  onSelect={(url) => {
-                    setForm((prev) => ({ ...prev, coverImageUrl: url }));
-                    setPreviewUrl(null);
-                    setSelectedFile(null);
-                  }}
-                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-xs py-1 px-3 flex items-center gap-1.5"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {t('admin.education.uploadFromPc', 'Upload from computer')}
+                </Button>
               </div>
             </div>
 

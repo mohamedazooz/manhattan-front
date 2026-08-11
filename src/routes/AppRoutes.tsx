@@ -55,7 +55,6 @@ const NotificationsAdminPage = lazy(() => import('../pages/admin/NotificationsAd
 
 const AdminEducationPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminEducationPage })));
 const AdminGalleryPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminGalleryPage })));
-const AdminMediaLibraryPage = lazy(() => import('../pages/admin/AdminMediaLibraryPage').then((m) => ({ default: m.AdminMediaLibraryPage })));
 const AdminBlogPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminBlogPage })));
 const AdminAdmissionsPage = lazy(() => import('../pages/admin/AdminAdmissionsPage').then((m) => ({ default: m.AdminAdmissionsPage })));
 const AdminRequirementsPage = lazy(() => import('../pages/admin/OpsAdminPages').then((m) => ({ default: m.AdminRequirementsPage })));
@@ -160,7 +159,6 @@ export function AppRoutes() {
                   <Route path="education" element={<AdminEducationPage />} />
                   <Route path="education/:id" element={<AdminEducationPage />} />
                   <Route path="gallery" element={<AdminGalleryPage />} />
-                  <Route path="media" element={<AdminMediaLibraryPage />} />
                   <Route path="blog" element={<AdminBlogPage />} />
                   <Route path="blog/:id" element={<AdminBlogPage />} />
                   <Route element={<ProtectedRoute permission="UPDATE_SYSTEM_CONFIG" />}>

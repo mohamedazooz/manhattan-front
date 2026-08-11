@@ -113,31 +113,15 @@ export function HomePage() {
   const hero = landingData?.hero;
   const sections = landingData?.sections || [];
 
-  const isSectionPublished = (key: string) => {
-    const sec = sections.find((s) => s.key === key);
-    if (!sec) return true;
-    return sec.status === 'PUBLISHED' || !sec.status;
-  };
-
-  const getSectionData = (keys: string[]) => {
-    for (const k of keys) {
-      const found = sections.find((s) => s.key === k);
-      if (found) {
-        if (found.status === 'DRAFT' || found.status === 'ARCHIVED') {
-          return null;
-        }
-        return found;
-      }
-    }
-    return { title: '', content: '', titleAr: '', contentAr: '' } as any;
-  };
+  const isSectionPublished = (key: string) =>
+    sections.length === 0 || sections.some((s) => s.key === key);
 
   const trustBarSection = isSectionPublished('trust-bar');
   const pathwaysSection = isSectionPublished('pathways-hub');
-  const chairmanSection = getSectionData(['quote-chairman']);
-  const philosophySection = getSectionData(['educational-philosophy', 'about-preview']);
-  const visionSection = getSectionData(['vision']);
-  const missionSection = getSectionData(['mission']);
+  const chairmanSection = sections.find((s) => s.key === 'quote-chairman') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const philosophySection = sections.find((s) => s.key === 'educational-philosophy' || s.key === 'about-preview') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const visionSection = sections.find((s) => s.key === 'vision') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
+  const missionSection = sections.find((s) => s.key === 'mission') ?? (sections.length === 0 ? { title: '', content: '' } as any : undefined);
   const coreValuesSection = isSectionPublished('core-values');
   const academicsSection = isSectionPublished('academics-card');
   const requirementsSection = isSectionPublished('requirements-widget');

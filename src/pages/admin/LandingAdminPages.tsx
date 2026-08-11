@@ -10,8 +10,6 @@ import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { RichTextEditor } from '../../components/ui/RichTextEditor';
 import { mediaUrl } from '../../lib/utils';
 import { buildFormData, getApiErrorMessage, omitKeys } from '../../lib/formData';
-import { FolderOpen } from 'lucide-react';
-import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
 import type { LandingHero, LandingSection } from '../../types';
 
 const emptyHeroForm = {
@@ -34,7 +32,6 @@ export function AdminHeroPage() {
   const [image, setImage] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [openPicker, setOpenPicker] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const { data: heroes = [] } = useQuery({
@@ -191,31 +188,7 @@ export function AdminHeroPage() {
             {t('status.ACTIVE', 'Active')}
           </label>
 
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input label={t('admin.education.coverImage', 'Image')} type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-            </div>
-            <Button
-              type="button"
-              variant="gold"
-              className="mt-6 text-xs py-2 px-3 flex items-center gap-1.5 font-bold shadow-2xs shrink-0"
-              onClick={() => setOpenPicker(true)}
-            >
-              <FolderOpen className="w-3.5 h-3.5" />
-              <span>مكتبة الصور (GCS)</span>
-            </Button>
-          </div>
-
-          <MediaPickerModal
-            open={openPicker}
-            onClose={() => setOpenPicker(false)}
-            defaultFolder="heroes"
-            onSelect={(url) => {
-              setCurrentImageUrl(url);
-              setPreviewUrl(null);
-              setImage(null);
-            }}
-          />
+          <Input label={t('admin.education.coverImage', 'Image')} type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
 
           {displayImage && (
             <div>
@@ -255,7 +228,6 @@ export function AdminSectionsPage() {
   const [image, setImage] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [openPicker, setOpenPicker] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const { data: sections = [] } = useQuery({
@@ -449,32 +421,7 @@ export function AdminSectionsPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input label="رفع صورة القسم" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-            </div>
-            <Button
-              type="button"
-              variant="gold"
-              className="mt-6 text-xs py-2 px-3 flex items-center gap-1.5 font-bold shadow-2xs shrink-0"
-              onClick={() => setOpenPicker(true)}
-            >
-              <FolderOpen className="w-3.5 h-3.5" />
-              <span>مكتبة الصور (GCS)</span>
-            </Button>
-          </div>
-
-          <MediaPickerModal
-            open={openPicker}
-            onClose={() => setOpenPicker(false)}
-            defaultFolder="photos"
-            onSelect={(url) => {
-              setForm((prev) => ({ ...prev, imageUrl: url }));
-              setCurrentImageUrl(url);
-              setPreviewUrl(null);
-              setImage(null);
-            }}
-          />
+          <Input label="رفع صورة القسم" type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
 
           {displayImage && (
             <div>

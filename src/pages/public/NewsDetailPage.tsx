@@ -55,7 +55,7 @@ export function NewsDetailPage() {
           alt={title}
           className="w-full h-80 object-cover rounded-xl shadow-md mb-8"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = mediaUrl('/photos/photo1.jpeg');
+            (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
           }}
         />
       )}

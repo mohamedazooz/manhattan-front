@@ -1,8 +1,5 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'https://www.manhattanschool.net/api';
 export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'https://www.manhattanschool.net';
-export const GCS_BASE_URL = (import.meta.env.VITE_GCS_BASE_URL || 'https://storage.googleapis.com/manhattan-school-bucket').replace(/\/+$/, '');
-export const DEFAULT_GCS_LOGO = `${GCS_BASE_URL}/brand/logo.png`;
-export const DEFAULT_GCS_PHOTO = `${GCS_BASE_URL}/photos/photo1.jpeg`;
 
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';
@@ -18,17 +15,15 @@ export function mediaUrl(path?: string | null): string {
     const normalized = cleanPath.startsWith('/') ? cleanPath.slice(8) : cleanPath.slice(7);
     cleanPath = normalized;
   }
-
-  if (cleanPath.startsWith('/photos/') || cleanPath.startsWith('photos/')) {
-    const photoName = cleanPath.replace(/^\/?photos\//, '');
-    return `${GCS_BASE_URL}/photos/${photoName}`;
-  }
-
-  if (cleanPath.startsWith('/logo.png') || cleanPath.startsWith('logo.png') || cleanPath === '/logo' || cleanPath === 'logo') {
-    return DEFAULT_GCS_LOGO;
-  }
-
-  if (cleanPath.startsWith('/assets/') || cleanPath.startsWith('assets/') || cleanPath.startsWith('/favicon')) {
+  if (
+    cleanPath.startsWith('/photos/') ||
+    cleanPath.startsWith('photos/') ||
+    cleanPath.startsWith('/logo') ||
+    cleanPath.startsWith('logo') ||
+    cleanPath.startsWith('/assets/') ||
+    cleanPath.startsWith('assets/') ||
+    cleanPath.startsWith('/favicon')
+  ) {
     return cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
   }
 

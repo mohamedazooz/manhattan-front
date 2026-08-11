@@ -1,5 +1,4 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
 import { Home, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
@@ -29,7 +28,7 @@ export function PortalLayout({ portalType }: PortalLayoutProps) {
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link to="/" title={t('admin.site', 'العودة للموقع')}>
-              <img src={mediaUrl(DEFAULT_GCS_LOGO)} alt="MLS" className="h-10 w-auto hover:opacity-90 transition-opacity" />
+              <img src="/logo.png" alt="MLS" className="h-10 w-auto hover:opacity-90 transition-opacity" />
             </Link>
             <div>
               <p className="text-xs uppercase tracking-widest text-sage font-medium">

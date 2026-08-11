@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GraduationCap, Briefcase, UserPlus, LogIn } from 'lucide-react';
@@ -57,7 +56,7 @@ export function RegisterPage({ accountType }: RegisterPageProps) {
       <div className="flex items-center justify-center px-4 py-12 bg-slate-50">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
           <div className="flex flex-col items-center text-center">
-            <img src={mediaUrl(DEFAULT_GCS_LOGO)} alt="MLS" className="h-12 w-auto mb-3" />
+            <img src="/logo.png" alt="MLS" className="h-12 w-auto mb-3" />
             <h2 className="text-2xl font-bold text-slate-800">
               {isParent ? 'تسجيل طلب التحاق جديد' : 'انضمام كادر تعليمي'}
             </h2>

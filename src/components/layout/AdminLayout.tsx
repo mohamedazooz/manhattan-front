@@ -6,7 +6,7 @@ import { PermissionGuard } from '../auth/ProtectedRoute';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AdminNotificationBell } from './AdminNotificationBell';
 import { AdminApiStatusBanner } from '../admin/AdminApiStatusBanner';
-import { cn, mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
+import { cn } from '../../lib/utils';
 import {
   LayoutDashboard,
   Image,
@@ -30,7 +30,6 @@ import {
   Sun,
   Moon,
   Compass,
-  FolderOpen,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -81,7 +80,6 @@ const navSections: NavSection[] = [
       { to: '/admin/form-documents', labelKey: 'admin.formDocuments', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/education', labelKey: 'admin.navEducation', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
       { to: '/admin/gallery', labelKey: 'admin.navGallery', icon: Camera, perm: 'MANAGE_GALLERY' },
-      { to: '/admin/media', labelKey: 'admin.mediaLibrary', icon: FolderOpen, perm: 'VIEW_DASHBOARD' },
       { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
     ],
   },
@@ -140,7 +138,7 @@ export function AdminLayout() {
       >
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={mediaUrl(DEFAULT_GCS_LOGO)} alt="MLS Logo" className="h-9 w-auto object-contain bg-white/10 rounded p-1" />
+            <img src="/logo.png" alt="MLS Logo" className="h-9 w-auto object-contain bg-white/10 rounded p-1" />
             <div>
               <div className="font-bold text-lg leading-snug tracking-tight">MLS Admin</div>
               <div className="text-sm text-white/70 truncate max-w-[130px]">
