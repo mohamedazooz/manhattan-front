@@ -198,7 +198,7 @@ export function HomePage() {
                   showArrow
                   className="py-3.5 px-8 text-sm font-bold shadow-lg justify-center"
                 >
-                  {t('portal.parent.btn', 'بوابة ولي الأمر')}
+                  {t('portal.parent.btn', 'Parent Portal')}
                 </Button>
               </div>
             </motion.div>
@@ -232,7 +232,7 @@ export function HomePage() {
                   showArrow
                   className="py-3.5 px-8 text-sm font-bold shadow-lg justify-center bg-emerald-600 hover:bg-emerald-700 text-white border-none"
                 >
-                  {t('portal.applicant.btn', 'بوابة المتقدمين للوظائف')}
+                  {t('portal.applicant.btn', 'Job Applicant Portal')}
                 </Button>
               </div>
             </motion.div>

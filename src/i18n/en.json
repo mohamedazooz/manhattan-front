@@ -284,6 +284,7 @@
     "parent": {
       "title": "Parent Portal",
       "badge": "Student Admissions",
+      "btn": "Parent Portal",
       "welcome": "Welcome",
       "greeting": "Welcome back, {{name}}",
       "newApplication": "New Admission Application",
@@ -312,6 +313,7 @@
     "applicant": {
       "title": "Applicant Portal",
       "badge": "Career Applications",
+      "btn": "Job Applicant Portal",
       "welcome": "Welcome",
       "greeting": "Welcome back, {{name}}",
       "browseJobs": "Browse Open Positions",
