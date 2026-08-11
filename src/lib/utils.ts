@@ -10,10 +10,10 @@ export function mediaUrl(path?: string | null): string {
     return cleanPath;
   }
 
-  // Laravel local storage: /storage/uploads/... (served from APP_URL)
+  // NestJS local storage or static assets: /uploads/..., /photos/..., etc.
   if (cleanPath.startsWith('/storage/') || cleanPath.startsWith('storage/')) {
-    const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
-    return `${UPLOAD_URL}${normalized}`;
+    const normalized = cleanPath.startsWith('/') ? cleanPath.slice(8) : cleanPath.slice(7);
+    cleanPath = normalized;
   }
   if (
     cleanPath.startsWith('/photos/') ||
