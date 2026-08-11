@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
 import { Link, Navigate, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth';
@@ -63,7 +64,7 @@ export function LoginPage() {
       <div className="flex items-center justify-center px-4 py-12 bg-slate-50">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl border border-slate-200 shadow-xl space-y-6">
           <div className="flex flex-col items-center text-center">
-            <img src="/logo.png" alt="MLS" className="h-12 w-auto mb-3" />
+            <img src={mediaUrl(DEFAULT_GCS_LOGO)} alt="MLS" className="h-12 w-auto mb-3" />
             <h2 className="text-2xl font-bold text-slate-800">
               {targetType === 'applicant' ? 'تسجيل دخول كادر تعليمي' : 'تسجيل دخول ولي أمر'}
             </h2>
@@ -159,7 +160,7 @@ export function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-primary-dark px-4">
       <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-xl border border-gold/20">
         <div className="flex flex-col items-center mb-6 text-center">
-          <img src="/logo.png" alt="MLS" className="h-12 w-auto mb-3" />
+          <img src={mediaUrl(DEFAULT_GCS_LOGO)} alt="MLS" className="h-12 w-auto mb-3" />
           <h1 className="text-2xl font-bold text-primary-dark dark:text-white">{t('auth.adminLogin', 'دخول لوحة التحكم بالإدارة')}</h1>
           <p className="text-xs text-neutral-medium mt-1">Manhattan Language School Management Portal</p>
         </div>

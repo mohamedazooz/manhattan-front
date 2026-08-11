@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { MapPin, Phone, Mail, Clock, Send, Check } from 'lucide-react';
 import { cmsApi, newsletterApi, pagesApi } from '../../api';
-import { mediaUrl, getBilingualText } from '../../lib/utils';
+import { mediaUrl, getBilingualText, DEFAULT_GCS_LOGO } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 
 export function Footer() {
@@ -55,7 +55,7 @@ export function Footer() {
         <div className="lg:col-span-4 space-y-4">
           <Link to="/" className="inline-flex items-center gap-3 group">
             <img
-              src={config.school_logo_url ? mediaUrl(config.school_logo_url) : '/logo.png'}
+              src={mediaUrl(config.school_logo_url || DEFAULT_GCS_LOGO)}
               alt="Manhattan Language School logo"
               className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105 duration-200"
             />

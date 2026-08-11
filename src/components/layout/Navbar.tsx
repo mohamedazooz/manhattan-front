@@ -9,7 +9,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { useAuth } from '../../lib/auth';
 import { getPortalHomeForRole } from '../../components/auth/RoleRoute';
 import { useTheme } from '../../lib/theme';
-import { cn, mediaUrl } from '../../lib/utils';
+import { cn, mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
 
 export function Navbar() {
   const { t, i18n } = useTranslation();
@@ -66,7 +66,7 @@ export function Navbar() {
         {/* Brand Logo & Name */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0 group py-0.5">
           <img
-            src={config.school_logo_url ? mediaUrl(config.school_logo_url) : '/logo.png'}
+            src={mediaUrl(config.school_logo_url || DEFAULT_GCS_LOGO)}
             alt="Manhattan Language School"
             className="h-10 lg:h-11 xl:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105 filter drop-shadow-xs"
             onError={(e) => {

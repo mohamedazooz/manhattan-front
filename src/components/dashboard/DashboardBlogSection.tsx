@@ -57,7 +57,7 @@ export function DashboardBlogSection() {
                       alt={post.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
+                        (e.target as HTMLImageElement).src = mediaUrl('/photos/photo1.jpeg');
                       }}
                     />
                   ) : (

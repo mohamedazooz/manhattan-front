@@ -51,7 +51,7 @@ export function NewsPage() {
                           alt={title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/photos/photo1.jpeg';
+                            (e.target as HTMLImageElement).src = mediaUrl('/photos/photo1.jpeg');
                           }}
                         />
                       </div>

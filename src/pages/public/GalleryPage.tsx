@@ -54,7 +54,7 @@ export function GalleryPage() {
     return items.map((item) => ({
       ...item,
       title: getBilingualText(item, 'title', lang),
-      media_url: item.imageUrl || item.media_url || '/photos/photo1.jpeg',
+      media_url: mediaUrl(item.imageUrl || item.media_url || '/photos/photo1.jpeg'),
       description: getBilingualText(item, 'caption', lang) || getBilingualText(item, 'description', lang),
     }));
   }, [rawItems, lang]);

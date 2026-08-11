@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import { seoApi } from '../../api';
 import type { SeoConfig } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { mediaUrl, DEFAULT_GCS_LOGO } from '../../lib/utils';
 
 interface SeoHeadProps {
   title?: string;
@@ -63,8 +64,7 @@ export const SeoHead: FC<SeoHeadProps> = ({
 
   const finalOgImage =
     ogImage ||
-    globalConfig?.defaultOgImage ||
-    `${window.location.origin}/logo.png`;
+    (globalConfig?.defaultOgImage ? mediaUrl(globalConfig.defaultOgImage) : mediaUrl(DEFAULT_GCS_LOGO));
 
   const currentUrl = canonicalUrl || window.location.href;
 
@@ -78,7 +78,7 @@ export const SeoHead: FC<SeoHeadProps> = ({
     name: 'Manhattan Language School',
     alternateName: 'مدرسة منهاتن للغات',
     url: window.location.origin,
-    logo: `${window.location.origin}/logo.png`,
+    logo: mediaUrl(DEFAULT_GCS_LOGO),
     description: finalDescription,
     address: {
       '@type': 'PostalAddress',

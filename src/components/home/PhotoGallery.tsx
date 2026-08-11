@@ -49,7 +49,10 @@ export function PhotoGallery() {
         imageUrl: mediaUrl(item.imageUrl || item.media_url || '/photos/photo1.jpeg'),
         caption: item.caption || item.description,
       }))
-    : defaultGalleryItems;
+    : defaultGalleryItems.map((item) => ({
+        ...item,
+        imageUrl: mediaUrl(item.imageUrl),
+      }));
 
   const categories = [
     { key: 'ALL', label: t('gallery.all', 'All Photos') },
