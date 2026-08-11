@@ -56,19 +56,19 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 backdrop-blur-xl transition-all duration-300 border-b w-full overflow-x-hidden',
+        'sticky top-0 z-50 backdrop-blur-xl transition-all duration-300 border-b w-full',
         scrolled
           ? 'bg-white/95 dark:bg-slate-950/95 border-slate-200/90 dark:border-slate-800/90 shadow-md shadow-slate-950/5 py-2'
           : 'bg-white/90 dark:bg-slate-950/90 border-slate-200/60 dark:border-slate-800/60 shadow-xs py-2.5'
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-1.5 lg:gap-2.5 px-3 lg:px-4 xl:px-6 w-full">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-1 lg:gap-2 px-2.5 sm:px-4 xl:px-6 w-full">
         {/* Brand Logo & Name */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0 group py-0.5">
+        <Link to="/" className="flex items-center gap-2 shrink-0 group py-0.5">
           <img
             src={config.school_logo_url ? mediaUrl(config.school_logo_url) : '/logo.png'}
             alt="Manhattan Language School"
-            className="h-10 lg:h-11 xl:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105 filter drop-shadow-xs"
+            className="h-9 sm:h-10 lg:h-11 xl:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105 filter drop-shadow-xs"
             onError={(e) => {
               (e.currentTarget as HTMLElement).style.display = 'none';
               const sibling = e.currentTarget.nextElementSibling;
@@ -86,14 +86,14 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation Bar */}
-        <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-100/60 dark:bg-slate-900/60 p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink-0 overflow-hidden mx-3 xl:mx-5">
+        <nav className="hidden xl:flex items-center gap-0.5 bg-slate-100/60 dark:bg-slate-900/60 p-0.5 xl:p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink-0 overflow-hidden mx-1.5 xl:mx-2.5 2xl:mx-4">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  'relative px-2 xl:px-2.5 2xl:px-3 py-1 rounded-full text-xs xl:text-[13px] 2xl:text-sm font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
+                  'relative px-1.5 xl:px-2 2xl:px-3 py-1 rounded-full text-[11px] xl:text-xs 2xl:text-sm font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
                   isActive
                     ? 'bg-white dark:bg-slate-800 text-primary dark:text-amber-400 shadow-xs border border-slate-200/60 dark:border-slate-700/60 font-extrabold'
                     : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
@@ -113,14 +113,14 @@ export function Navbar() {
         </nav>
 
         {/* Action Hub & Utilities */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ms-auto ps-2">
-          <div className="hidden sm:block me-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ms-auto ps-1">
+          <div className="hidden sm:block me-0.5">
             <LanguageSwitcher />
           </div>
 
           <button
             onClick={toggleTheme}
-            className="p-1.5 lg:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+            className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all shrink-0"
             aria-label={t('theme.toggle')}
             title={theme === 'dark' ? t('theme.light') : t('theme.dark')}
           >
@@ -134,17 +134,17 @@ export function Navbar() {
           {location.pathname !== '/' && (
             <button
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all shrink-0"
               title={t('common.back', 'رجوع للصفحة السابقة')}
             >
               <span className="rtl:rotate-0">←</span>
-              <span className="hidden sm:inline">{t('common.back', 'رجوع')}</span>
+              <span className="hidden md:inline">{t('common.back', 'رجوع')}</span>
             </button>
           )}
 
           <button
             onClick={() => navigate('/search')}
-            className="p-1.5 lg:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+            className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all shrink-0"
             aria-label={t('nav.search')}
             title={t('nav.search')}
           >
@@ -154,7 +154,7 @@ export function Navbar() {
           {user ? (
             <Link
               to={getPortalHomeForRole(role)}
-              className="p-2 lg:p-2.5 rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/90 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all shadow-2xs flex items-center justify-center shrink-0"
+              className="p-2 rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/90 hover:text-primary dark:hover:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all shadow-2xs flex items-center justify-center shrink-0"
               title={isRtl ? 'لوحة التحكم' : 'Dashboard'}
               aria-label={isRtl ? 'لوحة التحكم' : 'Dashboard'}
             >
@@ -163,10 +163,10 @@ export function Navbar() {
           ) : (
             <Button
               to="/login"
-              className="py-1.5 px-3 lg:px-3.5 text-xs font-bold shadow-xs bg-gradient-to-r from-primary to-blue-900 hover:from-primary-dark hover:to-blue-950 text-white rounded-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shrink-0"
+              className="py-1.5 px-2.5 sm:px-3 text-xs font-bold shadow-xs bg-gradient-to-r from-primary to-blue-900 hover:from-primary-dark hover:to-blue-950 text-white rounded-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap shrink-0"
             >
-              <User className="h-3.5 w-3.5 me-1.5" />
-              {t('nav.login')}
+              <User className="h-3.5 w-3.5 me-1 shrink-0" />
+              <span>{t('nav.login')}</span>
             </Button>
           )}
 
