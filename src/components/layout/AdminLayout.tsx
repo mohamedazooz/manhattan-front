@@ -30,6 +30,7 @@ import {
   Sun,
   Moon,
   Compass,
+  FolderOpen,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -80,6 +81,7 @@ const navSections: NavSection[] = [
       { to: '/admin/form-documents', labelKey: 'admin.formDocuments', icon: FileText, perm: 'MANAGE_ABOUT_US' },
       { to: '/admin/education', labelKey: 'admin.navEducation', icon: GraduationCap, perm: 'MANAGE_EDUCATION' },
       { to: '/admin/gallery', labelKey: 'admin.navGallery', icon: Camera, perm: 'MANAGE_GALLERY' },
+      { to: '/admin/media', labelKey: 'admin.mediaLibrary', icon: FolderOpen, perm: 'VIEW_DASHBOARD' },
       { to: '/admin/blog', labelKey: 'admin.blog', icon: Newspaper, perm: 'UPDATE_BLOG' },
     ],
   },

@@ -298,6 +298,14 @@ export const seoApi = {
   updateGlobal: (data: Partial<SeoConfig>) => api.put<SeoConfig>('/seo/global', data),
 };
 
+export interface StorageFileItem {
+  key: string;
+  url: string;
+  size: number;
+  updatedAt: string;
+  contentType: string;
+}
+
 export const storageApi = {
   upload: (file: File, folder: string = 'blog') => {
     const fd = new FormData();
@@ -307,6 +315,14 @@ export const storageApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+  listFiles: (folder?: string) =>
+    api.get<{ success: boolean; data: StorageFileItem[] }>('/storage/files', {
+      params: folder ? { folder } : {},
+    }),
+  delete: (key: string) =>
+    api.delete<{ success: boolean }>('/storage/files', {
+      data: { key },
+    }),
 };
 
 export const newsletterApi = {

@@ -11,7 +11,8 @@ import { RichTextEditor } from '../../components/ui/RichTextEditor';
 import { slugify } from '../../lib/slug';
 import { getApiErrorMessage, omitKeys, buildFormData } from '../../lib/formData';
 import { mediaUrl } from '../../lib/utils';
-import { Save, CheckCircle, Building, Phone, Share2, Target, Upload } from 'lucide-react';
+import { Save, CheckCircle, Building, Phone, Share2, Target, Upload, FolderOpen } from 'lucide-react';
+import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
 
 function AboutCrud() {
   const { t } = useTranslation();
@@ -639,6 +640,7 @@ export function AdminSettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [savedKey, setSavedKey] = useState<string | null>(null);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [pickerKey, setPickerKey] = useState<string | null>(null);
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [bulkSavedSuccess, setBulkSavedSuccess] = useState(false);
 
@@ -784,7 +786,17 @@ export function AdminSettingsPage() {
                         onClick={() => fileInputRefs.current[key]?.click()}
                       >
                         <Upload className="w-3.5 h-3.5" />
-                        <span>{uploadingKey === key ? 'جاري الرفع...' : 'رفع ملف/صورة من الكمبيوتر'}</span>
+                        <span>{uploadingKey === key ? 'جاري الرفع...' : 'رفع من الكمبيوتر'}</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="gold"
+                        className="text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-2xs font-bold"
+                        onClick={() => setPickerKey(key)}
+                      >
+                        <FolderOpen className="w-3.5 h-3.5" />
+                        <span>مكتبة الصور (GCS)</span>
                       </Button>
                     </div>
 
@@ -880,6 +892,17 @@ export function AdminSettingsPage() {
           'branding'
         )}
       </div>
+
+      <MediaPickerModal
+        open={!!pickerKey}
+        onClose={() => setPickerKey(null)}
+        defaultFolder="brand"
+        onSelect={(url) => {
+          if (pickerKey) {
+            setValues((prev) => ({ ...prev, [pickerKey]: url }));
+          }
+        }}
+      />
     </div>
   );
 }

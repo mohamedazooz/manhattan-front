@@ -8,13 +8,15 @@ import { PageHeader } from '../../components/ui/Badge';
 import { getApiErrorMessage } from '../../lib/formData';
 import { mediaUrl } from '../../lib/utils';
 import type { SeoConfig } from '../../types';
-import { Search, Share2, BarChart2, CheckCircle, Save, Upload } from 'lucide-react';
+import { Search, Share2, BarChart2, CheckCircle, Save, Upload, FolderOpen } from 'lucide-react';
+import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
 
 export function SeoAdminPage() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const ogFileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingOg, setIsUploadingOg] = useState(false);
+  const [openPicker, setOpenPicker] = useState(false);
   const [form, setForm] = useState<Partial<SeoConfig>>({
     siteTitle: '',
     siteTitleAr: '',
@@ -197,8 +199,24 @@ export function SeoAdminPage() {
                   onClick={() => ogFileInputRef.current?.click()}
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{isUploadingOg ? 'جاري الرفع...' : 'رفع صورة من الكمبيوتر'}</span>
+                  <span>{isUploadingOg ? 'جاري الرفع...' : 'رفع من الكمبيوتر'}</span>
                 </Button>
+                <Button
+                  type="button"
+                  variant="gold"
+                  className="text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-2xs font-bold"
+                  onClick={() => setOpenPicker(true)}
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>مكتبة الصور (GCS)</span>
+                </Button>
+
+                <MediaPickerModal
+                  open={openPicker}
+                  onClose={() => setOpenPicker(false)}
+                  defaultFolder="seo"
+                  onSelect={(url) => setForm((prev) => ({ ...prev, defaultOgImage: url }))}
+                />
                 {form.defaultOgImage && (
                   <span className="text-xs text-slate-500 truncate max-w-[200px]">
                     تم التحديد: {form.defaultOgImage}
