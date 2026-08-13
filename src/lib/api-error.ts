@@ -1,6 +1,10 @@
 import axios from 'axios';
 
 export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   if (!axios.isAxiosError(error)) {
     return fallback;
   }

@@ -34,6 +34,14 @@ export function RegisterPage({ accountType }: RegisterPageProps) {
     setLoading(true);
     try {
       const user = await register(form.email, form.password, form.fullName, accountType);
+      if (!user?.role) {
+        throw new Error(
+          t(
+            'auth.sessionFailed',
+            'تم إنشاء الحساب لكن تعذّر تسجيل الدخول تلقائياً. يرجى تسجيل الدخول يدوياً.',
+          ),
+        );
+      }
       navigate(getPostLoginRedirect(user.role, redirect ?? undefined));
     } catch (err) {
       setError(

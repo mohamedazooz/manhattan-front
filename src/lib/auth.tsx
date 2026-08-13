@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -45,8 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const bootstrapEpoch = useRef(0);
 
-  const clearAuth = useCallback(() => {
+  const clearAuth = useCallback((epoch?: number) => {
+    if (epoch !== undefined && epoch !== bootstrapEpoch.current) {
+      return;
+    }
     setAccessToken(null);
     setUser(null);
     setPermissions([]);
@@ -54,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const applyToken = useCallback((token: string, u: User) => {
+    bootstrapEpoch.current += 1;
     setAccessToken(token);
     const decoded = decodeToken(token);
     const apiPermissions = u.permissions ?? [];
@@ -63,34 +69,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(decoded.role || u.role || null);
   }, []);
 
+  const establishSession = useCallback(
+    async (
+      email: string,
+      password: string,
+      registerResponse?: { accessToken?: string; user?: User },
+    ): Promise<User> => {
+      if (registerResponse?.accessToken && registerResponse.user) {
+        applyToken(registerResponse.accessToken, registerResponse.user);
+        return registerResponse.user;
+      }
+
+      const { data } = await authApi.login({ email, password });
+      applyToken(data.accessToken, data.user);
+      return data.user;
+    },
+    [applyToken],
+  );
+
   useEffect(() => {
     setOnAuthFailure(clearAuth);
     return () => setOnAuthFailure(null);
   }, [clearAuth]);
 
   useEffect(() => {
+    const epoch = bootstrapEpoch.current;
+
     async function bootstrapAuth() {
       const token = getAccessToken();
       if (token) {
         try {
           const { data } = await authApi.me();
+          if (bootstrapEpoch.current !== epoch) return;
           applyToken(token, data);
           return;
         } catch {
-          clearAuth();
+          clearAuth(epoch);
         }
       }
 
       try {
         const newToken = await refreshAccessToken();
+        if (bootstrapEpoch.current !== epoch) return;
         const { data } = await authApi.me();
+        if (bootstrapEpoch.current !== epoch) return;
         applyToken(newToken, data);
       } catch {
-        clearAuth();
+        clearAuth(epoch);
       }
     }
 
-    bootstrapAuth().finally(() => setLoading(false));
+    bootstrapAuth().finally(() => {
+      if (bootstrapEpoch.current === epoch) {
+        setLoading(false);
+      }
+    });
   }, [applyToken, clearAuth]);
 
   const login = useCallback(
@@ -104,16 +137,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (email: string, password: string, fullName: string, accountType: 'parent' | 'applicant' = 'parent') => {
+      const normalizedEmail = email.trim().toLowerCase();
       const { data } = await authApi.register({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
         fullName: fullName.trim(),
         accountType,
       });
-      applyToken(data.accessToken, data.user);
-      return data.user;
+      return establishSession(normalizedEmail, password, data);
     },
-    [applyToken],
+    [establishSession],
   );
 
   const logout = useCallback(async () => {
