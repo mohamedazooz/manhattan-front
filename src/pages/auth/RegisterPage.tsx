@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { getPostLoginRedirect } from '../../components/auth/RoleRoute';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { getApiErrorMessage } from '../../lib/api-error';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 
 interface RegisterPageProps {

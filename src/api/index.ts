@@ -16,7 +16,7 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post<{ accessToken: string; user: User }>('/auth/login', data),
   register: (data: { email: string; password: string; fullName: string; accountType?: 'parent' | 'applicant' }) =>
-    api.post('/auth/register', data),
+    api.post<{ accessToken: string; user: User }>('/auth/register', data),
   requestPasswordReset: (data: { email: string }) =>
     api.post('/auth/password-reset/request', data),
   resetPassword: (data: { token: string; password: string }) =>

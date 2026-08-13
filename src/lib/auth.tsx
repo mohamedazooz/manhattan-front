@@ -23,7 +23,7 @@ interface AuthContextValue {
   role: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string, fullName: string, accountType?: 'parent' | 'applicant') => Promise<void>;
+  register: (email: string, password: string, fullName: string, accountType?: 'parent' | 'applicant') => Promise<User>;
   logout: () => Promise<void>;
   hasPermission: (perm: string) => boolean;
   isAdmin: boolean;
@@ -104,9 +104,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (email: string, password: string, fullName: string, accountType: 'parent' | 'applicant' = 'parent') => {
-      await authApi.register({ email, password, fullName, accountType });
+      const { data } = await authApi.register({
+        email: email.trim().toLowerCase(),
+        password,
+        fullName: fullName.trim(),
+        accountType,
+      });
+      applyToken(data.accessToken, data.user);
+      return data.user;
     },
-    [],
+    [applyToken],
   );
 
   const logout = useCallback(async () => {
