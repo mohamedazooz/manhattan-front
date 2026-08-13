@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { getPostLoginRedirect } from '../../components/auth/RoleRoute';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 
 interface RegisterPageProps {
   accountType: 'parent' | 'applicant';
@@ -13,7 +14,7 @@ interface RegisterPageProps {
 
 export function RegisterPage({ accountType }: RegisterPageProps) {
   const { t } = useTranslation();
-  const { register, login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ fullName: '', email: '', password: '' });
@@ -31,11 +32,15 @@ export function RegisterPage({ accountType }: RegisterPageProps) {
     setError('');
     setLoading(true);
     try {
-      await register(form.email, form.password, form.fullName, accountType);
-      const user = await login(form.email, form.password);
+      const user = await register(form.email, form.password, form.fullName, accountType);
       navigate(getPostLoginRedirect(user.role, redirect ?? undefined));
-    } catch {
-      setError(t('auth.registerFailed', 'فشل إنشاء الحساب، يرجى المحاولة مرة أخرى'));
+    } catch (err) {
+      setError(
+        getApiErrorMessage(
+          err,
+          t('auth.registerFailed', 'فشل إنشاء الحساب، يرجى المحاولة مرة أخرى'),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -88,7 +93,7 @@ export function RegisterPage({ accountType }: RegisterPageProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input label="الاسم بالكامل" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required placeholder="مثال: أحمد محمد علي" />
             <Input label={t('auth.email', 'البريد الإلكتروني')} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="name@example.com" />
-            <Input label={t('auth.password', 'كلمة المرور')} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} placeholder="••••••••" />
+            <PasswordInput label={t('auth.password', 'كلمة المرور')} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} placeholder="••••••••" />
 
             <Button type="submit" variant="gold" className="w-full py-3 font-bold shadow-md text-base" disabled={loading}>
               {loading ? 'جاري الإنشاء والتحويل...' : 'إنشاء الحساب والبدء في التقديم →'}

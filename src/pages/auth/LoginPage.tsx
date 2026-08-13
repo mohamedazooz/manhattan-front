@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth';
 import { getPortalHomeForRole, getPostLoginRedirect } from '../../components/auth/RoleRoute';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 import { LogIn, UserPlus } from 'lucide-react';
 import { getAccessToken } from '../../api/client';
 import { LoadingSpinner } from '../../components/ui/Badge';
@@ -92,7 +93,7 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input label={t('auth.email', 'البريد الإلكتروني')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="name@example.com" />
-            <Input label={t('auth.password', 'كلمة المرور')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
+            <PasswordInput label={t('auth.password', 'كلمة المرور')} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
             <Button type="submit" variant="gold" className="w-full py-3 font-bold shadow-md text-base" disabled={loading}>
               {loading ? 'جاري الدخول...' : 'تسجيل الدخول والمتابعة →'}
             </Button>
@@ -100,8 +101,8 @@ export function LoginPage() {
 
           <div className="pt-2 text-center space-y-2 border-t text-xs text-slate-500">
             <p>
-              <Link to="/forgot-password" className="text-primary font-bold hover:underline">
-                نسيت كلمة المرور؟
+              <Link to={`/forgot-password?accountType=${targetType}`} className="text-primary font-bold hover:underline">
+                {t('auth.forgotPassword', 'نسيت كلمة المرور؟')}
               </Link>
             </p>
             <p>
@@ -171,7 +172,7 @@ export function AdminLoginPage() {
         {error && <p className="text-accent text-sm mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label={t('auth.email', 'البريد الإلكتروني')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input label={t('auth.password', 'كلمة المرور')} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <PasswordInput label={t('auth.password', 'كلمة المرور')} value={password} onChange={(e) => setPassword(e.target.value)} required />
           <Button type="submit" variant="gold" className="w-full font-bold py-3" disabled={loading}>
             {loading ? 'جاري الدخول...' : t('auth.loginBtn', 'دخول الأدمن')}
           </Button>
