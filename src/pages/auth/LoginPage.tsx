@@ -12,21 +12,21 @@ import { getAccessToken } from '../../api/client';
 import { getApiErrorMessage } from '../../lib/api-error';
 import { LoadingSpinner } from '../../components/ui/Badge';
 
-function getLoginErrorMessage(
+function resolveLoginError(
   err: unknown,
-  t: (key: string, fallback: string) => string,
-  invalidCredentialsFallback: string,
+  t: (key: string, fallback?: string) => string,
 ): string {
+  const invalidCredentials = t(
+    'auth.invalidCredentials',
+    'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+  );
   if (axios.isAxiosError(err) && !err.response) {
-    return t(
-      'auth.networkError',
-      'تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
-    );
+    return 'تعذر الاتصال بالخادم. تحقق من الاتصال وحاول مرة أخرى.';
   }
   if (axios.isAxiosError(err) && err.response?.status === 401) {
-    return t('auth.invalidCredentials', invalidCredentialsFallback);
+    return invalidCredentials;
   }
-  return getApiErrorMessage(err, t('auth.invalidCredentials', invalidCredentialsFallback));
+  return getApiErrorMessage(err, invalidCredentials);
 }
 
 export function LoginPage() {
@@ -55,11 +55,7 @@ export function LoginPage() {
       navigate(getPostLoginRedirect(user.role, from));
     } catch (err) {
       setError(
-        getLoginErrorMessage(
-          err,
-          t,
-          t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة'),
-        ),
+        resolveLoginError(err, t),
       );
     } finally {
       setLoading(false);
@@ -176,11 +172,7 @@ export function AdminLoginPage() {
       navigate(destination);
     } catch (err) {
       setError(
-        getLoginErrorMessage(
-          err,
-          t,
-          t('auth.invalidCredentials', 'بيانات الدخول غير صحيحة'),
-        ),
+        resolveLoginError(err, t),
       );
     } finally {
       setLoading(false);

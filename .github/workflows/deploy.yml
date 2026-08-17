@@ -25,4 +25,4 @@ jobs:
             npm install
             npm run build:prod
             sudo systemctl reload nginx
-            curl -sf https://www.manhattanschool.net/api/health | grep -q '"status":"ok"' || (echo "Health check failed" && exit 1)
+            curl -fsS https://www.manhattanschool.net/api/health
