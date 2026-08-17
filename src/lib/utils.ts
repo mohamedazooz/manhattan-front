@@ -1,5 +1,16 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'https://www.manhattanschool.net/api';
-export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || 'https://www.manhattanschool.net';
+const isProd = import.meta.env.PROD;
+const rawApi = import.meta.env.VITE_API_URL || '';
+const rawUpload = import.meta.env.VITE_UPLOAD_URL || '';
+
+export const API_URL =
+  isProd && (!rawApi || rawApi.includes('localhost'))
+    ? 'https://www.manhattanschool.net/api'
+    : (rawApi || 'https://www.manhattanschool.net/api');
+
+export const UPLOAD_URL =
+  isProd && (!rawUpload || rawUpload.includes('localhost'))
+    ? 'https://www.manhattanschool.net'
+    : (rawUpload || 'https://www.manhattanschool.net');
 
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';
