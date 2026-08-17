@@ -7,8 +7,27 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import { LogIn, UserPlus } from 'lucide-react';
+import axios from 'axios';
 import { getAccessToken } from '../../api/client';
+import { getApiErrorMessage } from '../../lib/api-error';
 import { LoadingSpinner } from '../../components/ui/Badge';
+
+function getLoginErrorMessage(
+  err: unknown,
+  t: (key: string, fallback: string) => string,
+  invalidCredentialsFallback: string,
+): string {
+  if (axios.isAxiosError(err) && !err.response) {
+    return t(
+      'auth.networkError',
+      'تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.',
+    );
+  }
+  if (axios.isAxiosError(err) && err.response?.status === 401) {
+    return t('auth.invalidCredentials', invalidCredentialsFallback);
+  }
+  return getApiErrorMessage(err, t('auth.invalidCredentials', invalidCredentialsFallback));
+}
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -34,8 +53,14 @@ export function LoginPage() {
     try {
       const user = await login(email, password);
       navigate(getPostLoginRedirect(user.role, from));
-    } catch {
-      setError(t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة'));
+    } catch (err) {
+      setError(
+        getLoginErrorMessage(
+          err,
+          t,
+          t('auth.invalidCredentials', 'البريد الإلكتروني أو كلمة المرور غير صحيحة'),
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -149,8 +174,14 @@ export function AdminLoginPage() {
           ? redirectTo
           : getPortalHomeForRole(user.role);
       navigate(destination);
-    } catch {
-      setError(t('auth.invalidCredentials', 'بيانات الدخول غير صحيحة'));
+    } catch (err) {
+      setError(
+        getLoginErrorMessage(
+          err,
+          t,
+          t('auth.invalidCredentials', 'بيانات الدخول غير صحيحة'),
+        ),
+      );
     } finally {
       setLoading(false);
     }
