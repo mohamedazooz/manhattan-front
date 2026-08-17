@@ -14,7 +14,7 @@ import { LoadingSpinner } from '../../components/ui/Badge';
 
 function resolveLoginError(
   err: unknown,
-  t: (key: string, fallback?: string) => string,
+  t: (key: string, defaultValue: string) => string,
 ): string {
   const invalidCredentials = t(
     'auth.invalidCredentials',
