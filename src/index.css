@@ -260,3 +260,16 @@ h1, h2, h3, h4, h5, h6 {
 .admin-shell button {
   font-size: 0.9375rem;
 }
+
+[dir='rtl'] {
+  font-family: var(--font-body);
+}
+
+[dir='rtl'] h1,
+[dir='rtl'] h2,
+[dir='rtl'] h3,
+[dir='rtl'] h4,
+[dir='rtl'] h5,
+[dir='rtl'] h6 {
+  font-family: var(--font-heading);
+}

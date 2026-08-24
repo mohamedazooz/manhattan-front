@@ -6,6 +6,8 @@ import { careersApi } from '../../../api';
 import { Button } from '../../../components/ui/Button';
 import { StepIndicator } from '../../../components/ui/StepIndicator';
 import { Upload, FileText, Paperclip } from 'lucide-react';
+import { LoadingSpinner } from '../../../components/ui/Badge';
+import { ErrorState } from '../../../components/ui/ErrorState';
 import { HiringDocumentsSection } from '../../../components/careers/HiringDocumentsSection';
 import { useAuth } from '../../../lib/auth';
 import { getPortalHomeForRole } from '../../../components/auth/RoleRoute';
@@ -99,13 +101,13 @@ export function ApplicationWizard() {
     pledgeOriginalsAtInterview: true,
   });
 
-  const { data: job } = useQuery({
+  const { data: job, isLoading: jobLoading, isError: jobError, refetch: refetchJob } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => careersApi.get(jobId!, 'en').then((r) => r.data),
     enabled: !!jobId,
   });
 
-  const { data: myApps } = useQuery({
+  const { data: myApps, isLoading: appsLoading } = useQuery({
     queryKey: ['myApplications'],
     queryFn: () => careersApi.myApplications().then((r) => r.data),
     enabled: !!user,
@@ -347,6 +349,16 @@ export function ApplicationWizard() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  // Gate rendering until the job and any existing draft are resolved, so the
+  // wizard does not briefly show step 1 before restoring a saved draft.
+  if (jobLoading || appsLoading) {
+    return <LoadingSpinner showLabel label={t('states.loadingContent', 'Loading content, please wait…')} />;
+  }
+
+  if (jobError) {
+    return <ErrorState onRetry={() => refetchJob()} />;
+  }
 
   if (alreadySubmitted) {
     return (

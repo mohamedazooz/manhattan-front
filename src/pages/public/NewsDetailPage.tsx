@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { blogApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { formatDate, getBilingualText, mediaUrl } from '../../lib/utils';
+import DOMPurify from 'dompurify';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 
@@ -61,7 +62,7 @@ export function NewsDetailPage() {
       )}
       <PageHeader title={title} subtitle={`${categoryName} · ${formatDate(post.createdAt, lang)}`} />
       
-      <div className="prose-content text-neutral-dark dark:text-slate-200 text-base leading-relaxed mb-12" dangerouslySetInnerHTML={{ __html: content }} />
+      <div className="prose-content text-neutral-dark dark:text-slate-200 text-base leading-relaxed mb-12" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
     </article>
   );
 }

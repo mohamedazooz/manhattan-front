@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon, Filter, Sparkles, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { galleryApi } from '../../api';
 import { getBilingualText, mediaUrl } from '../../lib/utils';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { ErrorState } from '../../components/ui/ErrorState';
 import { useAppLanguage } from '../../i18n';
 
 interface GalleryItem {
@@ -44,7 +46,7 @@ export function GalleryPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [lightboxImage, setLightboxImage] = useState<GalleryItem | null>(null);
 
-  const { data: rawItems = [], isLoading } = useQuery<GalleryItem[]>({
+  const { data: rawItems = [], isLoading, isError, refetch } = useQuery<GalleryItem[]>({
     queryKey: ['public-gallery', lang],
     queryFn: () => galleryApi.list(lang).then((res) => res.data),
   });
@@ -92,6 +94,53 @@ export function GalleryPage() {
   const startIndex = (validPage - 1) * ITEMS_PER_PAGE + 1;
   const endIndex = Math.min(validPage * ITEMS_PER_PAGE, filteredItems.length);
 
+  /** Move the lightbox selection within the current page, wrapping at the ends. */
+  const step = useCallback(
+    (delta: number) => {
+      setLightboxImage((current) => {
+        if (!current || paginatedItems.length === 0) return current;
+        const index = paginatedItems.findIndex((item) => item.id === current.id);
+        if (index === -1) return current;
+        const nextIndex = (index + delta + paginatedItems.length) % paginatedItems.length;
+        return paginatedItems[nextIndex];
+      });
+    },
+    [paginatedItems],
+  );
+
+  // Keyboard navigation for the lightbox. Arrow direction is mirrored in RTL.
+  useEffect(() => {
+    if (!lightboxImage) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault();
+          setLightboxImage(null);
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          step(isRtl ? -1 : 1);
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          step(isRtl ? 1 : -1);
+          break;
+        case 'Home':
+          event.preventDefault();
+          if (paginatedItems.length) setLightboxImage(paginatedItems[0]);
+          break;
+        case 'End':
+          event.preventDefault();
+          if (paginatedItems.length) setLightboxImage(paginatedItems[paginatedItems.length - 1]);
+          break;
+        default:
+          break;
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [lightboxImage, step, isRtl, paginatedItems]);
+
   return (
     <>
       {/* Hero Header */}
@@ -100,7 +149,7 @@ export function GalleryPage() {
         <div className="relative max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-gold mb-4">
             <Sparkles className="h-4 w-4" />
-            <span>MLS MEDIA GALLERY</span>
+            <span>{t('gallery.mediaBadge', 'MLS MEDIA GALLERY')}</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
             {t('gallery.title', 'School Photo Gallery')}
@@ -116,7 +165,7 @@ export function GalleryPage() {
         {/* Category Filters */}
         {categories.length > 1 && (
           <div className="flex items-center justify-center flex-wrap gap-2 mb-10">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-slate-400 mr-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-slate-400 me-2">
               <Filter className="h-4 w-4" />
               <span>{t('gallery.filter', 'Filter:')}</span>
             </div>
@@ -145,25 +194,40 @@ export function GalleryPage() {
           </div>
         )}
 
+        {/* Error State */}
+        {!isLoading && isError && (
+          <ErrorState
+            description={t('states.errorDesc')}
+            onRetry={() => refetch()}
+          />
+        )}
+
         {/* Empty State */}
-        {!isLoading && filteredItems.length === 0 && (
-          <div className="text-center py-16 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-gray-300 dark:border-slate-800">
-            <ImageIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-slate-600 mb-3" />
-            <p className="text-lg font-medium text-gray-600 dark:text-slate-400">
-              {t('gallery.empty', 'No photos available in this category currently.')}
-            </p>
-          </div>
+        {!isLoading && !isError && filteredItems.length === 0 && (
+          <EmptyState
+            icon={<ImageIcon className="h-12 w-12" />}
+            title={t('gallery.empty', 'No photos available in this category currently.')}
+          />
         )}
 
         {/* Gallery Grid */}
-        {!isLoading && filteredItems.length > 0 && (
+        {!isLoading && !isError && filteredItems.length > 0 && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {paginatedItems.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => setLightboxImage(item)}
-                  className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 transition-all duration-300 cursor-pointer flex flex-col h-72"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setLightboxImage(item);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${t('gallery.view', 'Zoom Image')}: ${item.title}`}
+                  className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 transition-all duration-300 cursor-pointer flex flex-col h-72 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <div className="relative w-full h-full overflow-hidden bg-slate-900">
                     <img
@@ -206,7 +270,7 @@ export function GalleryPage() {
                     onClick={() => handlePageChange(validPage - 1)}
                     disabled={validPage === 1}
                     className="p-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Previous page"
+                    aria-label={t('common.previous', 'Previous')}
                   >
                     {isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                   </button>
@@ -231,7 +295,7 @@ export function GalleryPage() {
                     onClick={() => handlePageChange(validPage + 1)}
                     disabled={validPage === totalPages}
                     className="p-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Next page"
+                    aria-label={t('common.next', 'Next')}
                   >
                     {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </button>
@@ -250,14 +314,18 @@ export function GalleryPage() {
         >
           <button
             onClick={() => setLightboxImage(null)}
-            className="absolute top-6 right-6 p-3 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute top-6 end-6 p-3 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={t('common.close', 'Close')}
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
 
           <div
             className="max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-white/10"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lightboxImage.title}
           >
             <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
               <img

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -66,6 +66,57 @@ export function PhotoGallery() {
   // Show only top 3 photos on landing page as requested
   const displayedItems = filteredItems.slice(0, 3);
 
+  /**
+   * Move the lightbox selection by `delta` positions within the displayed set.
+   * Wraps around at both ends so arrow keys never dead-end.
+   */
+  const step = useCallback(
+    (delta: number) => {
+      setActiveItem((current) => {
+        if (!current || displayedItems.length === 0) return current;
+        const index = displayedItems.findIndex((item) => item.id === current.id);
+        if (index === -1) return current;
+        const nextIndex = (index + delta + displayedItems.length) % displayedItems.length;
+        return displayedItems[nextIndex];
+      });
+    },
+    [displayedItems],
+  );
+
+  // Keyboard navigation while the lightbox is open.
+  // Arrow semantics are mirrored in RTL so "next" always follows reading order.
+  useEffect(() => {
+    if (!activeItem) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault();
+          setActiveItem(null);
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          step(isRtl ? -1 : 1);
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          step(isRtl ? 1 : -1);
+          break;
+        case 'Home':
+          event.preventDefault();
+          if (displayedItems.length) setActiveItem(displayedItems[0]);
+          break;
+        case 'End':
+          event.preventDefault();
+          if (displayedItems.length) setActiveItem(displayedItems[displayedItems.length - 1]);
+          break;
+        default:
+          break;
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [activeItem, step, isRtl, displayedItems]);
+
   return (
     <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
       {/* Glow Effects */}
@@ -116,7 +167,16 @@ export function PhotoGallery() {
                 transition={{ duration: 0.3 }}
                 key={item.id}
                 onClick={() => setActiveItem(item)}
-                className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer shadow-xl border border-white/10 bg-slate-800"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveItem(item);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={t('gallery.view', 'Zoom Image') + ': ' + item.title}
+                className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer shadow-xl border border-white/10 bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
               >
                 <img
                   src={item.imageUrl}
@@ -178,14 +238,17 @@ export function PhotoGallery() {
           >
             <div
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={activeItem.title}
               className="relative max-w-4xl w-full bg-slate-900 rounded-3xl overflow-hidden border border-white/20 shadow-2xl space-y-4"
             >
               <button
                 onClick={() => setActiveItem(null)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 backdrop-blur-md transition-colors"
-                aria-label="Close modal"
+                className="absolute top-4 end-4 z-10 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                aria-label={t('common.close', 'Close')}
               >
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6" aria-hidden="true" />
               </button>
 
               <div className="max-h-[70vh] overflow-hidden bg-slate-950 flex items-center justify-center">

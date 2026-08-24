@@ -37,6 +37,9 @@ import {
   isCurrentStepValid,
 } from './admissionWizardValidation';
 import { getApiErrorMessage } from '../../../lib/formData';
+import { logger } from '../../../lib/logger';
+import { LoadingSpinner } from '../../../components/ui/Badge';
+import { ErrorState } from '../../../components/ui/ErrorState';
 
 export function AdmissionWizard() {
   const { t } = useTranslation();
@@ -46,9 +49,10 @@ export function AdmissionWizard() {
 
   const [step, setStep] = useState(1);
   const [documentFiles, setDocumentFiles] = useState<Record<string, File | null>>({});
+  const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [form, setForm] = useState<AdmissionWizardFormState>(() => createInitialAdmissionForm(user));
 
-  const { data: requirements = [] } = useQuery({
+  const { data: requirements = [], isLoading: requirementsLoading, isError: requirementsError, refetch: refetchRequirements } = useQuery({
     queryKey: ['admission-requirements', lang],
     queryFn: () => requirementsApi.list(false, lang).then((r) => r.data),
   });
@@ -76,15 +80,23 @@ export function AdmissionWizard() {
       const appId = res.data.id;
 
       // 2. Upload Document Files sequentially
+      const docUploadErrors: string[] = [];
       for (const [docCode, fileObj] of Object.entries(documentFiles)) {
         if (fileObj) {
           const fd = new FormData();
           fd.append('file', fileObj);
           fd.append('documentType', docCode);
-          await admissionsApi.uploadDocument(appId, fd).catch((err) => {
-            console.warn(`Error uploading document ${docCode}:`, err);
-          });
+          try {
+            await admissionsApi.uploadDocument(appId, fd);
+          } catch (err) {
+            const msg = getApiErrorMessage(err, `Failed to upload document ${docCode}`);
+            docUploadErrors.push(msg);
+            logger.warn(`Error uploading document ${docCode}:`, err);
+          }
         }
+      }
+      if (docUploadErrors.length > 0) {
+        setUploadErrors(docUploadErrors);
       }
 
       // 3. Submit application to admin and get reference number
@@ -137,6 +149,7 @@ export function AdmissionWizard() {
   const stepValid = isCurrentStepValid(step, form, requiredDocumentsList, documentFiles);
 
   function next() {
+    setUploadErrors([]);
     if (!stepValid) return;
     if (step < 6) setStep(step + 1);
     else mutation.mutate();
@@ -627,6 +640,14 @@ export function AdmissionWizard() {
               </div>
             </div>
 
+            {requirementsLoading ? (
+              <LoadingSpinner showLabel label={t('states.loadingContent', 'Loading content, please wait…')} />
+            ) : requirementsError ? (
+              <ErrorState
+                compact
+                onRetry={() => refetchRequirements()}
+              />
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {requiredDocumentsList.map((doc) => {
                 const currentFile = documentFiles[doc.code];
@@ -703,6 +724,7 @@ export function AdmissionWizard() {
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
@@ -1041,6 +1063,19 @@ export function AdmissionWizard() {
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-3">
           <ShieldAlert className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
           <span>{getApiErrorMessage(mutation.error, 'حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.')}</span>
+        </div>
+      )}
+
+      {/* Upload Errors Alert */}
+      {uploadErrors.length > 0 && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-semibold space-y-1">
+          <div className="flex items-center gap-2 font-bold">
+            <ShieldAlert className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>{t('admission.uploadPartialFailure', 'Some documents failed to upload')}</span>
+          </div>
+          {uploadErrors.map((err, i) => (
+            <div key={i} className="ps-6">{err}</div>
+          ))}
         </div>
       )}
 

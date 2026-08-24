@@ -38,13 +38,13 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function LoadingSpinner() {
-  return (
-    <div className="flex justify-center py-12">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-    </div>
-  );
-}
+/**
+ * Re-exported from `./LoadingSpinner` so that the many existing
+ * `import { LoadingSpinner } from '.../ui/Badge'` call sites keep working while
+ * picking up the accessible (`role="status"`) implementation.
+ */
+export { LoadingSpinner } from './LoadingSpinner';
+export type { LoadingSpinnerProps } from './LoadingSpinner';
 
 export function PageHeader({ title, subtitle, showBack = true }: { title: string; subtitle?: string; showBack?: boolean }) {
   const navigate = useNavigate();

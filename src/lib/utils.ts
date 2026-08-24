@@ -15,13 +15,12 @@ export const UPLOAD_URL =
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';
   let cleanPath = path.trim();
-  cleanPath = cleanPath.replace(/(\.(?:png|jpg|jpeg|webp|gif|svg))\/+$/i, '$1');
+  cleanPath = cleanPath.replace(/(\.(?:png|jpg|jpeg|webp|gif|svg|pdf))\/+$/i, '$1');
 
   if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
     return cleanPath;
   }
 
-  // NestJS local storage or static assets: /uploads/..., /photos/..., etc.
   if (cleanPath.startsWith('/storage/') || cleanPath.startsWith('storage/')) {
     const normalized = cleanPath.startsWith('/') ? cleanPath.slice(8) : cleanPath.slice(7);
     cleanPath = normalized;
@@ -80,6 +79,15 @@ export function formatRelativeTime(value: string, lang: string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return formatDate(value, lang);
+}
+
+export function formatCurrency(value: number, lang: string, currency = 'EGP'): string {
+  return new Intl.NumberFormat(lang === 'ar' ? 'ar-EG' : 'en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 export function getBilingualText(item: any, fieldName: string, lang: string): string {

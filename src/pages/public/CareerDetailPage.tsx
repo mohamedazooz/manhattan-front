@@ -8,6 +8,7 @@ import { useAppLanguage } from '../../i18n';
 import { useAuth } from '../../lib/auth';
 
 import { getBilingualText } from '../../lib/utils';
+import DOMPurify from 'dompurify';
 
 function getApplyPath(jobId: string) {
   return `/portal/applicant/apply/${jobId}`;
@@ -54,11 +55,11 @@ export function CareerDetailPage() {
         <div className="md:col-span-7 space-y-6">
           <div className="glass-card rounded-2xl p-6">
             <h3 className="font-semibold text-lg mb-3 text-primary-dark dark:text-gold">{t('careers.positionDescription', 'الوصف الوظيفي')}</h3>
-            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: description }} />
+            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }} />
           </div>
           <div className="glass-card rounded-2xl p-6">
             <h3 className="font-semibold text-lg mb-3 text-primary-dark dark:text-gold">{t('careers.requirementsQualifications', 'المتطلبات والمؤهلات')}</h3>
-            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: requirements }} />
+            <div className="prose-content text-sm text-neutral-medium dark:text-slate-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(requirements) }} />
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { educationApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { getBilingualText, mediaUrl } from '../../lib/utils';
+import DOMPurify from 'dompurify';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 
@@ -62,7 +63,7 @@ export function ProgramDetailPage() {
         <img src={mediaUrl(program.coverImageUrl)} alt={title} className="w-full h-64 sm:h-80 object-cover rounded-2xl mb-8 border border-slate-200 dark:border-slate-800 shadow-xs" />
       )}
       <PageHeader title={title} subtitle={summary} />
-      <div className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed mt-6" dangerouslySetInnerHTML={{ __html: content }} />
+      <div className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed mt-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
     </div>
   );
 }

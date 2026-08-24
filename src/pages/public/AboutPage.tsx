@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { aboutApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { getBilingualText, mediaUrl } from '../../lib/utils';
+import DOMPurify from 'dompurify';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
 
@@ -59,7 +60,7 @@ export function AboutPage() {
                 </h2>
                 <div
                   className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
                 />
               </div>
               {section.imageUrl && (

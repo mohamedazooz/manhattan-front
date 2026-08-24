@@ -50,14 +50,19 @@ function clearAccessToken() {
 }
 
 export async function refreshAccessToken(): Promise<string> {
-  const { data } = await axios.post(
-    `${API_URL}/auth/refresh`,
-    {},
-    { withCredentials: true },
-  );
-  accessToken = data.accessToken;
-  return data.accessToken;
+  refreshPromise ??= axios
+    .post(`${API_URL}/auth/refresh`, {}, { withCredentials: true })
+    .then((res) => {
+      accessToken = res.data.accessToken;
+      return res.data.accessToken;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
+  return refreshPromise;
 }
+
+let refreshPromise: Promise<string> | null = null;
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -75,33 +80,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-let refreshPromise: Promise<string> | null = null;
-
-async function refreshAccessTokenInternal(): Promise<string> {
-  refreshPromise ??= refreshAccessToken().finally(() => {
-    refreshPromise = null;
-  });
-  return refreshPromise;
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      try {
-        refreshPromise ??= refreshAccessTokenInternal();
-        const token = await refreshPromise;
-        refreshPromise = null;
-        original.headers.Authorization = `Bearer ${token}`;
-        return api(original);
-      } catch {
-        refreshPromise = null;
-        clearAccessToken();
-        onAuthFailure?.();
-      }
+  if (error.response?.status === 401 && !original._retry) {
+    original._retry = true;
+    try {
+      const token = await refreshAccessToken();
+      original.headers.Authorization = `Bearer ${token}`;
+      return api(original);
+    } catch {
+      clearAccessToken();
+      onAuthFailure?.();
     }
+  }
     return Promise.reject(error);
   },
 );

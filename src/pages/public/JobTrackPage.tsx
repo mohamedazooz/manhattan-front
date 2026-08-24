@@ -12,6 +12,7 @@ import { careersApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
+import { logger } from '../../lib/logger';
 
 interface TrackResult {
   referenceNumber: string;
@@ -53,7 +54,7 @@ export function JobTrackPage() {
       const res = await careersApi.trackApplication(refNumber.trim(), phone.trim());
       setResult(res.data);
     } catch (err: any) {
-      console.error('Track application error:', err);
+      logger.error('Track application error:', err);
       const msg = err?.response?.data?.message;
       setError(
         msg || (isAr ? 'لم يتم العثور على طلب بهذا الرقم المرجعي أو رقم الهاتف غير مطابق' : 'No application found with provided reference number or phone mismatch')

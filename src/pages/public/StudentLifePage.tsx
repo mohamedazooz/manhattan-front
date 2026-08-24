@@ -28,6 +28,7 @@ import {
 import { SeoHead } from '../../components/common/SeoHead';
 import { DEFAULT_STUDENT_LIFE_CONFIG, type StudentLifeFullConfig, type StudentLifeClubConfig } from '../admin/AdminStudentLifePage';
 import { Button } from '../../components/ui/Button';
+import { logger } from '../../lib/logger';
 
 export function StudentLifePage() {
   const { t, i18n } = useTranslation();
@@ -53,7 +54,7 @@ export function StudentLifePage() {
           pillars: parsed.pillars && parsed.pillars.length > 0 ? parsed.pillars : DEFAULT_STUDENT_LIFE_CONFIG.pillars,
         };
       } catch (e) {
-        console.error('Error parsing student_life_config', e);
+        logger.error('Error parsing student_life_config', e);
       }
     }
     return DEFAULT_STUDENT_LIFE_CONFIG;

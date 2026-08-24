@@ -8,6 +8,7 @@ import { DataTable, Modal } from '../../components/ui/DataTable';
 import { PageHeader } from '../../components/ui/Badge';
 import { AdminPageGuide } from '../../components/admin/AdminPageGuide';
 import { useAppLanguage } from '../../i18n';
+import { logger } from '../../lib/logger';
 import {
   Sparkles,
   Plus,
@@ -244,7 +245,7 @@ export function AdminStudentLifePage() {
           pillars: parsed.pillars || DEFAULT_STUDENT_LIFE_CONFIG.pillars,
         });
       } catch (err) {
-        console.error('Failed to parse student_life_config:', err);
+        logger.error('Failed to parse student_life_config:', err);
       }
     }
   }, [cmsConfig]);

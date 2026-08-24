@@ -26,7 +26,8 @@
     "login": "Login",
     "portal": "Parent Portal",
     "applicantPortal": "Applicant Portal",
-    "admin": "Admin"
+    "admin": "Admin",
+    "portalHome": "Dashboard"
   },
   "hero": {
     "discover": "DISCOVER MORE",
@@ -61,7 +62,15 @@
     "empty": "No photos available in this category currently.",
     "view": "Zoom Image",
     "showingCount": "Showing {{start}} - {{end}} of {{total}} photos",
-    "noImages": "No gallery images yet."
+    "noImages": "No gallery images yet.",
+    "mediaBadge": "MLS MEDIA GALLERY",
+    "cat": {
+      "academics": "Academic Life",
+      "events": "Events & Activities",
+      "campus": "Campus & Facilities",
+      "sports": "Sports & Athletics",
+      "other": "Other"
+    }
   },
   "applicantFlows": {
     "studentTitle": "Student Admission Application",
@@ -120,7 +129,7 @@
     "experience": "Years of Experience",
     "classSize": "Avg. Class Size",
     "languages": "Languages Taught",
-    "campusArea": "Campus Area (m²)",
+    "campusArea": "Campus Area (mÂ²)",
     "labs": "STEM & Science Labs"
   },
   "philosophy": {
@@ -204,7 +213,39 @@
     "name": "Name",
     "subject": "Subject",
     "date": "Date",
-    "view": "View"
+    "view": "View",
+    "retry": "Try again",
+    "close": "Close",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "errorSave": "Failed to save",
+    "title": "Title",
+    "subtitle": "Subtitle",
+    "preview": "Preview",
+    "email": "Email",
+    "phone": "Phone",
+    "to": "To",
+    "sending": "Sending...",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "submitting": "Submitting...",
+    "saveSuccess": "Saved successfully",
+    "backToAcademics": "Back to Academics"
+  },
+  "states": {
+    "loading": "Loadingâ€¦",
+    "loadingContent": "Loading content, please waitâ€¦",
+    "errorTitle": "Something went wrong",
+    "errorDesc": "We could not load this content. Please check your connection and try again.",
+    "emptyTitle": "Nothing here yet",
+    "emptyDesc": "There is no data to display at the moment."
+  },
+  "notFoundPage": {
+    "code": "404",
+    "title": "Page not found",
+    "description": "The link you requested is unavailable or has been moved. Please check the address or return to the homepage.",
+    "backHome": "Back to homepage",
+    "browseSite": "Browse the site"
   },
   "footer": {
     "quickLinks": "Quick Links",
@@ -222,7 +263,8 @@
     "newsletterDesc": "Stay updated with our latest news, academic events, and announcements.",
     "emailPlaceholder": "Enter your email address",
     "subscribe": "Subscribe",
-    "subscribedSuccess": "Thank you for subscribing!"
+    "subscribedSuccess": "Thank you for subscribing!",
+    "subscribeError": "Could not subscribe. Please try again."
   },
   "auth": {
     "loginTitle": "Sign In",
@@ -238,8 +280,8 @@
     "welcomeBack": "Welcome Back",
     "loginHeroTitle": "Your Gateway to Manhattan",
     "loginHeroDesc": "Access your parent or applicant portal to manage applications and track progress.",
-    "registerAsParent": "Register as Parent →",
-    "registerAsApplicant": "Register as Job Applicant →",
+    "registerAsParent": "Register as Parent â†’",
+    "registerAsApplicant": "Register as Job Applicant â†’",
     "registerParent": "Parent account",
     "registerApplicant": "Applicant account",
     "registerParentTitle": "Parent Registration",
@@ -269,6 +311,7 @@
     "backToLogin": "Back to sign in",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
+    "passwordRequirements": "Must be at least {{count}} characters.",
     "invalidCredentials": "Invalid email or password",
     "registerFailed": "Registration failed. Email may already be in use.",
     "adminLogin": "Staff Login"
@@ -310,14 +353,18 @@
       "emptyTitle": "No admission applications yet",
       "emptyDesc": "Start your child's admission journey by creating a new application.",
       "viewDetails": "View Details",
-      "resumeApplication": "Resume Application ✏️",
+      "resumeApplication": "Resume Application âœï¸",
       "incompleteNoticeTitle": "Incomplete Application / Missing Documents",
       "incompleteNoticeDesc": "You have an incomplete admission application or missing required documents. Please resume and complete your submission.",
       "noApplicationNoticeTitle": "No Admission Application Submitted Yet",
       "noApplicationNoticeDesc": "Start registering your child's details and required documents to begin the admission process.",
       "startNow": "Start Application Now",
       "progress": "Application Progress",
-      "stats": { "active": "Active Applications", "total": "Total Applications", "accepted": "Accepted" },
+      "stats": {
+        "active": "Active Applications",
+        "total": "Total Applications",
+        "accepted": "Accepted"
+      },
       "calendar": "Academic Calendar",
       "policies": "School Policies",
       "acceptedNotice": {
@@ -339,7 +386,10 @@
       "emptyTitle": "No job applications yet",
       "emptyDesc": "Browse our open teaching positions and start your application.",
       "viewDetails": "View Application",
-      "stats": { "pending": "Pending Applications", "total": "Total Applications" },
+      "stats": {
+        "pending": "Pending Applications",
+        "total": "Total Applications"
+      },
       "acceptedNotice": {
         "title": "Congratulations! Job Application Accepted",
         "description": "Your job application has been ACCEPTED! Please visit the Manhattan Language School administration office within 48 hours for your HR interview and onboarding procedures.",
@@ -414,7 +464,7 @@
       "viewOnSite": "View on site",
       "affectsSection": "Affects section",
       "livePreview": "Live preview",
-      "noPreviewData": "No preview data yet — add content to see it here."
+      "noPreviewData": "No preview data yet â€” add content to see it here."
     },
     "pageGuides": {
       "hero": {
@@ -446,7 +496,7 @@
         "description": "Manage education programs and levels shown on the academics pages."
       },
       "gallery": {
-        "section": "Homepage — Photo gallery",
+        "section": "Homepage â€” Photo gallery",
         "description": "Upload and organize school photos shown in the landing gallery section."
       },
       "blog": {
@@ -454,7 +504,7 @@
         "description": "Write and publish school news and blog articles."
       },
       "jobRequirements": {
-        "section": "Careers — Applicant form",
+        "section": "Careers â€” Applicant form",
         "description": "Define required documents per employment type. Applicants must upload these when applying for a matching job."
       }
     },
@@ -474,7 +524,7 @@
     "formDocumentsEmpty": "No form documents",
     "editDocument": "Edit document",
     "saveChanges": "Save changes",
-    "selectCategory": "Select category…",
+    "selectCategory": "Select categoryâ€¦",
     "titleEn": "Title (English)",
     "contentEn": "Content (English)",
     "contentAr": "Content (Arabic)",
@@ -484,7 +534,7 @@
     "logout": "Logout",
     "site": "View Site",
     "dashboardSubtitle": "Overview of school operations & content",
-    "dashboardWelcome": "Welcome, {{name}} — operational overview for your role",
+    "dashboardWelcome": "Welcome, {{name}} â€” operational overview for your role",
     "navOverview": "Overview",
     "navAdmissions": "Admissions",
     "navCareers": "Careers",
@@ -509,7 +559,7 @@
     "replyMessage": "Reply Message Body",
     "replySubject": "Email Subject",
     "inquiryMessage": "Inquiry Message",
-    "replyPlaceholder": "Write your reply to the parent or visitor here…",
+    "replyPlaceholder": "Write your reply to the parent or visitor hereâ€¦",
     "replySuccess": "Reply sent and inquiry status updated",
     "formDocs": {
       "empty": "No form documents",
@@ -571,13 +621,13 @@
       "noPendingWork": "No pending reviews or system alerts.",
       "pendingCount": "{{count}} items across queues need action",
       "pipelineTitle": "Processing pipelines",
-      "pipelineSubtitle": "Where work is waiting — focus on the left side of each pipeline first.",
+      "pipelineSubtitle": "Where work is waiting â€” focus on the left side of each pipeline first.",
       "bottleneckAdmissions": "{{count}} applications in intake/review",
       "bottleneckJobs": "{{count}} applications awaiting HR review",
       "contentBacklog": "{{count}} unpublished content drafts across modules",
       "reviewContent": "Review content",
       "analyticsTitle": "Detailed analytics",
-      "analyticsSubtitle": "Optional breakdown charts — expand when you need distribution detail.",
+      "analyticsSubtitle": "Optional breakdown charts â€” expand when you need distribution detail.",
       "queueClear": "Queue is clear",
       "queueEmptyHint": "No pending submissions currently in the queue.",
       "queueClearHint": "No reviews, inquiries, or system alerts waiting on you.",
@@ -595,7 +645,7 @@
       "noInquiries": "No contact inquiries",
       "noInquiriesHint": "When visitors submit the contact form, inquiries will appear here.",
       "needsResponse": "Needs response",
-      "searchComments": "Search comments or authors…",
+      "searchComments": "Search comments or authorsâ€¦",
       "noComments": "No blog comments",
       "noCommentsHint": "Comments from readers will appear here for moderation.",
       "pendingReview": "Pending review"
@@ -621,7 +671,7 @@
     "pageOf": "Page {{page}} of {{total}}",
     "admissionsTitle": "Student Admissions",
     "admissionsSubtitle": "Manage prospective student applications, review parent contact info, and update status.",
-    "searchStudentPlaceholder": "🔍 Search student name or grade...",
+    "searchStudentPlaceholder": "ðŸ” Search student name or grade...",
     "filterStatusLabel": "Filter Status:",
     "studentName": "Student Name",
     "gradeLevel": "Grade Level",
@@ -716,7 +766,9 @@
       "uploadBtn": "Upload Photo",
       "confirmDelete": "Are you sure you want to delete this photo?",
       "empty": "No gallery images",
-      "emptyHint": "Upload photos to showcase campus life and events."
+      "emptyHint": "Upload photos to showcase campus life and events.",
+      "categoryLabel": "Category",
+      "uploadFromPc": "Upload from computer"
     },
     "requirements": {
       "title": "Admission Requirements by Grade",
@@ -728,14 +780,25 @@
       "saveReq": "Save Requirements",
       "ageRange": "Age range",
       "empty": "No admission requirements",
-      "emptyHint": "Add grade-level requirements above."
+      "emptyHint": "Add grade-level requirements above.",
+      "imageLabel": "Image"
     },
     "users": {
       "title": "User Management",
       "subtitle": "Create admin accounts, assign roles, and manage system access.",
       "addNew": "+ Add New User",
       "role": "Role",
-      "saveUser": "Save User"
+      "saveUser": "Save User",
+      "staffTab": "Staff",
+      "externalTab": "External",
+      "searchPlaceholder": "Search users...",
+      "filterRole": "Filter by role",
+      "allRoles": "All Roles",
+      "createTitle": "Create User",
+      "selectRole": "Select Role",
+      "nameHeader": "Name",
+      "roleHeader": "Role",
+      "activeUsers": "Active Users"
     },
     "roles": {
       "title": "Roles & Permissions",
@@ -745,7 +808,10 @@
       "description": "Description",
       "permissions": "Permissions",
       "saveRole": "Save Role",
-      "usersAssigned": "Users Assigned to this Role"
+      "usersAssigned": "Users Assigned to this Role",
+      "totalRoles": "Total Roles",
+      "sysAdmins": "System Admins",
+      "sysPerms": "System Permissions"
     },
     "email": {
       "title": "Email Templates & System Logs",
@@ -783,7 +849,7 @@
       "coverUrl": "Cover image URL",
       "coverHint": "Upload an image from your computer",
       "noCover": "No cover",
-      "saving": "Saving…",
+      "saving": "Savingâ€¦",
       "savePost": "Save article"
     },
     "heroCrud": {
@@ -829,7 +895,11 @@
       "metaTitle": "Global Meta Title",
       "metaDescription": "Global Meta Description",
       "keywords": "Keywords (comma separated)",
-      "saveSeo": "Save SEO Settings"
+      "saveSeo": "Save SEO Settings",
+      "siteTitleEn": "Site Title (English)",
+      "siteTitleAr": "Site Title (Arabic)",
+      "metaDescriptionEn": "Meta Description (English)",
+      "metaDescriptionAr": "Meta Description (Arabic)"
     },
     "notificationsCrud": {
       "title": "System Notifications",
@@ -838,17 +908,62 @@
       "noNotifications": "No unread notifications.",
       "noNotificationsHint": "Alerts will appear here when activity occurs.",
       "newNotification": "New notification",
-      "search": "Search notifications…",
-      "columnTitle": "Notification",
+      "searchPlaceholder": "Search notificationsâ€¦",
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read",
+      "archived": "Archived",
+      "notification": "Notification",
       "type": "Type",
+      "status": "Status",
       "created": "Created",
+      "actions": "Actions",
       "viewTarget": "View",
+      "markRead": "Mark read",
+      "archive": "Archive",
       "createTitle": "New notification",
-      "fieldTitle": "Title",
-      "fieldMessage": "Message",
-      "creating": "Creating…",
+      "formTitle": "Title",
+      "formMessage": "Message",
+      "creating": "Creatingâ€¦",
       "create": "Create"
-    }
+    },
+    "statusLabel": "Status",
+    "viewFullDetails": "View details",
+    "category": "Category",
+    "subCategory": "Sub-category",
+    "titleAr": "Title (Arabic)",
+    "descAr": "Description (Arabic)",
+    "descEn": "Description (English)",
+    "requiredStatus": "Required status",
+    "downloadUrl": "Download URL",
+    "downloadName": "File name",
+    "sortOrder": "Sort order",
+    "addDocument": "Add document",
+    "title": "Title",
+    "delete": "Delete",
+    "employmentType": "Employment type",
+    "description": "Description",
+    "descriptionAr": "Description (Arabic)",
+    "originalInquiry": "Original Inquiry",
+    "blogPosts": "Blog Posts",
+    "blogComments": "Comments",
+    "blogCategories": "Categories",
+    "comment": "Comment",
+    "author": "Author",
+    "approve": "Approve",
+    "spam": "Spam",
+    "categoryName": "Category Name",
+    "categoryNameAr": "Category Name (Arabic)",
+    "slug": "Slug",
+    "addCategory": "Add Category",
+    "backToAdmissions": "Back to Admissions",
+    "gradePlaceholder": "Select grade...",
+    "titlePlaceholder": "Enter title...",
+    "jobAppsTitle": "Job Applications",
+    "jobAppsSubtitle": "Review and manage job applications",
+    "candidateName": "Candidate Name",
+    "noDocs": "No documents",
+    "inquiriesSubtitle": "Manage contact form submissions and messages"
   },
   "about": {
     "pageTitle": "About Us",
@@ -1000,7 +1115,9 @@
     "submitting": "Submitting...",
     "submitApplication": "Submit Application",
     "cancel": "Cancel",
-    "errorSubmit": "Failed to submit application. Please try again."
+    "errorSubmit": "Failed to submit application. Please try again.",
+    "positionDescription": "Position Description",
+    "requirementsQualifications": "Requirements & Qualifications"
   },
   "status": {
     "DRAFT": "Draft",
@@ -1044,7 +1161,8 @@
       "documents": "Document Upload",
       "health": "Medical & Health Record",
       "policies": "Rules & Declaration",
-      "review": "Review & Submit"
+      "review": "Review & Submit",
+      "school": "School Information"
     },
     "studentFirstName": "Student First Name",
     "studentLastName": "Student Last Name",
@@ -1123,7 +1241,7 @@
       "Note that the final school installment is due at the beginning of the year on September 1st of the academic year."
     ],
     "officialDeclarationEn": "I AGREE TO ACCEPT AND ABIDE BY THE RULES AND REGULATION FOR MANHATTAN SCHOOL",
-    "officialDeclarationAr": "أنا الموقع أدناه أوافق على أنظمة وقوانين مدرسة مانهاتن الخاصة أعلاه وعليه أوقع",
+    "officialDeclarationAr": "Ø£Ù†Ø§ Ø§Ù„Ù…ÙˆÙ‚Ø¹ Ø£Ø¯Ù†Ø§Ù‡ Ø£ÙˆØ§ÙÙ‚ Ø¹Ù„Ù‰ Ø£Ù†Ø¸Ù…Ø© ÙˆÙ‚ÙˆØ§Ù†ÙŠÙ† Ù…Ø¯Ø±Ø³Ø© Ù…Ø§Ù†Ù‡Ø§ØªÙ† Ø§Ù„Ø®Ø§ØµØ© Ø£Ø¹Ù„Ø§Ù‡ ÙˆØ¹Ù„ÙŠÙ‡ Ø£ÙˆÙ‚Ø¹",
     "signedByName": "Signatory Parent Full Name",
     "signedDate": "Signature & Registration Date",
     "termsAccepted": "I accept and agree to abide by all rules and regulations of Manhattan School stated above.",
@@ -1133,6 +1251,8 @@
     "submitApplication": "Submit Application",
     "notFound": "Application not found",
     "noRequirements": "No specific requirements configured for this grade",
-    "referenceNumber": "Reference Number"
+    "referenceNumber": "Reference Number",
+    "uploadPartialFailure": "Some documents failed to upload",
+    "errorSubmit": "Failed to submit application. Please try again."
   }
 }

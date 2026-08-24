@@ -5,15 +5,17 @@ import { motion } from 'framer-motion';
 import { blogApi } from '../../api';
 import { Card } from '../../components/ui/Card';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { ErrorState } from '../../components/ui/ErrorState';
 import { formatDate, getBilingualText, mediaUrl } from '../../lib/utils';
 import { useAppLanguage } from '../../i18n';
 import { SeoHead } from '../../components/common/SeoHead';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight, Newspaper } from 'lucide-react';
 
 export function NewsPage() {
   const { t } = useTranslation();
   const lang = useAppLanguage();
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['posts', lang],
     queryFn: () => blogApi.list(lang).then((r) => r.data),
   });
@@ -28,7 +30,10 @@ export function NewsPage() {
       />
       <PageHeader title={t('newsPage.pageTitle')} subtitle={t('newsPage.pageSubtitle')} />
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {isError && <ErrorState onRetry={() => refetch()} />}
+
+      {!isError && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {posts.map((post: any, idx: number) => {
           const title = getBilingualText(post, 'title', lang);
           const contentSnippet = getBilingualText(post, 'content', lang).replace(/<[^>]+>/g, '').slice(0, 120);
@@ -70,17 +75,21 @@ export function NewsPage() {
 
                   <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-primary dark:text-blue-400">
                     <span>{t('newsPage.readArticle')}</span>
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
                   </div>
                 </Card>
               </Link>
             </motion.div>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      {!posts.length && (
-        <p className="text-neutral-medium dark:text-slate-400">{t('newsPage.noPosts')}</p>
+      {!isError && !posts.length && (
+        <EmptyState
+          icon={<Newspaper className="h-12 w-12" />}
+          title={t('newsPage.noPosts')}
+        />
       )}
     </div>
   );

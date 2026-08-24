@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { PageHeader } from '../../components/ui/Badge';
 import { getApiErrorMessage } from '../../lib/formData';
 import { mediaUrl } from '../../lib/utils';
+import { logger } from '../../lib/logger';
 import type { SeoConfig } from '../../types';
 import { Search, Share2, BarChart2, CheckCircle, Save, Upload } from 'lucide-react';
 
@@ -183,7 +184,7 @@ export function SeoAdminPage() {
                       const url = res.data.fileUrl || res.data.url;
                       setForm((prev) => ({ ...prev, defaultOgImage: url }));
                     } catch (err) {
-                      console.error('Failed to upload OG Image', err);
+                      logger.error('Failed to upload OG Image', err);
                     } finally {
                       setIsUploadingOg(false);
                     }

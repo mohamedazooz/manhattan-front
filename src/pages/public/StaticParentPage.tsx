@@ -5,6 +5,7 @@ import { pagesApi } from '../../api';
 import { LoadingSpinner, PageHeader } from '../../components/ui/Badge';
 import { useAppLanguage } from '../../i18n';
 import { getBilingualText } from '../../lib/utils';
+import DOMPurify from 'dompurify';
 
 const slugMap: Record<string, string> = {
   policies: 'school-policies',
@@ -36,7 +37,7 @@ export function StaticParentPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <PageHeader title={title} />
-      <div className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed mt-6" dangerouslySetInnerHTML={{ __html: content }} />
+      <div className="prose-content text-neutral-medium dark:text-slate-300 leading-relaxed mt-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
     </div>
   );
 }

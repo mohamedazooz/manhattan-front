@@ -12,6 +12,7 @@ import { slugify } from '../../lib/slug';
 import { getApiErrorMessage, omitKeys, buildFormData } from '../../lib/formData';
 import { mediaUrl } from '../../lib/utils';
 import { Save, CheckCircle, Building, Phone, Share2, Target, Upload } from 'lucide-react';
+import { logger } from '../../lib/logger';
 
 function AboutCrud() {
   const { t } = useTranslation();
@@ -658,7 +659,7 @@ export function AdminSettingsPage() {
       const url = res.data.fileUrl || res.data.url;
       setValues((prev) => ({ ...prev, [key]: url }));
     } catch (err) {
-      console.error(`Failed to upload file for ${key}`, err);
+      logger.error(`Failed to upload file for ${key}`, err);
     } finally {
       setUploadingKey(null);
     }
@@ -678,7 +679,7 @@ export function AdminSettingsPage() {
       setBulkSavedSuccess(true);
       setTimeout(() => setBulkSavedSuccess(false), 4000);
     } catch (err) {
-      console.error('Failed to save all settings', err);
+      logger.error('Failed to save all settings', err);
     } finally {
       setIsSavingAll(false);
     }

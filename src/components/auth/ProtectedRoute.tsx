@@ -22,7 +22,7 @@ export function ProtectedRoute({
   }
 
   if (adminOnly && !isAdmin) {
-    return <Navigate to="/portal/parent" replace />;
+    return <Navigate to={getRedirectPath(user.role)} replace />;
   }
 
   if (permission && !hasPermission(permission)) {
@@ -30,6 +30,20 @@ export function ProtectedRoute({
   }
 
   return <Outlet />;
+}
+
+function getRedirectPath(role?: string): string {
+  switch (role) {
+    case 'ADMIN':
+    case 'SUPER_ADMIN':
+      return '/admin';
+    case 'PARENT':
+      return '/portal/parent';
+    case 'APPLICANT':
+      return '/portal/applicant';
+    default:
+      return '/';
+  }
 }
 
 export function PermissionGuard({
