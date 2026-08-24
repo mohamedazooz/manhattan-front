@@ -26,7 +26,7 @@ import {
   X,
 } from 'lucide-react';
 import { SeoHead } from '../../components/common/SeoHead';
-import { DEFAULT_STUDENT_LIFE_CONFIG, type StudentLifeFullConfig, type StudentLifeClubConfig } from '../admin/AdminStudentLifePage';
+import { DEFAULT_STUDENT_LIFE_CONFIG, type StudentLifeFullConfig, type StudentLifeClubConfig } from '../../lib/studentLifeConfig';
 import { Button } from '../../components/ui/Button';
 import { logger } from '../../lib/logger';
 
