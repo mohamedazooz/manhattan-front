@@ -2,7 +2,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-ARG VITE_API_URL=https://www.manhattanschool.net/api/v1
+ARG VITE_API_URL=https://www.manhattanschool.net/api
 ARG VITE_UPLOAD_URL=https://www.manhattanschool.net
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_UPLOAD_URL=$VITE_UPLOAD_URL

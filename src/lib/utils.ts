@@ -4,8 +4,8 @@ const rawUpload = import.meta.env.VITE_UPLOAD_URL || '';
 
 export const API_URL =
   isProd && (!rawApi || rawApi.includes('localhost'))
-    ? 'https://www.manhattanschool.net/api/v1'
-    : (rawApi || 'https://www.manhattanschool.net/api/v1');
+    ? 'https://www.manhattanschool.net/api'
+    : (rawApi || 'https://www.manhattanschool.net/api');
 
 export const UPLOAD_URL =
   isProd && (!rawUpload || rawUpload.includes('localhost'))

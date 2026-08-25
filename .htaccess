@@ -15,7 +15,7 @@
 
     # Handle React Client-Side SPA Routing (exclude API and deploy hooks)
     RewriteRule ^index\.html$ - [L]
-    RewriteCond %{REQUEST_URI} !^/api/v1
+    RewriteCond %{REQUEST_URI} !^/api
     RewriteCond %{REQUEST_URI} !^/deploy
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
