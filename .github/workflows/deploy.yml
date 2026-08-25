@@ -4,25 +4,78 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          timeout: 15m
+          command_timeout: 15m
           script: |
+            set -euo pipefail
+            echo "=== [1/7] Pre-deploy checks ==="
             cd /var/www/manhattan/frontend
+            DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+            echo "Disk usage: ${DISK_USAGE}%"
+            if [ "$DISK_USAGE" -gt 90 ]; then
+              echo "⚠️  WARNING: Disk usage above 90% — attempting cleanup..."
+              journalctl --vacuum-size=100M 2>/dev/null || true
+              sudo truncate -s 0 /var/log/btmp 2>/dev/null || true
+              sudo apt autoremove -y 2>/dev/null || true
+              sudo apt clean 2>/dev/null || true
+            fi
+            if [ "$DISK_USAGE" -gt 95 ]; then
+              echo "❌ CRITICAL: Disk usage above 95% — aborting deploy"
+              exit 1
+            fi
+
+            echo "=== [2/7] Checkout main branch ==="
+            git status
+            git checkout main 2>/dev/null || true
+            git fetch origin main
+            git reset --hard HEAD
+            git status
+
+            echo "=== [3/7] Pull latest code ==="
             git pull origin main
-            npm install
-            npm run build:prod
-            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S systemctl reload nginx
-            curl -fsS https://www.manhattanschool.net/api/v1/health
+
+            echo "=== [4/7] Install dependencies ==="
+            npm ci --no-audit --no-fund 2>&1 | tail -20
+
+            echo "=== [5/7] Build production bundle ==="
+            npm run build:prod 2>&1 | tail -30
+
+            echo "=== [6/7] Fix ownership & permissions ==="
+            sudo chown -R machsol:machsol /var/www/manhattan/frontend/dist 2>/dev/null || true
+            sudo chown -R machsol:machsol /var/www/manhattan/frontend/assets 2>/dev/null || true
+            sudo chown -R machsol:machsol /var/www/manhattan/frontend/photos 2>/dev/null || true
+            sudo chmod 600 .env .env.local .env.production 2>/dev/null || true
+
+            echo "=== [7/7] Reload nginx & health check ==="
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' systemctl reload nginx
+            sleep 2
+            for i in 1 2 3 4 5; do
+              echo "Health check attempt #$i..."
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.manhattanschool.net/ || echo "000")
+              echo "HTTP $HTTP_CODE"
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "✅ Frontend deploy successful — HTTP $HTTP_CODE"
+                exit 0
+              fi
+              sleep 3
+            done
+            echo "❌ Frontend health check failed after 5 attempts"
+            exit 1
