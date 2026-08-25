@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bold,
   Italic,
@@ -30,6 +31,7 @@ export function RichTextEditor({
   className,
   minHeight = '180px',
 }: RichTextEditorProps) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [showCode, setShowCode] = useState(false);
   const [htmlValue, setHtmlValue] = useState(value || '');
@@ -152,7 +154,7 @@ export function RichTextEditor({
           {/* Code / Visual Toggle */}
           <button
             type="button"
-            title={showCode ? 'الرؤية المرئية' : 'عرض الكود التلقائي'}
+            title={showCode ? t('common.visualPreview', 'الرؤية المرئية') : t('common.codePreview', 'عرض الكود')}
             onClick={() => setShowCode(!showCode)}
             className={cn(
               'flex items-center gap-1.5 px-2 py-1 text-xs rounded transition-all font-medium',
@@ -162,12 +164,12 @@ export function RichTextEditor({
             {showCode ? (
               <>
                 <Eye className="h-3.5 w-3.5" />
-                <span>معاينة مرئية</span>
+                <span>{t('common.visualPreview', 'معاينة مرئية')}</span>
               </>
             ) : (
               <>
                 <Code className="h-3.5 w-3.5" />
-                <span>كود (اختياري)</span>
+                <span>{t('common.code', 'كود')}</span>
               </>
             )}
           </button>

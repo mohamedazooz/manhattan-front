@@ -100,7 +100,7 @@ export function GalleryPage() {
         <div className="relative max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-gold mb-4">
             <Sparkles className="h-4 w-4" />
-            <span>MLS MEDIA GALLERY</span>
+            <span>{t('gallery.pageTitleHeader')}</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
             {t('gallery.title', 'School Photo Gallery')}

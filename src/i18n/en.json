@@ -61,7 +61,8 @@
     "empty": "No photos available in this category currently.",
     "view": "Zoom Image",
     "showingCount": "Showing {{start}} - {{end}} of {{total}} photos",
-    "noImages": "No gallery images yet."
+    "noImages": "No gallery images yet.",
+    "pageTitleHeader": "MLS Media Gallery"
   },
   "applicantFlows": {
     "studentTitle": "Student Admission Application",
@@ -204,7 +205,18 @@
     "name": "Name",
     "subject": "Subject",
     "date": "Date",
-    "view": "View"
+    "view": "View",
+    "email": "Email",
+    "phone": "Phone Number",
+    "close": "Close",
+    "to": "To",
+    "sending": "Sending...",
+    "allowedFileFormats": "PDF, DOC, DOCX",
+    "unexpectedError": "An unexpected error occurred",
+    "schoolWhatsApp": "School WhatsApp",
+    "visualPreview": "Visual Preview",
+    "viewDocument": "View Document",
+    "additionalInfo": "Additional Information"
   },
   "footer": {
     "quickLinks": "Quick Links",
@@ -253,7 +265,10 @@
     "forgotPassword": "Forgot your password?",
     "invalidCredentials": "Invalid email or password",
     "registerFailed": "Registration failed. Email may already be in use.",
-    "adminLogin": "Staff Login"
+    "adminLogin": "Staff Login",
+    "portalSubtitle": "Manhattan Language School Management Portal",
+    "backToSignIn": "Back to sign in",
+    "loginSubtitle": "Enter your account credentials to proceed and access your application"
   },
   "contact": {
     "title": "Contact Us",
@@ -273,7 +288,10 @@
     "sendMessage": "Send us a Message",
     "successReply": "Our admissions team will get back to you shortly.",
     "sendAnother": "Send Another Message",
-    "success": "Message sent successfully!"
+    "success": "Message sent successfully!",
+    "schoolMapLocation": "School Location on the Map",
+    "openInMapsApp": "Open in Maps App",
+    "admissionsPhone": "Admissions Phone"
   },
   "portal": {
     "title": "Parent Portal",
@@ -298,7 +316,11 @@
       "noApplicationNoticeDesc": "Start registering your child's details and required documents to begin the admission process.",
       "startNow": "Start Application Now",
       "progress": "Application Progress",
-      "stats": { "active": "Active Applications", "total": "Total Applications", "accepted": "Accepted" },
+      "stats": {
+        "active": "Active Applications",
+        "total": "Total Applications",
+        "accepted": "Accepted"
+      },
       "calendar": "Academic Calendar",
       "policies": "School Policies",
       "acceptedNotice": {
@@ -307,7 +329,19 @@
         "timeLimit": "Deadline: Visit school within 48 hours",
         "callSchool": "Call School Administration",
         "whatsapp": "Contact via WhatsApp"
-      }
+      },
+      "chooseAttachment": "Choose Attachment",
+      "studentInfo": "Student Information",
+      "parentsContactInfo": "Parents Contact Information",
+      "studentHealthStatus": "Student Health Status",
+      "noHealthIssues": "Does not suffer from any registered special health conditions",
+      "motherResidentialInfo": "Mother Details & Residential Division",
+      "emergencyContact": "Emergency Contact Person",
+      "studentHealthLog": "Student Health Record & Medical Activity",
+      "healthy": "Healthy",
+      "documentsCenter": "Documents & Official Papers Center",
+      "previewDocument": "Preview Document",
+      "submitSuccessMessage": "The admission application has been submitted and received successfully, and is being reviewed by the school administration."
     },
     "applicant": {
       "title": "Applicant Portal",
@@ -319,7 +353,10 @@
       "emptyTitle": "No job applications yet",
       "emptyDesc": "Browse our open teaching positions and start your application.",
       "viewDetails": "View Application",
-      "stats": { "pending": "Pending Applications", "total": "Total Applications" },
+      "stats": {
+        "pending": "Pending Applications",
+        "total": "Total Applications"
+      },
       "acceptedNotice": {
         "title": "Congratulations! Job Application Accepted",
         "description": "Your job application has been ACCEPTED! Please visit the Manhattan Language School administration office within 48 hours for your HR interview and onboarding procedures.",
@@ -374,16 +411,32 @@
     "sections": "Sections",
     "about": "About Us",
     "settings": "Settings",
-    "seo": "SEO Settings",
+    "seo": {
+      "previewImage": "Preview Image",
+      "previewImageHint": "Appears when sharing the website link on social media"
+    },
     "notifications": "Notifications",
     "pages": "Static Pages",
     "navStudentLife": "Student Life",
     "navEducation": "Education",
     "navGallery": "Gallery",
-    "blog": "Blog",
+    "blog": {
+      "coverImage": "Article Cover Image",
+      "coverImageHint": "Choose an image from your device or select a preset image"
+    },
     "comments": "Comments",
     "inquiries": "Inquiries",
-    "admissions": "Admissions",
+    "admissions": {
+      "studentDetails": "Applicant Student Details",
+      "motherDetails": "Mother Details",
+      "emergencyDetails": "Emergency Details",
+      "healthRecord": "Student Health Record and Medical Status",
+      "regulationsAndSignature": "Regulations and Digital Signature",
+      "statusHistory": "Application Status Change Log",
+      "internalNotes": "Administrative Team Internal Notes",
+      "applicationDetails": "Application Details",
+      "attachedDocs": "Attached Documents"
+    },
     "navRequirements": "Requirements",
     "careers": "Careers",
     "jobRequirements": "Job Requirements",
@@ -642,7 +695,12 @@
       "category": "Category",
       "uploading": "Uploading...",
       "uploadBtn": "Upload Photo",
-      "confirmDelete": "Are you sure you want to delete this photo?"
+      "confirmDelete": "Are you sure you want to delete this photo?",
+      "cover": "Cover Photo",
+      "empty": "No images in the gallery",
+      "emptyHint": "Upload photos to showcase school life.",
+      "categoryLabel": "Category",
+      "uploadFromPc": "Upload from Computer"
     },
     "requirements": {
       "title": "Admission Requirements by Grade",
@@ -651,14 +709,28 @@
       "minAge": "Min Age (Years)",
       "maxAge": "Max Age (Years)",
       "documentsList": "Required Documents (one per line)",
-      "saveReq": "Save Requirements"
+      "saveReq": "Save Requirements",
+      "ageRange": "Age Range",
+      "empty": "No admission requirements defined",
+      "emptyHint": "Add requirements for each grade level above.",
+      "imageLabel": "Image"
     },
     "users": {
       "title": "User Management",
       "subtitle": "Create admin accounts, assign roles, and manage system access.",
       "addNew": "+ Add New User",
       "role": "Role",
-      "saveUser": "Save User"
+      "saveUser": "Save User",
+      "staffTab": "Staff",
+      "externalTab": "External Users",
+      "searchPlaceholder": "Search users...",
+      "filterRole": "Filter by Role",
+      "allRoles": "All Roles",
+      "createTitle": "Create User",
+      "selectRole": "Select Role",
+      "nameHeader": "Name",
+      "roleHeader": "Role",
+      "activeUsers": "Active Users"
     },
     "roles": {
       "title": "Roles & Permissions",
@@ -668,7 +740,12 @@
       "description": "Description",
       "permissions": "Permissions",
       "saveRole": "Save Role",
-      "usersAssigned": "Users Assigned to this Role"
+      "usersAssigned": "Users Assigned to this Role",
+      "totalRoles": "Total Roles",
+      "sysAdmins": "System Administrators",
+      "sysPerms": "System Permissions",
+      "noPermissions": "Without System Permissions",
+      "customRole": "Custom Job Role"
     },
     "email": {
       "title": "Email Templates & System Logs",
@@ -677,7 +754,13 @@
       "logs": "Delivery Logs",
       "subject": "Subject",
       "body": "Email Body",
-      "testEmail": "Send Test Email"
+      "testEmail": "Send Test Email",
+      "key": "Template Key",
+      "createTemplate": "Create Template",
+      "noTemplates": "No email templates found.",
+      "noLogs": "No delivery logs found.",
+      "recipient": "Recipient",
+      "details": "Details"
     },
     "aboutCrud": {
       "title": "About Us Sections",
@@ -732,6 +815,21 @@
       "subtitle": "View administrative alerts, new student applications, and inquiries.",
       "markAllRead": "Mark All as Read",
       "noNotifications": "No unread notifications."
+    },
+    "title": "Title",
+    "titleAr": "Arabic Title",
+    "employmentType": "Employment Type",
+    "sortOrder": "Sort Order",
+    "description": "Description",
+    "descriptionAr": "Arabic Description",
+    "delete": "Delete",
+    "replyPlaceholder": "Write your reply here...",
+    "originalInquiry": "Original Inquiry",
+    "layout": {
+      "title": "MLS Admin"
+    },
+    "content": {
+      "previewImage": "Preview Image"
     }
   },
   "about": {
@@ -828,7 +926,8 @@
       "subtitle": "Browse photos and highlights from top student events, competitions, and celebrations.",
       "viewGallery": "Visit Photo Gallery",
       "applyNow": "Join Manhattan School"
-    }
+    },
+    "excellenceHeader": "MLS Excellence"
   },
   "newsPage": {
     "pageTitle": "News & Events",
@@ -884,7 +983,10 @@
     "submitting": "Submitting...",
     "submitApplication": "Submit Application",
     "cancel": "Cancel",
-    "errorSubmit": "Failed to submit application. Please try again."
+    "errorSubmit": "Failed to submit application. Please try again.",
+    "attachDocument": "Attach Document",
+    "applicationDetails": "Job Application Details & Personal Information",
+    "resumeAlreadyUploaded": "Resume has been uploaded previously"
   },
   "status": {
     "DRAFT": "Draft",
@@ -928,7 +1030,8 @@
       "documents": "Document Upload",
       "health": "Medical & Health Record",
       "policies": "Rules & Declaration",
-      "review": "Review & Submit"
+      "review": "Review & Submit",
+      "school": "School Review"
     },
     "studentFirstName": "Student First Name",
     "studentLastName": "Student Last Name",

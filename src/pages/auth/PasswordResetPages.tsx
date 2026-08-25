@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ export function ForgotPasswordPage() {
           </Button>
         </form>
         <p className="mt-4 text-sm text-center text-neutral-medium">
-          <Link to="/login" className="text-primary font-medium">Back to sign in</Link>
+          <Link to="/login" className="text-primary font-medium">{t('auth.backToSignIn')}</Link>
         </p>
       </Card>
     </div>

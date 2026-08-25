@@ -234,7 +234,7 @@ export const HiringDocumentsSection: React.FC<HiringDocumentsSectionProps> = ({
                       ) : (
                         <label className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-semibold cursor-pointer transition-all">
                           <Upload className="w-3.5 h-3.5 text-amber-500" />
-                          <span>إرفاق المستند</span>
+                          <span>{isAr ? 'إرفاق المستند' : 'Attach Document'}</span>
                           <input
                             type="file"
                             accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"

@@ -381,7 +381,7 @@ export function StudentLifePage() {
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-gold text-xs font-bold">
               <Trophy className="h-4 w-4" />
-              <span>MLS EXCELLENCE</span>
+              <span>{t('studentLife.excellenceHeader')}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
               {t('studentLife.achievements.title')}

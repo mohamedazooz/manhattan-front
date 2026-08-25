@@ -585,15 +585,15 @@ export function ApplicationWizard() {
               ) : uploadedDocTypes.has(CV_DOCUMENT_TYPE) ? (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
                   <Paperclip className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>تم رفع السيرة الذاتية مسبقاً</span>
+                  <span>{t('careers.resumeAlreadyUploaded')}</span>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-red-300 dark:border-red-800 hover:border-red-500 bg-white dark:bg-slate-900 cursor-pointer transition-all text-center space-y-1">
                   <Upload className="w-6 h-6 text-red-500" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    اضغط هنا لإرفاق ملف السيرة الذاتية (CV)
+                    {isAr ? 'اضغط هنا لإرفاق ملف السيرة الذاتية (CV)' : 'Click here to attach your CV / Resume'}
                   </span>
-                  <span className="text-[10px] text-slate-400">PDF, DOC, DOCX</span>
+                  <span className="text-[10px] text-slate-400">{t('common.allowedFileFormats')}</span>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.png,.jpg"

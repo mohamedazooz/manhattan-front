@@ -598,7 +598,7 @@ export function AdminBlogPage() {
           </Select>
 
           <div className="space-y-2 border p-4 rounded-xl bg-slate-50/50">
-            <label className="block text-sm font-semibold text-slate-800">صورة غلاف المقال</label>
+            <label className="block text-sm font-semibold text-slate-800">{t('admin.blog.coverImage')}</label>
             
             {/* Live Preview Box */}
             <div className="flex items-center gap-4">
@@ -613,7 +613,7 @@ export function AdminBlogPage() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-slate-500">اختر صورة من جهازك أو حدد صورة جاهزة</p>
+                <p className="text-xs text-slate-500">{t('admin.blog.coverImageHint')}</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -883,7 +883,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <User className="w-5 h-5" />
-            <span>بيانات الطالب المتقدم</span>
+            <span>{t('admin.admissions.studentDetails')}</span>
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -971,7 +971,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <User className="w-5 h-5" />
-            <span>بيانات الأم</span>
+            <span>{t('admin.admissions.motherDetails')}</span>
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -1001,7 +1001,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <Phone className="w-5 h-5 text-red-500" />
-            <span>بيانات الطوارئ</span>
+            <span>{t('admin.admissions.emergencyDetails')}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
@@ -1019,7 +1019,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <span className="text-xl">🏥</span>
-            <span>السجل الطبي والحالة الصحية للطالب</span>
+            <span>{t('admin.admissions.healthRecord')}</span>
           </h3>
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1072,7 +1072,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <span>اللوائح والتوقيع الرقمي</span>
+            <span>{t('admin.admissions.regulationsAndSignature')}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -1130,7 +1130,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
                     className="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white dark:bg-slate-900 border border-primary/30 text-primary dark:text-blue-400 hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>عرض المستند</span>
+                    <span>{t('common.viewDocument')}</span>
                   </a>
                 </div>
               ))}
@@ -1144,7 +1144,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <Clock className="w-5 h-5" />
-            <span>سجل تغييرات حالة الطلب</span>
+            <span>{t('admin.admissions.statusHistory')}</span>
           </h3>
           {admission.statusHistory && admission.statusHistory.length > 0 ? (
             <div className="space-y-3">
@@ -1171,7 +1171,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <MessageSquare className="w-5 h-5" />
-            <span>الملاحظات الداخلية للفريق الإداري</span>
+            <span>{t('admin.admissions.internalNotes')}</span>
           </h3>
           {admission.notes && admission.notes.length > 0 ? (
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -1323,7 +1323,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">بيانات الطلب</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">{t('admin.admissions.applicationDetails')}</h4>
                 <div className="space-y-2 text-sm">
                   <div><strong className="font-medium text-slate-700">تاريخ التقديم:</strong> {new Date(viewApp.createdAt || Date.now()).toLocaleString('ar-EG')}</div>
                   <div><strong className="font-medium text-slate-700">الوظيفة المتقدم لها:</strong> {viewApp.job?.title || 'غير محدد'}</div>
@@ -1337,7 +1337,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
               </div>
 
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">المستندات المرفقة</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">{t('admin.admissions.attachedDocs')}</h4>
                 {viewApp.documents && viewApp.documents.length > 0 ? (
                   <div className="space-y-2">
                     {viewApp.documents.map((doc: any) => (
@@ -1394,7 +1394,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
                     ))}
                   </select>
                </div>
-              <Button variant="outline" onClick={() => setViewApp(null)}>إغلاق</Button>
+              <Button variant="outline" onClick={() => setViewApp(null)}>{t('common.close')}</Button>
             </div>
           </div>
         </Modal>
@@ -2122,7 +2122,7 @@ export function AdminUsersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">معلومات إضافية</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">{t('common.additionalInfo')}</h4>
                 <div className="space-y-1 text-sm">
                   <div><strong className="font-medium text-slate-700">تاريخ التسجيل:</strong> {new Date(viewUser.createdAt).toLocaleString('ar-EG')}</div>
                   <div><strong className="font-medium text-slate-700">معرف الحساب (ID):</strong> <span className="font-mono text-xs">{viewUser.id}</span></div>
@@ -2133,9 +2133,9 @@ export function AdminUsersPage() {
 
             <div className="flex justify-end pt-4 border-t gap-2">
               <Button variant="secondary" onClick={() => usersApi.updateStatus(viewUser.id, viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE').then(() => { qc.invalidateQueries({ queryKey: ['users'] }); setViewUser({ ...viewUser, status: viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }); })}>
-                {viewUser.status === 'ACTIVE' ? 'تعطيل الحساب' : 'تفعيل الحساب'}
+                {viewUser.status === 'ACTIVE' ? t('admin.users.suspend', 'تعطيل الحساب') : t('admin.users.activate', 'تفعيل الحساب')}
               </Button>
-              <Button variant="outline" onClick={() => setViewUser(null)}>إغلاق</Button>
+              <Button variant="outline" onClick={() => setViewUser(null)}>{t('common.close')}</Button>
             </div>
           </div>
         </Modal>
@@ -2391,7 +2391,7 @@ export function AdminRolesPage() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-slate-400 italic">بدون صلاحيات نظامية</span>
+                            <span className="text-xs text-slate-400 italic">{t('admin.roles.noPermissions')}</span>
                           )}
                         </div>
                       </div>
@@ -2629,10 +2629,10 @@ export function AdminRolesPage() {
       <Modal open={showAddUserModal} onClose={() => setShowAddUserModal(false)} title="إضافة مستخدم جديد وتعيين دوره الوظيفي">
         <form onSubmit={handleAddUserToRole} className="space-y-4">
           <Input label="الاسم بالكامل" value={userForm.fullName} onChange={(e) => setUserForm({ ...userForm, fullName: e.target.value })} required />
-          <Input label="البريد الإلكتروني" type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required />
-          <Input label="كلمة المرور" type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={6} />
+          <Input label={t('auth.email', 'البريد الإلكتروني')} type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required />
+          <Input label={t('auth.password', 'كلمة المرور')} type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={6} />
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-800">الدور الوظيفي المخصص</label>
+            <label className="block text-sm font-medium mb-1 text-slate-800">{t('admin.roles.customRole')}</label>
             <Select value={targetRoleIdForUser} onChange={(e) => setTargetRoleIdForUser(e.target.value)} required>
               {roles.map((r: any) => (
                 <option key={r.id} value={r.id}>
@@ -2659,31 +2659,32 @@ export function AdminRolesPage() {
 }
 
 export function AdminEmailPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { data: templates = [] } = useQuery({ queryKey: ['email-templates'], queryFn: () => emailApi.templates().then((r) => r.data) });
   const { data: logs = [] } = useQuery({ queryKey: ['email-logs'], queryFn: () => emailApi.logs().then((r) => r.data) });
   const [form, setForm] = useState({ key: '', subject: '', body: '' });
   return (
     <div>
-      <PageHeader title="Email Templates & Logs" />
+      <PageHeader title={t('admin.email.title')} subtitle={t('admin.email.subtitle')} />
       <form className="space-y-3 mb-8 max-w-xl" onSubmit={(e) => { e.preventDefault(); emailApi.createTemplate(form).then(() => qc.invalidateQueries({ queryKey: ['email-templates'] })); }}>
-        <Input label="Key" value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} />
-        <Input label="Subject" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-        <Textarea label="Body" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
-        <Button type="submit">Create Template</Button>
+        <Input label={t('admin.email.key')} value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} />
+        <Input label={t('admin.email.subject')} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+        <Textarea label={t('admin.email.body')} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+        <Button type="submit">{t('admin.email.createTemplate')}</Button>
       </form>
       <DataTable data={templates} columns={[
-        { key: 'key', header: 'Key', render: (r: { key: string }) => r.key },
-        { key: 'subject', header: 'Subject', render: (r: { subject: string }) => r.subject },
+        { key: 'key', header: t('admin.email.key') as string, render: (r: { key: string }) => r.key },
+        { key: 'subject', header: t('admin.email.subject') as string, render: (r: { subject: string }) => r.subject },
       ]} />
-      <h3 className="font-semibold mt-8 mb-4">Delivery Logs</h3>
+      <h3 className="font-semibold mt-8 mb-4">{t('admin.email.logs')}</h3>
       <DataTable data={logs} columns={[
-        { key: 'recipient', header: 'To', render: (r: { recipient: string }) => r.recipient },
-        { key: 'subject', header: 'Subject', render: (r: { subject: string }) => r.subject },
-        { key: 'status', header: 'Status', render: (r: { status: string }) => <StatusBadge status={r.status} /> },
+        { key: 'recipient', header: t('common.to') as string, render: (r: { recipient: string }) => r.recipient },
+        { key: 'subject', header: t('admin.email.subject') as string, render: (r: { subject: string }) => r.subject },
+        { key: 'status', header: t('common.status') as string, render: (r: { status: string }) => <StatusBadge status={r.status} /> },
         {
           key: 'errorMessage',
-          header: 'Details',
+          header: t('admin.email.details') as string,
           render: (r: { errorMessage?: string | null; createdAt?: string }) => (
             <span className="text-xs text-slate-600">
               {r.errorMessage || (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—')}

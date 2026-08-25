@@ -139,7 +139,7 @@ export function AdminLayout() {
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="MLS Logo" className="h-9 w-auto object-contain bg-white/10 rounded p-1" />
             <div>
-              <div className="font-bold text-lg leading-snug tracking-tight">MLS Admin</div>
+              <div className="font-bold text-lg leading-snug tracking-tight">{t('admin.layout.title')}</div>
               <div className="text-sm text-white/70 truncate max-w-[130px]">
                 {user?.fullName || 'Administrator'}
               </div>
