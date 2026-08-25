@@ -24,5 +24,5 @@ jobs:
             git pull origin main
             npm install
             npm run build:prod
-            echo 'Xu5NMjjh029&' | sudo -S systemctl reload nginx
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S systemctl reload nginx
             curl -fsS https://www.manhattanschool.net/api/v1/health
