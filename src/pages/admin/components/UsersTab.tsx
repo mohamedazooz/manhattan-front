@@ -263,7 +263,7 @@ export function AdminUsersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">معلومات إضافية</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">{t('common.moreInfo', 'معلومات إضافية')}</h4>
                 <div className="space-y-1 text-sm">
                   <div><strong className="font-medium text-slate-700">تاريخ التسجيل:</strong> {new Date(viewUser.createdAt).toLocaleString('ar-EG')}</div>
                   <div><strong className="font-medium text-slate-700">معرف الحساب (ID):</strong> <span className="font-mono text-xs">{viewUser.id}</span></div>
@@ -276,7 +276,7 @@ export function AdminUsersPage() {
               <Button variant="secondary" onClick={() => usersApi.updateStatus(viewUser.id, viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE').then(() => { qc.invalidateQueries({ queryKey: ['users'] }); setViewUser({ ...viewUser, status: viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }); })}>
                 {viewUser.status === 'ACTIVE' ? 'تعطيل الحساب' : 'تفعيل الحساب'}
               </Button>
-              <Button variant="outline" onClick={() => setViewUser(null)}>إغلاق</Button>
+              <Button variant="outline" onClick={() => setViewUser(null)}>{t('common.close', 'إغلاق')}</Button>
             </div>
           </div>
         </Modal>

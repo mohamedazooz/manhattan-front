@@ -228,13 +228,13 @@ export function AdminGalleryPage() {
             align: 'start',
             render: (img: any) => (
               <div className="flex flex-wrap items-center gap-1.5">
-                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => setPreviewImage(img)} title="معاينة">
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => setPreviewImage(img)} title={t('common.preview', 'معاينة')}>
                   <Eye className="w-3.5 h-3.5" />
-                  <span>معاينة</span>
+                  <span>{t('common.preview', 'معاينة')}</span>
                 </Button>
-                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => openEdit(img)} title="تعديل">
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => openEdit(img)} title={t('common.edit', 'تعديل')}>
                   <Edit className="w-3.5 h-3.5" />
-                  <span>تعديل</span>
+                  <span>{t('common.edit', 'تعديل')}</span>
                 </Button>
 
                 {img.status !== 'PUBLISHED' && (
@@ -249,13 +249,13 @@ export function AdminGalleryPage() {
                 )}
                 {img.status !== 'ARCHIVED' && (
                   <Button variant="outline" className="py-1 px-2 text-xs text-slate-500" onClick={() => setImageStatus(img.id, 'ARCHIVED')}>
-                    أرشفة
+                    {t('admin.notificationsCrud.archive', 'أرشفة')}
                   </Button>
                 )}
 
-                <Button variant="danger" className="py-1 px-2 text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(img.id, img.title)} title="حذف">
+                <Button variant="danger" className="py-1 px-2 text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(img.id, img.title)} title={t('common.delete', 'حذف')}>
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>حذف</span>
+                  <span>{t('common.delete', 'حذف')}</span>
                 </Button>
               </div>
             ),
@@ -264,7 +264,7 @@ export function AdminGalleryPage() {
       />
 
       {/* Modal: Image Preview Lightbox */}
-      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title || 'معاينة الصورة'} wide>
+      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title || t('common.previewImage', 'معاينة الصورة')} wide>
         {previewImage && (
           <div className="space-y-4">
             <div className="bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center p-2 border border-slate-800">
@@ -284,7 +284,7 @@ export function AdminGalleryPage() {
                   className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition-colors inline-flex items-center gap-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>فتح الرابط الأصل</span>
+                  <span>{t('common.originalLink', 'فتح الرابط الأصلي')}</span>
                 </a>
               </div>
             </div>

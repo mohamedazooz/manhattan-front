@@ -196,7 +196,7 @@ export function AdminRolesPage() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-slate-400 italic">بدون صلاحيات نظامية</span>
+                          <span className="text-xs text-slate-400 italic">{t('admin.noPermissions', 'بدون صلاحيات نظامية')}</span>
                         )}
                       </div>
                     </div>
@@ -345,7 +345,7 @@ export function AdminRolesPage() {
           <Input label="البريد الإلكتروني" type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required />
           <Input label="كلمة المرور" type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={6} />
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-800">الدور الوظيفي المخصص</label>
+            <label className="block text-sm font-medium mb-1 text-slate-800">{t('admin.customRole', 'الدور الوظيفي المخصص')}</label>
             <Select value={targetRoleIdForUser} onChange={(e) => setTargetRoleIdForUser(e.target.value)} required>
               {roles.map((r: any) => (
                 <option key={r.id} value={r.id}>

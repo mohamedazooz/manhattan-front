@@ -216,8 +216,8 @@ export function SeoAdminPage() {
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <div className="text-xs text-slate-600">
-                    <span className="font-semibold block">معاينة الصورة</span>
-                    <span className="text-slate-400">تظهر عند مشاركة رابط الموقع على مواقع التواصل الاجتماعي</span>
+                    <span className="font-semibold block">{t('common.previewImage', 'معاينة الصورة')}</span>
+                    <span className="text-slate-400">{t('common.ogImageHint', 'تظهر عند مشاركة رابط الموقع على مواقع التواصل الاجتماعي')}</span>
                   </div>
                 </div>
               )}

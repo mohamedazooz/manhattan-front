@@ -211,7 +211,7 @@ export function ParentAdmissionDetailPage() {
           className="inline-flex items-center gap-2 text-sm font-bold text-primary dark:text-blue-400 hover:underline cursor-pointer"
         >
           <ArrowRight className="w-4 h-4 rtl:rotate-0" />
-          <span>العودة للخلف</span>
+          <span>{t('common.goBack', 'العودة للخلف')}</span>
         </button>
         <Link to="/portal/parent" className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
           ← قائمة الطلبات
@@ -306,7 +306,7 @@ export function ParentAdmissionDetailPage() {
 
           {/* Mother Info (Extracted) */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
-            <h4 className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">بيانات الأم والفيصل السكني</h4>
+            <h4 className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{t('portal.parent.motherResidential', 'بيانات الأم والفيصل السكني')}</h4>
             <p><strong>اسم الأم:</strong> {admission.motherName || 'غير مدخل'}</p>
             <p><strong>الهاتف:</strong> {admission.motherPhone || 'غير مدخل'}</p>
             <p><strong>المهنة:</strong> {admission.motherOccupation || 'غير مدخل'}</p>
@@ -318,7 +318,7 @@ export function ParentAdmissionDetailPage() {
         {/* Emergency Contact */}
         {(admission.emergencyContactPhone || admission.emergencyContactName) && (
           <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
-            <h4 className="font-bold text-amber-700 dark:text-amber-400 text-sm">جهة الاتصال للطوارئ</h4>
+            <h4 className="font-bold text-amber-700 dark:text-amber-400 text-sm">{t('portal.parent.emergencyContact', 'جهة الاتصال للطوارئ')}</h4>
             {admission.emergencyContactName && <p><strong>الاسم:</strong> {admission.emergencyContactName} ({admission.emergencyContactRelation || 'جهة اتصال'})</p>}
             {admission.emergencyContactPhone && <p><strong>الهاتف:</strong> {admission.emergencyContactPhone}</p>}
             {admission.emergencyContactAddress && <p><strong>العنوان:</strong> {admission.emergencyContactAddress}</p>}
@@ -327,11 +327,11 @@ export function ParentAdmissionDetailPage() {
 
         {/* Medical & Health Record (Extracted) */}
         <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 text-xs space-y-2">
-          <h4 className="font-bold text-rose-600 dark:text-rose-400 text-sm">السجل الصحي والنشاط الطبي للطالب</h4>
+          <h4 className="font-bold text-rose-600 dark:text-rose-400 text-sm">{t('portal.parent.healthRecord', 'السجل الصحي والنشاط الطبي للطالب')}</h4>
           {admission.healthConditions && typeof admission.healthConditions === 'object' ? (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {Object.entries(admission.healthConditions as Record<string, boolean>).filter(([, v]) => v).length === 0 ? (
-                <span className="text-slate-500">لا توجد حالات صحية خاصة مسجلة (سليم صحياً)</span>
+                <span className="text-slate-500">{t('admission.noHealthIssues', 'لا توجد حالات صحية خاصة مسجلة (سليم صحياً)')}</span>
               ) : (
                 Object.entries(admission.healthConditions as Record<string, boolean>)
                   .filter(([, v]) => v)
@@ -343,7 +343,7 @@ export function ParentAdmissionDetailPage() {
               )}
             </div>
           ) : (
-            <p className="text-slate-500">سليم صحياً</p>
+            <p className="text-slate-500">{t('admission.healthyStatus', 'سليم صحياً')}</p>
           )}
 
           {admission.healthNotes && (
@@ -360,7 +360,7 @@ export function ParentAdmissionDetailPage() {
           <div>
             <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-2">
               <span>📁</span>
-              <span>مركز المستندات والوثائق الرسمية</span>
+              <span>{t('portal.parent.docsHub', 'مركز المستندات والوثائق الرسمية')}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               يرجى رفع صور أو ملفات PDF واضحة للمستندات المطلوبة لاستكمال ملف التقديم
@@ -428,7 +428,7 @@ export function ParentAdmissionDetailPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold transition-all"
                   >
-                    <span>معاينة المستند</span>
+                    <span>{t('portal.parent.previewDoc', 'معاينة المستند')}</span>
                     <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                   </a>
                 </div>

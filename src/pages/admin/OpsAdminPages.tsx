@@ -501,13 +501,13 @@ export function AdminGalleryPage() {
             align: 'start',
             render: (img: any) => (
               <div className="flex flex-wrap items-center gap-1.5">
-                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => setPreviewImage(img)} title="معاينة">
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => setPreviewImage(img)} title={t('common.preview', 'معاينة')}>
                   <Eye className="w-3.5 h-3.5" />
-                  <span>معاينة</span>
+                  <span>{t('common.preview', 'معاينة')}</span>
                 </Button>
-                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => openEdit(img)} title="تعديل">
+                <Button variant="outline" className="py-1 px-2 text-xs flex items-center gap-1" onClick={() => openEdit(img)} title={t('common.edit', 'تعديل')}>
                   <Edit className="w-3.5 h-3.5" />
-                  <span>تعديل</span>
+                  <span>{t('common.edit', 'تعديل')}</span>
                 </Button>
 
                 {img.status !== 'PUBLISHED' && (
@@ -522,13 +522,13 @@ export function AdminGalleryPage() {
                 )}
                 {img.status !== 'ARCHIVED' && (
                   <Button variant="outline" className="py-1 px-2 text-xs text-slate-500" onClick={() => setImageStatus(img.id, 'ARCHIVED')}>
-                    أرشفة
+                    {t('admin.notificationsCrud.archive', 'أرشفة')}
                   </Button>
                 )}
 
-                <Button variant="danger" className="py-1 px-2 text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(img.id, img.title)} title="حذف">
+                <Button variant="danger" className="py-1 px-2 text-xs flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => handleDelete(img.id, img.title)} title={t('common.delete', 'حذف')}>
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>حذف</span>
+                  <span>{t('common.delete', 'حذف')}</span>
                 </Button>
               </div>
             ),
@@ -537,7 +537,7 @@ export function AdminGalleryPage() {
       />
 
       {/* Modal: Image Preview Lightbox */}
-      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title || 'معاينة الصورة'} wide>
+      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title={previewImage?.title || t('common.previewImage', 'معاينة الصورة')} wide>
         {previewImage && (
           <div className="space-y-4">
             <div className="bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center p-2 border border-slate-800">
@@ -557,7 +557,7 @@ export function AdminGalleryPage() {
                   className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition-colors inline-flex items-center gap-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>فتح الرابط الأصل</span>
+                  <span>{t('common.originalLink', 'فتح الرابط الأصلي')}</span>
                 </a>
               </div>
             </div>
@@ -1276,7 +1276,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <User className="w-5 h-5" />
-            <span>بيانات الطالب المتقدم</span>
+            <span>{t('admin.studentData', 'بيانات الطالب المتقدم')}</span>
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -1330,7 +1330,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <Phone className="w-5 h-5" />
-            <span>بيانات ولي الأمر / الوصي</span>
+            <span>{t('admin.parentData', 'بيانات ولي الأمر / الوصي')}</span>
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -1364,7 +1364,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <User className="w-5 h-5" />
-            <span>بيانات الأم</span>
+            <span>{t('admin.motherData', 'بيانات الأم')}</span>
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -1394,7 +1394,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <Phone className="w-5 h-5 text-red-500" />
-            <span>بيانات الطوارئ</span>
+            <span>{t('admin.emergencyData', 'بيانات الطوارئ')}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
@@ -1412,7 +1412,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <span className="text-xl">🏥</span>
-            <span>السجل الطبي والحالة الصحية للطالب</span>
+            <span>{t('admin.medicalRecord', 'السجل الطبي والحالة الصحية للطالب')}</span>
           </h3>
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1465,7 +1465,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="col-span-1 lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <span>اللوائح والتوقيع الرقمي</span>
+            <span>{t('admin.regulationsSign', 'اللوائح والتوقيع الرقمي')}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -1523,7 +1523,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
                     className="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white dark:bg-slate-900 border border-primary/30 text-primary dark:text-blue-400 hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>عرض المستند</span>
+                    <span>{t('admin.viewDoc', 'عرض المستند')}</span>
                   </a>
                 </div>
               ))}
@@ -1537,7 +1537,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <Clock className="w-5 h-5" />
-            <span>سجل تغييرات حالة الطلب</span>
+            <span>{t('admin.statusAuditLog', 'سجل تغييرات حالة الطلب')}</span>
           </h3>
           {admission.statusHistory && admission.statusHistory.length > 0 ? (
             <div className="space-y-3">
@@ -1564,7 +1564,7 @@ export function AdminAdmissionDetailPage({ id }: { id: string }) {
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-primary dark:text-amber-400 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
             <MessageSquare className="w-5 h-5" />
-            <span>الملاحظات الداخلية للفريق الإداري</span>
+            <span>{t('admin.internalNotes', 'الملاحظات الداخلية للفريق الإداري')}</span>
           </h3>
           {admission.notes && admission.notes.length > 0 ? (
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -2007,7 +2007,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">بيانات الطلب</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">{t('admin.appDetails', 'بيانات الطلب')}</h4>
                 <div className="space-y-2 text-sm">
                   <div><strong className="font-medium text-slate-700">تاريخ التقديم:</strong> {new Date(viewApp.createdAt || Date.now()).toLocaleString('ar-EG')}</div>
                   <div><strong className="font-medium text-slate-700">الوظيفة المتقدم لها:</strong> {viewApp.job?.title || 'غير محدد'}</div>
@@ -2021,7 +2021,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
               </div>
 
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">المستندات المرفقة</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-3 border-b pb-2">{t('admin.attachedDocs', 'المستندات المرفقة')}</h4>
                 {viewApp.documents && viewApp.documents.length > 0 ? (
                   <div className="space-y-2">
                     {viewApp.documents.map((doc: any) => (
@@ -2078,7 +2078,7 @@ export function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
                     ))}
                   </select>
                </div>
-              <Button variant="outline" onClick={() => setViewApp(null)}>إغلاق</Button>
+              <Button variant="outline" onClick={() => setViewApp(null)}>{t('common.close', 'إغلاق')}</Button>
             </div>
           </div>
         </Modal>
@@ -2872,7 +2872,7 @@ export function AdminUsersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white border border-slate-200 p-4 rounded-xl">
-                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">معلومات إضافية</h4>
+                <h4 className="font-bold text-xs uppercase text-slate-500 mb-2">{t('common.moreInfo', 'معلومات إضافية')}</h4>
                 <div className="space-y-1 text-sm">
                   <div><strong className="font-medium text-slate-700">تاريخ التسجيل:</strong> {new Date(viewUser.createdAt).toLocaleString('ar-EG')}</div>
                   <div><strong className="font-medium text-slate-700">معرف الحساب (ID):</strong> <span className="font-mono text-xs">{viewUser.id}</span></div>
@@ -2885,7 +2885,7 @@ export function AdminUsersPage() {
               <Button variant="secondary" onClick={() => usersApi.updateStatus(viewUser.id, viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE').then(() => { qc.invalidateQueries({ queryKey: ['users'] }); setViewUser({ ...viewUser, status: viewUser.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' }); })}>
                 {viewUser.status === 'ACTIVE' ? 'تعطيل الحساب' : 'تفعيل الحساب'}
               </Button>
-              <Button variant="outline" onClick={() => setViewUser(null)}>إغلاق</Button>
+              <Button variant="outline" onClick={() => setViewUser(null)}>{t('common.close', 'إغلاق')}</Button>
             </div>
           </div>
         </Modal>
@@ -3083,7 +3083,7 @@ export function AdminRolesPage() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-slate-400 italic">بدون صلاحيات نظامية</span>
+                          <span className="text-xs text-slate-400 italic">{t('admin.noPermissions', 'بدون صلاحيات نظامية')}</span>
                         )}
                       </div>
                     </div>
@@ -3232,7 +3232,7 @@ export function AdminRolesPage() {
           <Input label="البريد الإلكتروني" type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required />
           <Input label="كلمة المرور" type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required minLength={6} />
           <div>
-            <label className="block text-sm font-medium mb-1 text-slate-800">الدور الوظيفي المخصص</label>
+            <label className="block text-sm font-medium mb-1 text-slate-800">{t('admin.customRole', 'الدور الوظيفي المخصص')}</label>
             <Select value={targetRoleIdForUser} onChange={(e) => setTargetRoleIdForUser(e.target.value)} required>
               {roles.map((r: any) => (
                 <option key={r.id} value={r.id}>

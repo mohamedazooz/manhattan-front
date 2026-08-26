@@ -94,7 +94,7 @@ export function ParentPortalDashboard() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
               <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-              <span>تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسية</span>
+              <span>{t('portal.parent.submissionSuccessBanner', 'تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسة')}</span>
             </div>
             {submissionState.studentName && (
               <h4 className="font-bold text-base text-slate-800 dark:text-slate-100">

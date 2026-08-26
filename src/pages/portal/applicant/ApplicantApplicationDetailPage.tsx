@@ -89,7 +89,7 @@ export function ApplicantApplicationDetailPage() {
           className="inline-flex items-center gap-2 text-sm font-bold text-primary dark:text-blue-400 hover:underline cursor-pointer"
         >
           <ArrowRight className="w-4 h-4 rtl:rotate-0" />
-          <span>العودة للخلف</span>
+          <span>{t('common.goBack', 'العودة للخلف')}</span>
         </button>
         <Link to="/portal/applicant" className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
           ← قائمة كل الطلبات
@@ -143,7 +143,7 @@ export function ApplicantApplicationDetailPage() {
       )}
 
       <section className="glass-card rounded-2xl p-6 space-y-4">
-        <h3 className="font-semibold text-lg border-b pb-2 text-slate-800 dark:text-slate-100">تفاصيل طلب التوظيف والبيانات الشخصية</h3>
+        <h3 className="font-semibold text-lg border-b pb-2 text-slate-800 dark:text-slate-100">{t('portal.applicant.detailsTitle', 'تفاصيل طلب التوظيف والبيانات الشخصية')}</h3>
         <div className="grid sm:grid-cols-2 gap-4 text-sm">
           <p><strong>{t('application.fullName')}:</strong> {application.fullName}</p>
           <p><strong>{t('application.phone')}:</strong> {application.phone}</p>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AuthPageShellProps {
   variant: 'parent' | 'applicant';
@@ -19,6 +20,7 @@ export function AuthPageShell({
   heroExtra,
   children,
 }: AuthPageShellProps) {
+  const { t } = useTranslation();
   const isApplicant = variant === 'applicant';
 
   return (
@@ -26,7 +28,7 @@ export function AuthPageShell({
       <div
         className={`hidden lg:flex flex-col justify-center px-12 text-white ${isApplicant ? 'bg-slate-900' : 'bg-primary'}`}
       >
-        <p className="text-gold text-sm font-bold uppercase tracking-widest mb-3">مدرسة منهاتن للغات</p>
+        <p className="text-gold text-sm font-bold uppercase tracking-widest mb-3">{t('app.name', 'مدرسة منهاتن للغات')}</p>
         <h1 className="text-4xl font-extrabold mb-4">{heroTitle}</h1>
         <p className="text-white/80 text-lg leading-relaxed">{heroDesc}</p>
         {heroExtra && <div className="mt-8">{heroExtra}</div>}

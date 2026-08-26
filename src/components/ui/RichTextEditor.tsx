@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bold,
   Italic,
@@ -26,10 +27,11 @@ export function RichTextEditor({
   label,
   value,
   onChange,
-  placeholder = 'أدخل المحتوى هنا...',
+  placeholder = 'Write content here...',
   className,
   minHeight = '180px',
 }: RichTextEditorProps) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [showCode, setShowCode] = useState(false);
   const [htmlValue, setHtmlValue] = useState(value || '');
@@ -162,12 +164,12 @@ export function RichTextEditor({
             {showCode ? (
               <>
                 <Eye className="h-3.5 w-3.5" />
-                <span>معاينة مرئية</span>
+                <span>{t('common.visualPreview', 'معاينة مرئية')}</span>
               </>
             ) : (
               <>
                 <Code className="h-3.5 w-3.5" />
-                <span>كود (اختياري)</span>
+                <span>{t('common.codeOptional', 'كود (اختياري)')}</span>
               </>
             )}
           </button>

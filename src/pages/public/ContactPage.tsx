@@ -289,7 +289,7 @@ export function ContactPage() {
           <div>
             <h3 className="text-xl font-bold text-neutral-dark dark:text-slate-100 flex items-center gap-2">
               <MapPin className="h-5 w-5 text-amber-500" />
-              <span>موقع المدرسة على الخريطة</span>
+              <span>{t('contact.mapLocation', 'موقع المدرسة على الخريطة')}</span>
             </h3>
             <p className="text-xs text-neutral-medium dark:text-slate-400 mt-1">
               تفضل بزيارتنا في مقر المدرسة بمدينة الشيخ زايد - محافظة الجيزة
@@ -301,7 +301,7 @@ export function ContactPage() {
             rel="noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-dark transition-all shadow-sm"
           >
-            <span>فتح في تطبيق الخرائط</span>
+            <span>{t('contact.openInMaps', 'فتح في تطبيق الخرائط')}</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>

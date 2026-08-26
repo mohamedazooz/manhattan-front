@@ -724,7 +724,7 @@ export function HomePage() {
                     {config.contact_phone_tertiary && (
                       <a href={`tel:${config.contact_phone_tertiary}`} className="rounded-2xl bg-white/10 p-4 hover:bg-white/15 transition-colors">
                         <Phone className="h-5 w-5 text-amber-200 mb-2" />
-                        <div className="text-xs text-blue-100">هاتف القبول</div>
+                        <div className="text-xs text-blue-100">{t('contact.admissionsPhone', 'هاتف القبول')}</div>
                         <div className="font-semibold" dir="ltr">{config.contact_phone_tertiary}</div>
                       </a>
                     )}

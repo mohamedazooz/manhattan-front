@@ -216,7 +216,7 @@ function AboutCrud() {
 
           {(previewUrl || currentImageUrl) && (
             <div className="rounded-lg border p-3 bg-slate-50">
-              <p className="text-xs font-semibold text-slate-600 mb-2">معاينة الصورة</p>
+              <p className="text-xs font-semibold text-slate-600 mb-2">{t('common.previewImage', 'معاينة الصورة')}</p>
               <img
                 src={previewUrl || mediaUrl(currentImageUrl!)}
                 alt="معاينة"
@@ -631,6 +631,7 @@ const SETTINGS_CONFIG: Record<
 };
 
 export function AdminSettingsPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { data: config = {} } = useQuery({
@@ -762,7 +763,7 @@ export function AdminSettingsPage() {
                         className="py-2.5 px-4 shrink-0 flex items-center gap-1.5 font-medium shadow-xs"
                       >
                         <Save className="h-4 w-4" />
-                        <span>حفظ</span>
+                        <span>{t('common.save', 'حفظ')}</span>
                       </Button>
                     </div>
 
@@ -820,7 +821,7 @@ export function AdminSettingsPage() {
                       className="py-2.5 px-5 shrink-0 flex items-center gap-1.5 font-medium shadow-xs"
                     >
                       <Save className="h-4 w-4" />
-                      <span>حفظ</span>
+                      <span>{t('common.save', 'حفظ')}</span>
                     </Button>
                   </div>
                 )}

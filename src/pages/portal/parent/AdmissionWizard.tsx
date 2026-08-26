@@ -707,7 +707,7 @@ export function AdmissionWizard() {
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold transition-all">
                           <Paperclip className="w-3.5 h-3.5 text-amber-500" />
-                          <span>اختر ملف مرفق</span>
+                          <span>{t('admission.chooseAttachment', 'اختر ملف مرفق')}</span>
                           <input
                             type="file"
                             accept="image/*,application/pdf"
@@ -963,7 +963,7 @@ export function AdmissionWizard() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
                 <div className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5 text-sm">
                   <User className="w-4 h-4" />
-                  <span>بيانات الطالب</span>
+                  <span>{t('admission.studentDetails', 'بيانات الطالب')}</span>
                 </div>
                 <p><strong>الاسم:</strong> {form.studentFirstName} {form.studentLastName}</p>
                 <p><strong>تاريخ الميلاد:</strong> {form.dateOfBirth}</p>
@@ -976,7 +976,7 @@ export function AdmissionWizard() {
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
                 <div className="font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1.5 text-sm">
                   <Users className="w-4 h-4" />
-                  <span>بيانات الوالدين والاتصال</span>
+                  <span>{t('admission.parentDetails', 'بيانات الوالدين والاتصال')}</span>
                 </div>
                 <p><strong>ولي الأمر (الأب):</strong> {form.parentName} ({form.parentPhone})</p>
                 <p><strong>البريد:</strong> {form.parentEmail}</p>
@@ -1015,11 +1015,11 @@ export function AdmissionWizard() {
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
               <div className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 text-sm">
                 <HeartPulse className="w-4 h-4" />
-                <span>الحالة الصحية للطالب</span>
+                <span>{t('admission.healthStatus', 'الحالة الصحية للطالب')}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(form.healthConditions).filter(([, v]) => v).length === 0 ? (
-                  <span className="text-slate-500">لا يعاني من أي حالات صحية خاصة مسجلة</span>
+                  <span className="text-slate-500">{t('admission.noHealthIssues', 'لا يعاني من أي حالات صحية خاصة مسجلة')}</span>
                 ) : (
                   Object.entries(form.healthConditions)
                     .filter(([, v]) => v)

@@ -29,7 +29,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const cls = cn(
-    'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 whitespace-nowrap shrink-0',
     styles[variant],
     className,
   );
@@ -38,7 +38,7 @@ export function Button({
     return (
       <Link to={to} className={cls}>
         {children}
-        {showArrow && <ArrowRight className="w-4 h-4 rtl:rotate-180" />}
+        {showArrow && <ArrowRight className="w-4 h-4 rtl:rotate-180 shrink-0" />}
       </Link>
     );
   }
@@ -46,7 +46,7 @@ export function Button({
   return (
     <button className={cls} {...props}>
       {children}
-      {showArrow && <ArrowRight className="w-4 h-4 rtl:rotate-180" />}
+      {showArrow && <ArrowRight className="w-4 h-4 rtl:rotate-180 shrink-0" />}
     </button>
   );
 }

@@ -65,7 +65,7 @@ export function LoginPage() {
   return (
     <div className="min-h-[85vh] grid lg:grid-cols-2">
       <div className={`hidden lg:flex flex-col justify-center px-12 text-white ${targetType === 'applicant' ? 'bg-slate-900' : 'bg-primary'}`}>
-        <p className="text-gold text-sm font-bold uppercase tracking-widest mb-3">مدرسة منهاتن للغات</p>
+        <p className="text-gold text-sm font-bold uppercase tracking-widest mb-3">{t('app.name', 'مدرسة منهاتن للغات')}</p>
         <h1 className="text-4xl font-extrabold mb-4">
           {targetType === 'applicant'
             ? 'بوابة التوظيف والانضمام لفريق التدريس'
@@ -89,7 +89,7 @@ export function LoginPage() {
             <h2 className="text-2xl font-bold text-slate-800">
               {targetType === 'applicant' ? 'تسجيل دخول كادر تعليمي' : 'تسجيل دخول ولي أمر'}
             </h2>
-            <p className="text-xs text-slate-500 mt-1">ادخل بيانات حسابك للمتابعة والوصول لطلبك</p>
+            <p className="text-xs text-slate-500 mt-1">{t('auth.loginSubtitle', 'ادخل بيانات حسابك للمتابعة والوصول لطلبك')}</p>
           </div>
 
           {/* Seamless Auth Tab Selector */}
@@ -185,7 +185,7 @@ export function AdminLoginPage() {
         <div className="flex flex-col items-center mb-6 text-center">
           <img src="/logo.png" alt="MLS" className="h-12 w-auto mb-3" />
           <h1 className="text-2xl font-bold text-primary-dark dark:text-white">{t('auth.adminLogin', 'دخول لوحة التحكم بالإدارة')}</h1>
-          <p className="text-xs text-neutral-medium mt-1">Manhattan Language School Management Portal</p>
+          <p className="text-xs text-neutral-medium mt-1">{t('auth.portalTagline', 'Manhattan Language School Management Portal')}</p>
         </div>
 
         <div className="mb-6 p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">

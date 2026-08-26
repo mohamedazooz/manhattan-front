@@ -26,7 +26,8 @@
     "login": "تسجيل الدخول",
     "portal": "بوابة ولي الأمر",
     "applicantPortal": "بوابة المتقدمين",
-    "admin": "الإدارة"
+    "admin": "الإدارة",
+    "portalHome": "لوحة التحكم"
   },
   "hero": {
     "discover": "اكتشف المزيد",
@@ -62,7 +63,15 @@
     "view": "تكبير الصورة",
     "showingCount": "عرض {{start}} - {{end}} من أصل {{total}} صورة",
     "noImages": "لا توجد صور في المعرض حالياً.",
-    "pageTitleHeader": "معرض وسائط مدرسة مانهاتن"
+    "pageTitleHeader": "معرض وسائط مدرسة مانهاتن",
+    "mediaBadge": "معرض وسائط مدرسة مانهاتن",
+    "cat": {
+      "academics": "الحياة الأكاديمية والدراسية",
+      "events": "الفعاليات والأنشطة المدرسية",
+      "campus": "المبنى والمرافق التعليمية",
+      "sports": "الرياضة والأنشطة البدنية",
+      "other": "أخرى"
+    }
   },
   "applicantFlows": {
     "studentTitle": "تقديم طلب التحاق طالب جديد",
@@ -216,7 +225,29 @@
     "schoolWhatsApp": "واتساب المدرسة",
     "visualPreview": "معاينة مرئية",
     "viewDocument": "عرض المستند",
-    "additionalInfo": "معلومات إضافية"
+    "additionalInfo": "معلومات إضافية",
+    "retry": "إعادة المحاولة",
+    "previous": "السابق",
+    "search": "بحث",
+    "filter": "تصفية",
+    "errorSave": "فشل حفظ البيانات",
+    "title": "العنوان",
+    "subtitle": "العنوان الفرعي",
+    "preview": "معاينة",
+    "confirmDelete": "هل أنت متأكد من رغبتك في الحذف نهائياً؟",
+    "submitting": "جاري الإرسال...",
+    "saveSuccess": "تم الحفظ بنجاح",
+    "backToAcademics": "العودة للمراحل الأكاديمية",
+    "allowedFileTypes": "PDF, DOC, DOCX",
+    "whatsapp": "واتساب المدرسة",
+    "whatsappContact": "تواصل معنا عبر واتساب",
+    "callSchool": "اتصل بالمدرسة",
+    "codeOptional": "كود (اختياري)",
+    "originalLink": "فتح الرابط الأصل",
+    "moreInfo": "معلومات إضافية",
+    "previewImage": "معاينة الصورة",
+    "ogImageHint": "تظهر عند مشاركة رابط الموقع على مواقع التواصل الاجتماعي",
+    "goBack": "العودة للخلف"
   },
   "footer": {
     "quickLinks": "روابط سريعة",
@@ -234,7 +265,8 @@
     "newsletterDesc": "احصل على آخر المستجدات والأحداث الأكاديمية والإعلانات.",
     "emailPlaceholder": "أدخل بريدك الإلكتروني",
     "subscribe": "اشتراك",
-    "subscribedSuccess": "شكراً لاشتراكك في النشرة!"
+    "subscribedSuccess": "شكراً لاشتراكك في النشرة!",
+    "subscribeError": "تعذر الاشتراك في النشرة البريدية، يرجى المحاولة مرة أخرى."
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -268,7 +300,27 @@
     "adminLogin": "دخول الكادر الإداري",
     "portalSubtitle": "بوابة إدارة مدرسة مانهاتن للغات",
     "backToSignIn": "العودة لتسجيل الدخول",
-    "loginSubtitle": "ادخل بيانات حسابك للمتابعة والوصول لطلبك"
+    "loginSubtitle": "ادخل بيانات حسابك للمتابعة والوصول لطلبك",
+    "forgotPasswordTitle": "إعادة تعيين كلمة المرور",
+    "forgotPasswordDesc": "أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطاً آمناً لإعادة التعيين.",
+    "sendResetLink": "إرسال رابط التعيين",
+    "sendingResetLink": "جاري الإرسال...",
+    "resetEmailSent": "إذا كان البريد مسجلاً لدينا، تم إرسال تعليمات إعادة التعيين إليه.",
+    "resetPasswordTitle": "تعيين كلمة مرور جديدة",
+    "resetPasswordDesc": "اختر كلمة مرور قوية لتأمين حسابك.",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordsMismatch": "كلمتا المرور غير متطابقتين",
+    "resetTokenMissing": "رابط إعادة التعيين غير صالح",
+    "resetTokenExpired": "انتهت صلاحية هذا الرابط أو تم استخدامه مسبقاً",
+    "resetSuccess": "تم تحديث كلمة المرور بنجاح",
+    "updatePassword": "تحديث كلمة المرور",
+    "updatingPassword": "جاري التحديث...",
+    "backToLogin": "العودة لتسجيل الدخول",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "passwordRequirements": "يجب ألا تقل عن {{count}} أحرف.",
+    "portalTagline": "بوابة إدارة مدرسة مانهاتن للغات"
   },
   "contact": {
     "title": "اتصل بنا",
@@ -291,7 +343,9 @@
     "success": "تم إرسال الرسالة بنجاح!",
     "schoolMapLocation": "موقع المدرسة على الخريطة",
     "openInMapsApp": "فتح في تطبيق الخرائط",
-    "admissionsPhone": "هاتف القبول"
+    "admissionsPhone": "هاتف القبول",
+    "mapLocation": "موقع المدرسة على الخريطة",
+    "openInMaps": "فتح في تطبيق الخرائط"
   },
   "portal": {
     "title": "بوابة ولي الأمر",
@@ -341,7 +395,13 @@
       "healthy": "سليم صحياً",
       "documentsCenter": "مركز المستندات والوثائق الرسمية",
       "previewDocument": "معاينة المستند",
-      "submitSuccessMessage": "تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسية"
+      "submitSuccessMessage": "تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسية",
+      "btn": "بوابة ولي الأمر",
+      "motherResidential": "بيانات الأم والفيصل السكني",
+      "healthRecord": "السجل الصحي والنشاط الطبي للطالب",
+      "docsHub": "مركز المستندات والوثائق الرسمية",
+      "previewDoc": "معاينة المستند",
+      "submissionSuccessBanner": "تم إرسال واستلام طلب القبول بنجاح، وجاري مراجعته بواسطة إدارة المدرسة."
     },
     "applicant": {
       "title": "بوابة المتقدمين للوظائف",
@@ -363,7 +423,10 @@
         "timeLimit": "المهلة المحددة: التوجه للمدرسة خلال 48 ساعة",
         "callSchool": "الاتصال بالمدرسة",
         "whatsapp": "تواصل عبر الواتساب"
-      }
+      },
+      "btn": "بوابة المتقدمين للوظائف",
+      "detailsTitle": "تفاصيل طلب التوظيف والبيانات الشخصية",
+      "cvAlreadyUploaded": "تم رفع السيرة الذاتية مسبقاً"
     }
   },
   "application": {
@@ -632,7 +695,7 @@
     "applicationNotFound": "لم يتم العثور على الطلب.",
     "documents": "المستندات",
     "statusHistory": "سجل تغييرات الحالة",
-    "internalNotes": "الملاحظات الداخلية",
+    "internalNotes": "الملاحظات الداخلية للفريق الإداري",
     "addInternalNote": "إضافة ملاحظة داخلية",
     "addNote": "إضافة ملاحظة",
     "cards": {
@@ -778,7 +841,13 @@
       "subtitle": "نشر إعلانات وأخبار المدرسة وإدارة التعليقات.",
       "addNew": "+ كتابة مقال جديد",
       "author": "الكاتب",
-      "excerpt": "الملخص"
+      "excerpt": "الملخص",
+      "coverImage": "الصورة البارزة",
+      "coverUrl": "رابط الصورة البارزة",
+      "coverHint": "ارفع صورة من جهازك للمقال",
+      "noCover": "بدون صورة بارزة",
+      "saving": "جاري الحفظ...",
+      "savePost": "حفظ المقال"
     },
     "heroCrud": {
       "title": "إدارة الشرائح الرئيسية (Hero)",
@@ -800,7 +869,18 @@
       "department": "القسم",
       "jobType": "نوع الوظيفة",
       "location": "الموقع",
-      "applicationsCount": "عدد المتقدمين"
+      "applicationsCount": "عدد المتقدمين",
+      "totalJobs": "إجمالي الوظائف",
+      "closedJobs": "الوظائف المغلقة",
+      "newApps": "طلبات جديدة",
+      "noJobs": "لا توجد وظائف معلنة",
+      "noNewApps": "لا توجد طلبات جديدة",
+      "noApps": "لا توجد طلبات تطابق الفلتر",
+      "saveJobError": "فشل حفظ بيانات الوظيفة",
+      "statusError": "فشل تحديث حالة الوظيفة",
+      "appStatusError": "فشل تحديث حالة طلب التوظيف",
+      "exportError": "فشل تصدير البيانات",
+      "evalError": "فشل حفظ تقييم المتقدم"
     },
     "seoCrud": {
       "title": "إعدادات محركات البحث SEO",
@@ -808,13 +888,37 @@
       "metaTitle": "العنوان الرئيسي SEO",
       "metaDescription": "الوصف الرئيسي SEO",
       "keywords": "الكلمات المفتاحية (تفصل بينها فاصلة)",
-      "saveSeo": "حفظ إعدادات SEO"
+      "saveSeo": "حفظ إعدادات SEO",
+      "siteTitleEn": "عنوان الموقع (بالإنجليزية)",
+      "siteTitleAr": "عنوان الموقع (بالعربية)",
+      "metaDescriptionEn": "الوصف التعريفي (بالإنجليزية)",
+      "metaDescriptionAr": "الوصف التعريفي (بالعربية)"
     },
     "notificationsCrud": {
       "title": "إشعارات النظام",
       "subtitle": "عرض التنبيهات الإدارية وطلبات القبول والتوظيف الجديدة.",
       "markAllRead": "تحديد الكل كمقروء",
-      "noNotifications": "لا توجد إشعارات غير مقروءة."
+      "noNotifications": "لا توجد إشعارات غير مقروءة.",
+      "noNotificationsHint": "ستظهر التنبيهات هنا عند حدوث أي أنشطة جديدة.",
+      "newNotification": "إشعار جديد",
+      "searchPlaceholder": "بحث في الإشعارات...",
+      "all": "الكل",
+      "unread": "غير مقروءة",
+      "read": "مقروءة",
+      "archived": "المؤرشفة",
+      "notification": "الإشعار",
+      "type": "النوع",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "actions": "الإجراءات",
+      "viewTarget": "عرض",
+      "markRead": "تمييز كمقروء",
+      "archive": "أرشفة",
+      "createTitle": "إنشاء إشعار وتنبيه جديد",
+      "formTitle": "العنوان",
+      "formMessage": "نص الرسالة",
+      "creating": "جاري الإنشاء...",
+      "create": "إنشاء التنبيه"
     },
     "title": "العنوان",
     "titleAr": "العنوان بالعربية",
@@ -830,7 +934,133 @@
     },
     "content": {
       "previewImage": "معاينة الصورة"
-    }
+    },
+    "dashboardHub": {
+      "pipelineTitle": "مسارات المعالجة والعمليات",
+      "pipelineSubtitle": "الأعمال المعلقة والطلبات التي تتطلب إجراءً عاجلاً.",
+      "bottleneckAdmissions": "{{count}} طلب في مرحلة المراجعة/الفحص",
+      "bottleneckJobs": "{{count}} طلب توظيف بانتظار مراجعة الموارد البشرية",
+      "contentBacklog": "{{count}} مسودات محتوى غير منشورة عبر الأقسام",
+      "reviewContent": "مراجعة المحتوى",
+      "analyticsTitle": "التحليلات والإحصائيات التفصيلية",
+      "analyticsSubtitle": "مخططات بيانية لتوزيع ونسب البيانات والطلبات.",
+      "queueClear": "قائمة الانتظار خالية",
+      "queueEmptyHint": "لا توجد طلبات أو معاملات معلقة حالياً في قائمة الانتظار.",
+      "queueClearHint": "لا توجد مراجعات أو استفسارات أو تنبيهات تتطلب إجراءً منك حالياً.",
+      "takeAction": "اتخاذ إجراء",
+      "kpiTitle": "المؤشرات الرئيسية للأداء",
+      "statsError": "تعذر تحميل إحصائيات لوحة التحكم. يرجى التحقق من الاتصال والتحديث.",
+      "apiOfflineTitle": "تعذر الاتصال بخادم النظام (API)",
+      "apiOfflineHint": "تأكد من تشغيل خادم NestJS وصحة إعداد VITE_API_URL.",
+      "quickNav": "التنقل السريع",
+      "needsReview": "بحاجة لمراجعة",
+      "noAdmissions": "لا توجد طلبات قبول",
+      "noAdmissionsHint": "عند تقديم أولياء الأمور لطلبات القبول ستظهر هنا للمراجعة.",
+      "noFilterResults": "لا توجد عناصر تطابق البحث أو الفلتر المحدد. جرب مسح الفلتر.",
+      "clearFilters": "مسح الفلاتر",
+      "noInquiries": "لا توجد استفسارات تواصل",
+      "noInquiriesHint": "عند إرسال الزوار لرسائل عبر نموذج التواصل ستظهر هنا.",
+      "needsResponse": "بحاجة للرد",
+      "searchComments": "بحث في التعليقات أو أسماء الكتاب...",
+      "noComments": "لا توجد تعليقات",
+      "noCommentsHint": "تعليقات القراء ستظهر هنا للمراجعة والموافقة.",
+      "pendingReview": "قيد المراجعة"
+    },
+    "jobsAwaitingReview": "طلبات توظيف بانتظار المراجعة",
+    "studentLifeCrud": {
+      "title": "إدارة صفحة حياة الطالب والأنشطة",
+      "subtitle": "إدارة الأندية الطلابية، الأكاديميات الرياضية، أنشطة STEM، والإحصائيات."
+    },
+    "statusLabel": "الحالة",
+    "viewFullDetails": "عرض التفاصيل",
+    "category": "الفئة",
+    "subCategory": "الفئة الفرعية",
+    "descAr": "الوصف (بالعربية)",
+    "descEn": "الوصف (بالإنجليزية)",
+    "requiredStatus": "الحالة المطلوبة",
+    "downloadUrl": "رابط التحميل",
+    "downloadName": "اسم الملف",
+    "addDocument": "إضافة مستند",
+    "blogPosts": "المقالات والأخبار",
+    "blogComments": "التعليقات",
+    "blogCategories": "التصنيفات",
+    "comment": "التعليق",
+    "author": "الكاتب",
+    "approve": "اعتماد",
+    "spam": "سبام / مزعج",
+    "categoryName": "اسم التصنيف (بالإنجليزية)",
+    "categoryNameAr": "اسم التصنيف (بالعربية)",
+    "slug": "الرابط الدائم (Slug)",
+    "addCategory": "إضافة تصنيف",
+    "backToAdmissions": "العودة لطلبات القبول",
+    "gradePlaceholder": "اختر المرحلة الدراسية...",
+    "titlePlaceholder": "أدخل العنوان...",
+    "jobAppsTitle": "طلبات التوظيف والتعيين",
+    "jobAppsSubtitle": "مراجعة وإدارة طلبات التوظيف للمتقدمين والمستندات المرفقة.",
+    "candidateName": "اسم المتقدم",
+    "noDocs": "لا توجد مستندات مرفقة",
+    "inquiriesSubtitle": "إدارة واستعراض رسائل التواصل والاستفسارات الواردة من الموقع.",
+    "formDocumentsEmpty": "لا توجد نماذج أو وثائق رسمية",
+    "editDocument": "تعديل المستند",
+    "saveChanges": "حفظ التعديلات",
+    "selectCategory": "اختر التصنيف...",
+    "titleEn": "العنوان (بالإنجليزية)",
+    "contentEn": "المحتوى (بالإنجليزية)",
+    "contentAr": "المحتوى (بالعربية)",
+    "formDocs": {
+      "empty": "لا توجد نماذج أو مستندات",
+      "emptyHint": "أضف النماذج والوثائق القابلة للتحميل من النموذج بالأعلى."
+    },
+    "ops": {
+      "healthLabel": "حالة سلامة العمليات",
+      "healthHealthy": "العمليات تعمل بشكل ممتاز",
+      "healthAttention": "توجد عناصر بحاجة لمراجعة",
+      "healthCritical": "تم رصد مشكلات حرجة",
+      "emptyDataHint": "لا توجد بيانات تشغيلية حتى الآن.",
+      "noPendingWork": "لا توجد مراجعات أو تنبيهات نظام معلقة.",
+      "pendingCount": "{{count}} عناصر في قوائم الانتظار بحاجة لإجراء",
+      "pipelineTitle": "مسارات المعالجة والتشغيل",
+      "pipelineSubtitle": "المهام والطلبات التي تنتظر إجراءك.",
+      "bottleneckAdmissions": "{{count}} طلب قبول في مرحلة المراجعة والفحص",
+      "bottleneckJobs": "{{count}} طلب توظيف بانتظار مراجعة الموارد البشرية",
+      "contentBacklog": "{{count}} مسودات محتوى غير منشورة عبر الأقسام",
+      "reviewContent": "مراجعة المحتوى",
+      "analyticsTitle": "التحليلات والإحصائيات التشغيلية",
+      "analyticsSubtitle": "مخططات تفصيلية لبيانات المنظومة.",
+      "queueClear": "قائمة المعاملات خالية",
+      "queueEmptyHint": "لا توجد طلبات معلقة حالياً في قائمة الانتظار.",
+      "queueClearHint": "لا توجد مراجعات أو استفسارات أو تنبيهات معلقة.",
+      "takeAction": "اتخاذ إجراء",
+      "kpiTitle": "المؤشرات الرئيسية للأداء",
+      "statsError": "تعذر تحميل إحصائيات لوحة التحكم.",
+      "apiOfflineTitle": "تعذر الاتصال بخادم النظام (API)",
+      "apiOfflineHint": "تأكد من تشغيل خادم NestJS وصحة إعداد VITE_API_URL.",
+      "quickNav": "التنقل السريع",
+      "needsReview": "بحاجة لمراجعة",
+      "noAdmissions": "لا توجد طلبات قبول",
+      "noAdmissionsHint": "طلبات أولياء الأمور ستظهر هنا فور إرسالها.",
+      "noFilterResults": "لا توجد نتائج تطابق خيارات البحث أو التصفية.",
+      "clearFilters": "مسح الفلاتر",
+      "noInquiries": "لا توجد استفسارات تواصل",
+      "noInquiriesHint": "رسائل الزوار ستظهر هنا للمتابعة والرد.",
+      "needsResponse": "بحاجة للرد",
+      "searchComments": "بحث في التعليقات وأسماء الكتاب...",
+      "noComments": "لا توجد تعليقات للمقالات",
+      "noCommentsHint": "تعليقات القراء ستظهر هنا للمراجعة والاعتماد.",
+      "pendingReview": "قيد المراجعة والتدقيق"
+    },
+    "portalTitle": "إدارة مدرسة مانهاتن",
+    "studentData": "بيانات الطالب المتقدم",
+    "motherData": "بيانات الأم",
+    "emergencyData": "بيانات الطوارئ",
+    "medicalRecord": "السجل الطبي والحالة الصحية للطالب",
+    "regulationsSign": "اللوائح والتوقيع الرقمي",
+    "statusAuditLog": "سجل تغييرات حالة الطلب",
+    "noPermissions": "بدون صلاحيات نظامية",
+    "customRole": "الدور الوظيفي المخصص",
+    "appDetails": "بيانات الطلب",
+    "attachedDocs": "المستندات المرفقة",
+    "viewDoc": "عرض المستند"
   },
   "about": {
     "pageTitle": "من نحن",
@@ -986,7 +1216,9 @@
     "errorSubmit": "حدث خطأ أثناء تقديم الطلب. يرجى المحاولة لاحقاً.",
     "attachDocument": "إرفاق المستند",
     "applicationDetails": "تفاصيل طلب التوظيف والبيانات الشخصية",
-    "resumeAlreadyUploaded": "تم رفع السيرة الذاتية مسبقاً"
+    "resumeAlreadyUploaded": "تم رفع السيرة الذاتية مسبقاً",
+    "positionDescription": "الوصف الوظيفي",
+    "requirementsQualifications": "الشروط والمؤهلات المطلوبة"
   },
   "status": {
     "DRAFT": "مسودة",
@@ -1120,6 +1352,29 @@
     "submitApplication": "إرسال الطلب",
     "notFound": "لم يتم العثور على طلب الالتحاق",
     "noRequirements": "لا توجد متطلبات مستندات خاصة لهذه المرحلة الدراسية",
-    "referenceNumber": "الرقم المرجعي"
+    "referenceNumber": "الرقم المرجعي",
+    "uploadPartialFailure": "تعذر رفع بعض المستندات، يرجى إعادة المحاولة",
+    "errorSubmit": "فشل إرسال الطلب، يرجى التأكد من البيانات والمحاولة مرة أخرى.",
+    "chooseAttachment": "اختر ملف مرفق",
+    "studentDetails": "بيانات الطالب",
+    "parentDetails": "بيانات الوالدين والاتصال",
+    "healthStatus": "الحالة الصحية للطالب",
+    "noHealthIssues": "لا يعاني من أي حالات صحية خاصة مسجلة",
+    "healthyStatus": "سليم صحياً"
+  },
+  "states": {
+    "loading": "جاري التحميل...",
+    "loadingContent": "جاري تحميل المحتوى، يرجى الانتظار...",
+    "errorTitle": "حدث خطأ غير متوقع",
+    "errorDesc": "تعذر تحميل المحتوى المطلوب. يرجى التحقق من اتصالك بالإنترنت والمحاولة مجدداً.",
+    "emptyTitle": "لا توجد بيانات متاحة حالياً",
+    "emptyDesc": "لا توجد عناصر لعرضها في الوقت الحالي."
+  },
+  "notFoundPage": {
+    "code": "404",
+    "title": "الصفحة غير موجودة",
+    "description": "الرابط الذي تحاول الوصول إليه غير متاح أو تم نقله. يرجى التأكد من العنوان أو العودة للرئيسية.",
+    "backHome": "العودة للرئيسية",
+    "browseSite": "تصفح أقسام الموقع"
   }
 }
