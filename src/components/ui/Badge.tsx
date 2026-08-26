@@ -53,6 +53,20 @@ export function PageHeader({ title, subtitle, showBack = true }: { title: string
   const isAr = lang === 'ar';
   const canGoBack = showBack && location.pathname !== '/';
 
+  const handleBack = () => {
+    if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+      navigate(-1);
+    } else if (location.pathname.startsWith('/admin')) {
+      navigate('/admin');
+    } else if (location.pathname.startsWith('/portal/parent')) {
+      navigate('/portal/parent');
+    } else if (location.pathname.startsWith('/portal/applicant')) {
+      navigate('/portal/applicant');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between min-w-0">
       <div className="min-w-0 flex-1">
@@ -64,7 +78,7 @@ export function PageHeader({ title, subtitle, showBack = true }: { title: string
       {canGoBack && (
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-2xs transition-all shrink-0 active:scale-95 whitespace-nowrap"
           title={isAr ? 'رجوع للصفحة السابقة' : 'Go back'}
         >

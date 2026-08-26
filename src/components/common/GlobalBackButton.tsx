@@ -13,15 +13,29 @@ export function GlobalBackButton() {
     return null;
   }
 
+  const handleBack = () => {
+    if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+      navigate(-1);
+    } else if (location.pathname.startsWith('/admin')) {
+      navigate('/admin');
+    } else if (location.pathname.startsWith('/portal/parent')) {
+      navigate('/portal/parent');
+    } else if (location.pathname.startsWith('/portal/applicant')) {
+      navigate('/portal/applicant');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <button
       type="button"
-      onClick={() => navigate(-1)}
-      className="fixed bottom-6 start-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-dark/90 text-white hover:bg-primary-dark shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-md border border-white/20 active:scale-95 group text-xs font-bold"
+      onClick={handleBack}
+      className="fixed bottom-6 start-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-dark/90 text-white hover:bg-primary-dark shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-md border border-white/20 active:scale-95 group text-xs font-bold shrink-0 whitespace-nowrap"
       title={isAr ? 'رجوع للصفحة السابقة' : 'Go back to previous page'}
       aria-label={isAr ? 'رجوع' : 'Back'}
     >
-      <ArrowLeft className="w-4 h-4 rtl:rotate-180 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
+      <ArrowLeft className="w-4 h-4 rtl:rotate-180 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1 shrink-0" />
       <span>{isAr ? 'رجوع' : 'Back'}</span>
     </button>
   );

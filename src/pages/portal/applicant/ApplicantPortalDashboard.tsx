@@ -39,7 +39,7 @@ export function ApplicantPortalDashboard() {
         </div>
         <Button to="/careers" variant="gold">
           <Plus className="w-4 h-4" />
-          {lang === 'ar' ? 'تقديم طلب توظيف جديد' : t('portal.applicant.browseJobs')}
+          {t('portal.applicant.browseJobs', 'تصفح الوظائف المتاحة')}
         </Button>
       </div>
 
