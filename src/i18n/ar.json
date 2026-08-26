@@ -474,32 +474,16 @@
     "sections": "أقسام الصفحات",
     "about": "من نحن",
     "settings": "الإعدادات",
-    "seo": {
-      "previewImage": "معاينة الصورة",
-      "previewImageHint": "تظهر عند مشاركة رابط الموقع على مواقع التواصل الاجتماعي"
-    },
+    "seo": "إعدادات محركات البحث (SEO)",
     "notifications": "التنبيهات",
     "pages": "الصفحات الثابتة",
     "navStudentLife": "حياة الطالب",
     "navEducation": "البرامج الأكاديمية",
     "navGallery": "معرض الصور",
-    "blog": {
-      "coverImage": "صورة غلاف المقال",
-      "coverImageHint": "اختر صورة من جهازك أو حدد صورة جاهزة"
-    },
+    "blog": "المقالات والأخبار",
     "comments": "التعليقات",
     "inquiries": "الاستفسارات",
-    "admissions": {
-      "studentDetails": "بيانات الطالب المتقدم",
-      "motherDetails": "بيانات الأم",
-      "emergencyDetails": "بيانات الطوارئ",
-      "healthRecord": "السجل الطبي والحالة الصحية للطالب",
-      "regulationsAndSignature": "اللوائح والتوقيع الرقمي",
-      "statusHistory": "سجل تغييرات حالة الطلب",
-      "internalNotes": "الملاحظات الداخلية للفريق الإداري",
-      "applicationDetails": "بيانات الطلب",
-      "attachedDocs": "المستندات المرفقة"
-    },
+    "admissions": "طلبات القبول والتسجيل",
     "navRequirements": "شروط القبول",
     "careers": "وظائف التدريس",
     "jobRequirements": "متطلبات التوظيف",
