@@ -10,10 +10,11 @@ const ROLE_HOME: Record<PortalRole, string> = {
   APPLICANT: '/portal/applicant',
 };
 
-const STAFF_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'TEACHER', 'HR']);
-
 export function isStaffRole(role: string | null | undefined): boolean {
-  return !!role && STAFF_ROLES.has(role);
+  if (!role) return false;
+  const upper = role.toUpperCase();
+  if (upper === 'PARENT' || upper === 'APPLICANT' || upper === 'GUEST') return false;
+  return true;
 }
 
 export function getPortalHomeForRole(role: string | null): string {

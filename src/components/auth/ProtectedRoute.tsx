@@ -33,17 +33,11 @@ export function ProtectedRoute({
 }
 
 function getRedirectPath(role?: string): string {
-  switch (role) {
-    case 'ADMIN':
-    case 'SUPER_ADMIN':
-      return '/admin';
-    case 'PARENT':
-      return '/portal/parent';
-    case 'APPLICANT':
-      return '/portal/applicant';
-    default:
-      return '/';
-  }
+  if (!role) return '/';
+  const upper = role.toUpperCase();
+  if (upper === 'PARENT') return '/portal/parent';
+  if (upper === 'APPLICANT') return '/portal/applicant';
+  return '/admin';
 }
 
 export function PermissionGuard({

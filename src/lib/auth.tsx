@@ -171,10 +171,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return permissions.includes(perm);
       },
       isAdmin:
-        role === 'ADMIN' ||
-        role === 'SUPER_ADMIN' ||
-        role === 'TEACHER' ||
-        role === 'HR',
+        Boolean(role) &&
+        role !== 'PARENT' &&
+        role !== 'APPLICANT' &&
+        role !== 'GUEST',
     }),
     [user, permissions, role, loading, login, register, logout],
   );
