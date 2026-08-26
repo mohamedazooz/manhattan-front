@@ -59,12 +59,14 @@ jobs:
             npm run build:prod 2>&1 | tail -30
 
             echo "=== [6/7] Fix ownership & permissions ==="
-            sudo chown -R machsol:machsol /var/www/manhattan/frontend/dist 2>/dev/null || true
-            sudo chown -R machsol:machsol /var/www/manhattan/frontend/assets 2>/dev/null || true
-            sudo chown -R machsol:machsol /var/www/manhattan/frontend/photos 2>/dev/null || true
-            sudo chmod 600 .env .env.local .env.production 2>/dev/null || true
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' chown -R machsol:machsol /var/www/manhattan/frontend/dist 2>/dev/null || true
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' chown -R machsol:machsol /var/www/manhattan/frontend/assets 2>/dev/null || true
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' chown -R machsol:machsol /var/www/manhattan/frontend/photos 2>/dev/null || true
+            chmod 600 .env .env.local .env.production 2>/dev/null || true
 
-            echo "=== [7/7] Reload nginx & health check ==="
+            echo "=== [7/7] Sync to Nginx & reload ==="
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' rm -rf /usr/share/nginx/html/* 2>/dev/null || true
+            echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' cp -r dist/* /usr/share/nginx/html/ 2>/dev/null || true
             echo '${{ secrets.SUDO_PASSWORD }}' | sudo -S -p '' systemctl reload nginx
             sleep 2
             for i in 1 2 3 4 5; do
