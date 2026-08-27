@@ -10,7 +10,7 @@ import { StatusBadge, LoadingSpinner } from '../../../components/ui/Badge';
 import { StepIndicator } from '../../../components/ui/StepIndicator';
 import { mediaUrl } from '../../../lib/utils';
 import { getApiErrorMessage } from '../../../lib/formData';
-import { getAdmissionDocumentMeta } from './admissionWizardConstants';
+import { getAdmissionDocumentMeta, REQUIRED_DOCUMENTS_LIST } from './admissionWizardConstants';
 
 export function ParentAdmissionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -120,7 +120,11 @@ export function ParentAdmissionDetailPage() {
   }
 
   const gradeReq = requirements.find((r: { gradeLevel: string }) => r.gradeLevel === admission.gradeLevel);
-  const requiredDocs: string[] = gradeReq?.requiredDocumentTypes ?? [];
+  const requiredDocs: string[] =
+    gradeReq?.requiredDocumentTypes && gradeReq.requiredDocumentTypes.length > 0
+      ? gradeReq.requiredDocumentTypes
+      : REQUIRED_DOCUMENTS_LIST.filter((d) => d.required).map((d) => d.code);
+  const allAvailableDocs: string[] = REQUIRED_DOCUMENTS_LIST.map((d) => d.code);
   const uploadedTypes = new Set((admission.documents || []).map((d: { documentType: string }) => d.documentType));
   const missingDocs = requiredDocs.filter((type) => !uploadedTypes.has(type));
   const isDraft = admission.status === 'DRAFT';
@@ -446,9 +450,16 @@ export function ParentAdmissionDetailPage() {
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
               >
-                {requiredDocs.map((val) => (
-                  <option key={val} value={val}>{getAdmissionDocumentMeta(val).title}</option>
-                ))}
+                {allAvailableDocs.map((val) => {
+                  const meta = getAdmissionDocumentMeta(val);
+                  const isReq = requiredDocs.includes(val);
+                  const isAlreadyUploaded = uploadedTypes.has(val);
+                  return (
+                    <option key={val} value={val}>
+                      {meta.title} {isAlreadyUploaded ? '✓ (تم الرفع)' : isReq ? '* (مطلوب)' : '(إضافي)'}
+                    </option>
+                  );
+                })}
               </Select>
 
               <div className="space-y-1">
