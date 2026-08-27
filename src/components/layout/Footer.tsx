@@ -57,6 +57,12 @@ export function Footer() {
             <img
               src={config.school_logo_url ? mediaUrl(config.school_logo_url) : '/logo.png'}
               alt="Manhattan Language School logo"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith('/logo.png')) {
+                  target.src = '/logo.png';
+                }
+              }}
               className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105 duration-200"
             />
           </Link>

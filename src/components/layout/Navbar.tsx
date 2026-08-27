@@ -70,9 +70,14 @@ export function Navbar() {
             alt="Manhattan Language School"
             className="h-9 sm:h-10 lg:h-11 xl:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105 filter drop-shadow-xs"
             onError={(e) => {
-              (e.currentTarget as HTMLElement).style.display = 'none';
-              const sibling = e.currentTarget.nextElementSibling;
-              if (sibling) sibling.classList.remove('hidden');
+              const target = e.currentTarget as HTMLImageElement;
+              if (!target.src.endsWith('/logo.png')) {
+                target.src = '/logo.png';
+              } else {
+                target.style.display = 'none';
+                const sibling = target.nextElementSibling;
+                if (sibling) sibling.classList.remove('hidden');
+              }
             }}
           />
           <div className="hidden sm:flex flex-col">
