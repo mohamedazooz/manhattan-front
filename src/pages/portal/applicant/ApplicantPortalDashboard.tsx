@@ -114,12 +114,7 @@ export function ApplicantPortalDashboard() {
           />
         ) : (
           <div className="space-y-4">
-            {applications.map((ja: {
-              id: string;
-              status: string;
-              createdAt: string;
-              job?: { title: string; location: string };
-            }) => (
+            {applications.map((ja: any) => (
               <div key={ja.id} className="glass-card rounded-xl p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>

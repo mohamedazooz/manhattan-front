@@ -4,24 +4,28 @@ import type {
   BlogPost,
   DashboardStats,
   EducationProgram,
+  FormDocument,
+  GalleryImage,
   Job,
+  JobApplication,
   LandingHero,
   LandingSection,
+  Notification,
   SeoConfig,
   StaticPage,
   User,
 } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractList<T>(res: { data: any }): { data: T[] } {
+function extractList<T = any>(res: { data: any }): { data: T[] } {
   const d = res.data;
   let items: T[] = [];
   if (Array.isArray(d)) {
-    items = d;
+    items = d as T[];
   } else if (d && typeof d === 'object' && Array.isArray(d.data)) {
-    items = d.data;
+    items = d.data as T[];
   } else if (d && typeof d === 'object' && Array.isArray(d.items)) {
-    items = d.items;
+    items = d.items as T[];
   }
   return { ...res, data: items };
 }
@@ -73,7 +77,7 @@ export const cmsApi = {
 
 export const aboutApi = {
   get: (lang: string) => api.get('/about-us', { params: { lang: langParam(lang) } }),
-  admin: () => api.get('/about-us/admin').then(extractList),
+  admin: () => api.get<any[]>('/about-us/admin').then(extractList<any>),
   create: (data: FormData | object) =>
     data instanceof FormData ? api.post('/about-us', data) : api.post('/about-us', data),
   update: (id: string, data: FormData | object) =>
@@ -114,8 +118,8 @@ export const educationApi = {
 
 export const galleryApi = {
   list: (lang: string, category?: string) =>
-    api.get('/gallery', { params: { lang: langParam(lang), category } }).then(extractList),
-  admin: () => api.get('/gallery/admin').then(extractList),
+    api.get<any[]>('/gallery', { params: { lang: langParam(lang), category } }).then(extractList<any>),
+  admin: () => api.get<GalleryImage[]>('/gallery/admin').then(extractList<GalleryImage>),
   create: (form: FormData) => api.post('/gallery', form),
   update: (id: string, form: FormData) => api.patch(`/gallery/${id}`, form),
   updateStatus: (id: string, status: string) =>
@@ -128,7 +132,7 @@ export const blogApi = {
     api.get<BlogPost[]>('/posts', { params: { lang: langParam(lang), categoryId } }).then(extractList<BlogPost>),
   get: (slug: string, lang: string) =>
     api.get<BlogPost>(`/posts/${slug}`, { params: { lang: langParam(lang) } }),
-  admin: () => api.get<BlogPost[] | { data: BlogPost[] }>('/posts/admin').then(extractList<BlogPost>),
+  admin: () => api.get<BlogPost[]>('/posts/admin').then(extractList<BlogPost>),
   getById: (id: string) => api.get<BlogPost>(`/posts/${id}`),
   getPost(id: string) {
     return this.getById(id);
@@ -136,13 +140,13 @@ export const blogApi = {
   create: (data: object) => api.post('/posts', data),
   update: (id: string, data: object) => api.patch(`/posts/${id}`, data),
   updateStatus: (id: string, status: string) => api.patch(`/posts/${id}/status`, { status }),
-  comments: () => api.get('/posts/comments/admin').then(extractList),
+  comments: () => api.get<any[]>('/posts/comments/admin').then(extractList<any>),
   moderateComment: (id: string, status: string) =>
     api.patch(`/posts/comments/${id}`, { status }),
   createComment: (postId: string, content: string) =>
     api.post(`/posts/${postId}/comments`, { content }),
   categories: (lang: string) =>
-    api.get('/categories', { params: { lang: langParam(lang) } }).then(extractList),
+    api.get<any[]>('/categories', { params: { lang: langParam(lang) } }).then(extractList<any>),
   createCategory: (data: object) => api.post('/categories', data),
   updateCategory: (id: string, data: object) => api.patch(`/categories/${id}`, data),
   deleteCategory: (id: string) => api.delete(`/categories/${id}`),
@@ -152,16 +156,16 @@ export const careersApi = {
   list: (lang: string) => api.get<Job[]>('/jobs', { params: { lang: langParam(lang) } }).then(extractList<Job>),
   get: (id: string, lang: string) =>
     api.get<Job>(`/jobs/${id}`, { params: { lang: langParam(lang) } }),
-  admin: () => api.get('/jobs/admin').then(extractList<Job>),
+  admin: () => api.get<Job[]>('/jobs/admin').then(extractList<Job>),
   create: (data: object) => api.post('/jobs', data),
   update: (id: string, data: object) => api.patch(`/jobs/${id}`, data),
   updateStatus: (id: string, status: string) => api.patch(`/jobs/${id}/status`, { status }),
-  applications: (id: string) => api.get(`/jobs/${id}/applications`).then(extractList),
-  myApplications: () => api.get('/jobs/my-applications').then(extractList),
+  applications: (id: string) => api.get<JobApplication[]>(`/jobs/${id}/applications`).then(extractList<JobApplication>),
+  myApplications: () => api.get<JobApplication[]>('/jobs/my-applications').then(extractList<JobApplication>),
   getApplication: (id: string) => api.get(`/jobs/applications/${id}`),
   updateApplication: (id: string, data: object) => api.patch(`/jobs/applications/${id}`, data),
   submitApplication: (id: string) => api.post(`/jobs/applications/${id}/submit`),
-  allApplications: () => api.get('/jobs/admin/all-applications').then(extractList),
+  allApplications: () => api.get<JobApplication[]>('/jobs/admin/all-applications').then(extractList<JobApplication>),
   adminGetApplication: (id: string) => api.get(`/jobs/admin/applications/${id}`),
   updateApplicationStatus: (
     id: string,
@@ -194,11 +198,11 @@ export const careersApi = {
 export const jobRequirementsApi = {
   list: (all?: boolean, lang?: string) =>
     (all
-      ? api.get('/job-requirements/admin')
-      : api.get('/job-requirements', { params: { lang: langParam(lang) } })
-    ).then(extractList),
+      ? api.get<any[]>('/job-requirements/admin')
+      : api.get<any[]>('/job-requirements', { params: { lang: langParam(lang) } })
+    ).then(extractList<any>),
   byType: (employmentType?: string, lang?: string) =>
-    api.get('/job-requirements/by-type', { params: { employmentType, lang: langParam(lang) } }).then(extractList),
+    api.get<any[]>('/job-requirements/by-type', { params: { employmentType, lang: langParam(lang) } }).then(extractList<any>),
   create: (data: object) => api.post('/job-requirements', data),
   update: (id: string, data: object) => api.patch(`/job-requirements/${id}`, data),
   remove: (id: string) => api.delete(`/job-requirements/${id}`),
@@ -226,9 +230,9 @@ export const admissionsApi = {
 export const requirementsApi = {
   list: (all?: boolean, lang?: string) =>
     (all
-      ? api.get('/admission-requirements/admin')
-      : api.get('/admission-requirements', { params: { lang: langParam(lang) } })
-    ).then(extractList),
+      ? api.get<any[]>('/admission-requirements/admin')
+      : api.get<any[]>('/admission-requirements', { params: { lang: langParam(lang) } })
+    ).then(extractList<any>),
   create: (data: object) => api.post('/admission-requirements', data),
   update: (id: string, data: object) => api.patch(`/admission-requirements/${id}`, data),
   remove: (id: string) => api.delete(`/admission-requirements/${id}`),
@@ -236,14 +240,14 @@ export const requirementsApi = {
 
 export const contactApi = {
   submit: (data: object) => api.post('/contact', data),
-  admin: (status?: string) => api.get('/contact/admin', { params: { status } }).then(extractList),
+  admin: (status?: string) => api.get<any[]>('/contact/admin', { params: { status } }).then(extractList<any>),
   updateStatus: (id: string, status: string) => api.patch(`/contact/${id}/status`, { status }),
   reply: (id: string, data: { subject?: string; message: string }) =>
     api.post(`/contact/${id}/reply`, data),
 };
 
 export const usersApi = {
-  list: () => api.get('/users').then(extractList),
+  list: () => api.get<any[]>('/users').then(extractList<any>),
   create: (data: { email: string; password: string; fullName: string; roleId: string }) =>
     api.post('/users', data),
   delete: (id: string) => api.delete(`/users/${id}`),
@@ -252,9 +256,9 @@ export const usersApi = {
 };
 
 export const rolesApi = {
-  list: () => api.get('/roles').then(extractList),
+  list: () => api.get<any[]>('/roles').then(extractList<any>),
   get: (id: string) => api.get(`/roles/${id}`),
-  permissions: () => api.get('/roles/permissions').then(extractList),
+  permissions: () => api.get<any[]>('/roles/permissions').then(extractList<any>),
   create: (data: { name: string; description?: string; permissionNames?: string[] }) =>
     api.post('/roles', data),
   update: (id: string, data: { name?: string; description?: string; permissionNames?: string[] }) =>
@@ -267,11 +271,11 @@ export const rolesApi = {
 };
 
 export const emailApi = {
-  templates: () => api.get('/email/templates').then(extractList),
+  templates: () => api.get<any[]>('/email/templates').then(extractList<any>),
   createTemplate: (data: object) => api.post('/email/templates', data),
   updateTemplate: (id: string, data: object) => api.patch(`/email/templates/${id}`, data),
   deleteTemplate: (id: string) => api.delete(`/email/templates/${id}`),
-  logs: () => api.get('/email/logs').then(extractList),
+  logs: () => api.get<any[]>('/email/logs').then(extractList<any>),
 };
 
 export const healthApi = {
@@ -299,7 +303,7 @@ export const dashboardApi = {
 
 export const notificationsApi = {
   list: (status?: string, limit?: number) =>
-    api.get('/notifications', { params: { status, limit } }).then(extractList),
+    api.get<Notification[]>('/notifications', { params: { status, limit } }).then(extractList<Notification>),
   unreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
   create: (data: { title: string; message: string; type?: string; userId?: string }) =>
     api.post('/notifications', data),
@@ -330,10 +334,10 @@ export const newsletterApi = {
 
 export const formDocumentsApi = {
   list: (lang: string, category?: string) =>
-    api.get('/form-documents', {
+    api.get<FormDocument[]>('/form-documents', {
       params: { lang: langParam(lang), category },
-    }).then(extractList),
-  admin: () => api.get('/form-documents/admin').then(extractList),
+    }).then(extractList<FormDocument>),
+  admin: () => api.get<FormDocument[]>('/form-documents/admin').then(extractList<FormDocument>),
   create: (data: object) => api.post('/form-documents', data),
   update: (id: string, data: object) => api.patch(`/form-documents/${id}`, data),
   updateStatus: (id: string, status: string) =>

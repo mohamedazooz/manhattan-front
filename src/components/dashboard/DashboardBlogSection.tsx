@@ -13,11 +13,7 @@ export function DashboardBlogSection() {
   const lang = useAppLanguage();
   const { data: blogPosts = [] } = useQuery({
     queryKey: ['dashboard-blog-posts'],
-    queryFn: () =>
-      blogApi.admin().then((r) => {
-        const body = r.data;
-        return Array.isArray(body) ? body : body.data ?? [];
-      }),
+    queryFn: () => blogApi.admin().then((r) => r.data),
   });
 
   return (

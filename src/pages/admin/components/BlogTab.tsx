@@ -41,11 +41,7 @@ export function AdminBlogPage() {
 
   const { data: posts = [] } = useQuery({
     queryKey: ['posts-admin'],
-    queryFn: () =>
-      blogApi.admin().then((r) => {
-        const body = r.data;
-        return Array.isArray(body) ? body : body.data ?? [];
-      }),
+    queryFn: () => blogApi.admin().then((r) => r.data),
   });
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],

@@ -10,6 +10,7 @@ import { AdmissionStatusSelect } from '../../components/admin/AdmissionStatusSel
 import { AdminListToolbar, AdminStatusChip } from '../../components/admin/AdminListToolbar';
 import { AdminDataTable } from '../../components/admin/AdminDataTable';
 import { AdminOpsCounters } from '../../components/admin/AdminOpsCounters';
+import type { Admission } from '../../types';
 
 type StatusFilter = '' | 'NEEDS_REVIEW' | 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED';
 
@@ -24,7 +25,7 @@ export function AdminAdmissionsPage() {
     queryFn: () => admissionsApi.list().then((r) => r.data),
   });
 
-  const admissions = useMemo(() => {
+  const admissions = useMemo<Admission[]>(() => {
     if (!rawAdmissions) return [];
     if (Array.isArray(rawAdmissions)) return rawAdmissions;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

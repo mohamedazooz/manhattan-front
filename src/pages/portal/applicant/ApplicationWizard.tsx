@@ -162,7 +162,7 @@ export function ApplicationWizard() {
           subjectsTaught: draft.subjectsTaught || prev.subjectsTaught,
           highestQualification: draft.highestQualification || prev.highestQualification,
           university: draft.university || prev.university,
-          graduationYear: draft.graduationYear || prev.graduationYear,
+          graduationYear: draft.graduationYear ? String(draft.graduationYear) : prev.graduationYear,
           major: draft.major || prev.major,
           teachingLicenseNo: draft.teachingLicenseNo || prev.teachingLicenseNo,
           availableStartDate: draft.availableStartDate ? String(draft.availableStartDate).split('T')[0] : prev.availableStartDate,
