@@ -19,10 +19,18 @@ export function AdminAdmissionsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: admissions = [], isLoading } = useQuery({
+  const { data: rawAdmissions, isLoading } = useQuery({
     queryKey: ['admissions-admin'],
     queryFn: () => admissionsApi.list().then((r) => r.data),
   });
+
+  const admissions = useMemo(() => {
+    if (!rawAdmissions) return [];
+    if (Array.isArray(rawAdmissions)) return rawAdmissions;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (Array.isArray((rawAdmissions as any).data)) return (rawAdmissions as any).data;
+    return [];
+  }, [rawAdmissions]);
 
   const counts = useMemo(() => {
     const tally = {
