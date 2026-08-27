@@ -51,7 +51,7 @@ function clearAccessToken() {
 
 export async function refreshAccessToken(): Promise<string> {
   refreshPromise ??= axios
-    .post(`${API_URL}/auth/refresh`, {}, { withCredentials: true })
+    .post(`${API_URL}/auth/refresh`, {}, { withCredentials: true, timeout: 10000 })
     .then((res) => {
       accessToken = res.data.accessToken;
       return res.data.accessToken;
@@ -67,6 +67,7 @@ let refreshPromise: Promise<string> | null = null;
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -84,17 +85,18 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-  if (error.response?.status === 401 && !original._retry) {
-    original._retry = true;
-    try {
-      const token = await refreshAccessToken();
-      original.headers.Authorization = `Bearer ${token}`;
-      return api(original);
-    } catch {
-      clearAccessToken();
-      onAuthFailure?.();
+    if (error.response?.status === 401 && original && !original._retry) {
+      original._retry = true;
+      try {
+        const token = await refreshAccessToken();
+        original.headers.Authorization = `Bearer ${token}`;
+        return api(original);
+      } catch {
+        clearAccessToken();
+        onAuthFailure?.();
+        return Promise.reject(error);
+      }
     }
-  }
     return Promise.reject(error);
   },
 );

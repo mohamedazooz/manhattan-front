@@ -93,37 +93,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuth]);
 
   useEffect(() => {
-    const epoch = bootstrapEpoch.current;
+    let active = true;
+    const timeoutId = setTimeout(() => {
+      if (active) {
+        setLoading(false);
+      }
+    }, 5000);
 
     async function bootstrapAuth() {
       const token = getAccessToken();
       if (token) {
         try {
           const { data } = await authApi.me();
-          if (bootstrapEpoch.current !== epoch) return;
+          if (!active) return;
           applyToken(token, data);
           return;
         } catch {
-          clearAuth(epoch);
+          if (active) clearAuth();
         }
       }
 
       try {
         const newToken = await refreshAccessToken();
-        if (bootstrapEpoch.current !== epoch) return;
+        if (!active) return;
         const { data } = await authApi.me();
-        if (bootstrapEpoch.current !== epoch) return;
+        if (!active) return;
         applyToken(newToken, data);
       } catch {
-        clearAuth(epoch);
+        if (active) clearAuth();
       }
     }
 
-    bootstrapAuth().finally(() => {
-      if (bootstrapEpoch.current === epoch) {
-        setLoading(false);
-      }
-    });
+    bootstrapAuth()
+      .catch(() => {
+        if (active) clearAuth();
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
   }, [applyToken, clearAuth]);
 
   const login = useCallback(
