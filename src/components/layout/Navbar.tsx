@@ -47,8 +47,8 @@ export function Navbar() {
     { to: '/academics', label: t('nav.academics') },
     { to: '/admissions', label: t('nav.admissions') },
     { to: '/student-life', label: t('nav.studentLife') },
-    { to: '/gallery', label: t('nav.gallery', isRtl ? 'معرض' : 'Gallery') },
-    { to: '/careers', label: t('nav.careers', isRtl ? 'وظائف' : 'Careers') },
+    { to: '/gallery', label: t('nav.gallery', isRtl ? 'معرض الصور' : 'Gallery') },
+    { to: '/careers', label: t('nav.careers', isRtl ? 'الوظائف' : 'Careers') },
     { to: '/news', label: t('nav.news') },
     { to: '/contact', label: t('nav.contact') },
   ];
@@ -91,14 +91,14 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation Bar */}
-        <nav className="hidden xl:flex items-center gap-0.5 bg-slate-100/60 dark:bg-slate-900/60 p-0.5 xl:p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink-0 overflow-hidden mx-1.5 xl:mx-2.5 2xl:mx-4">
+        <nav className="hidden lg:flex items-center gap-0.5 bg-slate-100/70 dark:bg-slate-900/70 p-1 rounded-full border border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md shrink-0 overflow-hidden mx-1 xl:mx-2.5 2xl:mx-4">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
                 cn(
-                  'relative px-1.5 xl:px-2 2xl:px-3 py-1 rounded-full text-[11px] xl:text-xs 2xl:text-sm font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
+                  'relative px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap select-none shrink-0',
                   isActive
                     ? 'bg-white dark:bg-slate-800 text-primary dark:text-amber-400 shadow-xs border border-slate-200/60 dark:border-slate-700/60 font-extrabold'
                     : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
