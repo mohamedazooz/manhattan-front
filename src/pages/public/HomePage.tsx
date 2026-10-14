@@ -31,11 +31,11 @@ import { SchoolMap } from '../../components/common/SchoolMap';
 import { useAuth } from '../../lib/auth';
 
 const trustIcons = [
-  { key: 'bilingual', icon: BookOpen, count: '100% Dual Curriculum' },
-  { key: 'classrooms', icon: GraduationCap, count: 'Smart Classrooms' },
-  { key: 'safe', icon: Shield, count: 'Safe Campus' },
-  { key: 'teachers', icon: Users, count: 'Top Educators' },
-  { key: 'future', icon: Star, count: 'Future Leaders' },
+  { key: 'bilingual', icon: BookOpen },
+  { key: 'classrooms', icon: GraduationCap },
+  { key: 'safe', icon: Shield },
+  { key: 'teachers', icon: Users },
+  { key: 'future', icon: Star },
 ];
 
 interface Announcement {
@@ -146,7 +146,7 @@ export function HomePage() {
       {trustBarSection && (
         <section className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 py-8 shadow-xs relative z-10 transition-colors">
         <div className="mx-auto max-w-7xl px-4 grid grid-cols-2 md:grid-cols-5 gap-6">
-          {trustIcons.map(({ key, icon: Icon, count }, idx) => (
+          {trustIcons.map(({ key, icon: Icon }, idx) => (
             <motion.div
               key={key}
               initial={{ opacity: 0, y: 20 }}
@@ -159,7 +159,7 @@ export function HomePage() {
                 <Icon className="h-6 w-6" />
               </div>
               <span className="text-sm font-semibold text-neutral-dark dark:text-slate-100">{t(`trust.${key}`)}</span>
-              <span className="text-[11px] text-neutral-medium dark:text-slate-400">{count}</span>
+              <span className="text-[11px] text-neutral-medium dark:text-slate-400">{t(`trust.${key}Desc`)}</span>
             </motion.div>
           ))}
         </div>
@@ -198,7 +198,7 @@ export function HomePage() {
                   showArrow
                   className="py-3.5 px-8 text-sm font-bold shadow-lg justify-center"
                 >
-                  {t('portal.parent.btn', 'Parent Portal')}
+                  {t('portal.parent.btn', 'بوابة ولي الأمر والتقديم')}
                 </Button>
               </div>
             </motion.div>
@@ -232,7 +232,7 @@ export function HomePage() {
                   showArrow
                   className="py-3.5 px-8 text-sm font-bold shadow-lg justify-center bg-emerald-600 hover:bg-emerald-700 text-white border-none"
                 >
-                  {t('portal.applicant.btn', 'Job Applicant Portal')}
+                  {t('portal.applicant.btn', 'بوابة التوظيف والانضمام للكادر')}
                 </Button>
               </div>
             </motion.div>

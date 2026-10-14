@@ -32,6 +32,12 @@
   "hero": {
     "discover": "DISCOVER MORE",
     "programs": "OUR ACADEMIC PROGRAMS",
+    "applyNow": "Apply for Admission",
+    "admissions": "Admissions",
+    "studentLife": "Student Life",
+    "gallery": "Photo Gallery",
+    "contact": "Contact Us",
+    "careers": "Join Our Team",
     "slide1": {
       "title": "Excellence in Education & Character Building",
       "subtitle": "Empowering students through bilingual education, modern facilities, and dedicated mentorship for a bright future."
@@ -80,10 +86,15 @@
   },
   "trust": {
     "bilingual": "Bilingual Education",
+    "bilingualDesc": "100% Dual Curriculum",
     "classrooms": "Modern Classrooms",
+    "classroomsDesc": "Smart Classrooms",
     "safe": "Safe Environment",
+    "safeDesc": "Safe Campus",
     "teachers": "Experienced Teachers",
-    "future": "Bright Future"
+    "teachersDesc": "Top Educators",
+    "future": "Bright Future",
+    "futureDesc": "Future Leaders"
   },
   "foundation": {
     "badge": "MLS Foundation",

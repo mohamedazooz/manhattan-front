@@ -33,62 +33,73 @@ export function HeroSlideshow({ cmsHero, cmsHeroes }: HeroSlideshowProps) {
   const defaultSlides = [
     {
       id: 'slide-1',
-      title: t('hero.slide1.title'),
-      subtitle: t('hero.slide1.subtitle'),
+      title: t('hero.slide1.title', 'التميز في التعليم وبناء الشخصية'),
+      subtitle: t('hero.slide1.subtitle', 'تمكين الطلاب من خلال تعليم ثنائي اللغة، ومرافق حديثة، وإرشاد مخصص لمستقبل مشرق.'),
       image: '/photos/hero1.jpeg',
-      ctaText: t('nav.login'),
-      ctaLink: '/login',
-      secondaryCtaText: t('nav.careers'),
-      secondaryCtaLink: '/careers',
+      ctaText: t('hero.applyNow', isRtl ? 'التقديم والقبول' : 'Apply Now'),
+      ctaLink: '/register/parent?redirect=/portal/parent/admissions/new',
+      secondaryCtaText: t('hero.discover', isRtl ? 'عن المدرسة' : 'About Us'),
+      secondaryCtaLink: '/about',
     },
     {
       id: 'slide-2',
-      title: t('hero.slide2.title'),
-      subtitle: t('hero.slide2.subtitle'),
+      title: t('hero.slide2.title', 'برامج أكاديمية بمواصفات عالمية'),
+      subtitle: t('hero.slide2.subtitle', 'من الروضة إلى الإعدادية، نعد قادة الغد بمنهج تعليمي مزدوج رفيع المستوى.'),
       image: '/photos/hero2.jpeg',
-      ctaText: t('hero.discover'),
-      ctaLink: '/about',
-      secondaryCtaText: t('hero.programs'),
-      secondaryCtaLink: '/academics',
+      ctaText: t('hero.programs', isRtl ? 'برامجنا الأكاديمية' : 'Academic Programs'),
+      ctaLink: '/academics',
+      secondaryCtaText: t('hero.admissions', isRtl ? 'شروط القبول' : 'Admissions'),
+      secondaryCtaLink: '/admissions',
     },
     {
       id: 'slide-3',
-      title: t('hero.slide3.title'),
-      subtitle: t('hero.slide3.subtitle'),
+      title: t('hero.slide3.title', 'مرافق حديثة وحياة مدرسية مفعمة بالنشاط'),
+      subtitle: t('hero.slide3.subtitle', 'فصول ذكية متطورة، مختبرات علمية، ملاعب رياضية، واستوديوهات للفنون والإبداع.'),
       image: '/photos/hero3.jpeg',
-      ctaText: t('nav.login'),
-      ctaLink: '/login',
-      secondaryCtaText: t('nav.careers'),
-      secondaryCtaLink: '/careers',
+      ctaText: t('hero.studentLife', isRtl ? 'حياة الطالب' : 'Student Life'),
+      ctaLink: '/student-life',
+      secondaryCtaText: t('hero.gallery', isRtl ? 'معرض الصور' : 'Photo Gallery'),
+      secondaryCtaLink: '/gallery',
     },
     {
       id: 'slide-4',
-      title: t('hero.slide4.title'),
-      subtitle: t('hero.slide4.subtitle'),
+      title: t('hero.slide4.title', 'نخبة من أفضل المعلمين والخبراء'),
+      subtitle: t('hero.slide4.subtitle', 'نظام تعليمي متكامل يرعى الموهوبين وينمي المهارات القيادية والفكرية للأبناء.'),
       image: '/photos/hero4.jpeg',
-      ctaText: t('nav.contact'),
+      ctaText: t('hero.contact', isRtl ? 'تواصل معنا' : 'Contact Us'),
       ctaLink: '/contact',
-      secondaryCtaText: t('hero.programs'),
-      secondaryCtaLink: '/academics',
+      secondaryCtaText: t('hero.careers', isRtl ? 'انضم لفريقنا' : 'Join Our Team'),
+      secondaryCtaLink: '/careers',
     },
   ];
 
-  const slides = activeHeroes.length > 0
-    ? activeHeroes.map((h, i) => {
-        const title = getBilingualText(h, 'title', lang);
-        const subtitle = getBilingualText(h, 'subtitle', lang);
-        const ctaText = getBilingualText(h, 'ctaText', lang);
-        return {
-          id: `cms-slide-${i}`,
-          title: title || t('hero.slide1.title'),
-          subtitle: subtitle || t('hero.slide1.subtitle'),
-          image: h.imageUrl ? mediaUrl(h.imageUrl) : `/photos/hero${(i % 4) + 1}.jpeg`,
-          ctaText: ctaText || t('nav.login'),
-          ctaLink: h.ctaLink || '/login',
-          secondaryCtaText: t('nav.careers'),
-          secondaryCtaLink: '/careers',
-        };
-      })
+  const mappedCmsSlides = activeHeroes.map((h, i) => {
+    const fallbackSlide = defaultSlides[i % defaultSlides.length];
+    const title = getBilingualText(h, 'title', lang);
+    const subtitle = getBilingualText(h, 'subtitle', lang);
+    const ctaText = getBilingualText(h, 'ctaText', lang);
+    const rawImage = h.imageUrl?.trim();
+    const image = rawImage && !rawImage.includes('undefined') && !rawImage.includes('null')
+      ? mediaUrl(rawImage)
+      : fallbackSlide.image;
+
+    return {
+      id: `cms-slide-${i}`,
+      title: title || fallbackSlide.title,
+      subtitle: subtitle || fallbackSlide.subtitle,
+      image,
+      ctaText: ctaText || fallbackSlide.ctaText,
+      ctaLink: h.ctaLink || fallbackSlide.ctaLink,
+      secondaryCtaText: fallbackSlide.secondaryCtaText,
+      secondaryCtaLink: fallbackSlide.secondaryCtaLink,
+    };
+  });
+
+  // If CMS has only 1 slide, append the remaining default slides to give a full rotating experience
+  const slides = mappedCmsSlides.length === 1
+    ? [...mappedCmsSlides, ...defaultSlides.slice(1)]
+    : mappedCmsSlides.length > 1
+    ? mappedCmsSlides
     : defaultSlides;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -177,7 +188,7 @@ export function HeroSlideshow({ cmsHero, cmsHeroes }: HeroSlideshowProps) {
           className="md:col-span-12 max-w-3xl space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-white/90 text-xs sm:text-sm font-medium border border-white/20 backdrop-blur-md">
-            <Sparkles className="h-4 w-4 text-amber-400 animate-spin" />
+            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
             <span>{t('app.name')}</span>
           </div>
 
